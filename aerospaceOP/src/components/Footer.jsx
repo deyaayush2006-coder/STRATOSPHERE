@@ -1,8 +1,12 @@
 import React from "react";
 import ContactForm from "./ContactForm";
-import { CONTACT, FOOTER_COLS } from "../../data";
+import { useContent } from "../content/ContentProvider";
 
 export default function Footer() {
+  const CONTACT = useContent("contact") ?? {};
+  const FOOTER_COLS = useContent("footerCols") ?? [];
+  const { address = [], hours = [], email = "", phone = "" } = CONTACT;
+
   return (
     <footer
       id="contact"
@@ -15,7 +19,7 @@ export default function Footer() {
               Our Address
             </h3>
             <address className="not-italic font-mono text-sm text-ink/65 leading-relaxed mt-4">
-              {CONTACT.address.map((line) => (
+              {address.map((line) => (
                 <span key={line} className="block">
                   {line}
                 </span>
@@ -26,10 +30,10 @@ export default function Footer() {
               Email us
             </h3>
             <a
-              href={`mailto:${CONTACT.email}`}
+              href={`mailto:${email}`}
               className="inline-block font-mono text-sm text-ink/65 hover:text-aurora2 transition-colors mt-4"
             >
-              {CONTACT.email}
+              {email}
             </a>
           </div>
 
@@ -45,7 +49,7 @@ export default function Footer() {
                 {c.title}
               </h4>
               <div className="flex flex-col gap-2.5 items-start">
-                {c.links.map((l) => (
+                {(c.links ?? []).map((l) => (
                   <a
                     key={l.label}
                     href={l.href}
@@ -65,7 +69,7 @@ export default function Footer() {
             </h4>
             <div className="flex flex-col gap-2.5 font-mono text-[13px] leading-relaxed">
               <p className="text-ink/60">
-                {CONTACT.address.map((line) => (
+                {address.map((line) => (
                   <span key={line} className="block">
                     {line}
                   </span>
@@ -74,19 +78,19 @@ export default function Footer() {
               <p className="text-ink/60">
                 Phone:{" "}
                 <a
-                  href={`tel:${CONTACT.phone.replace(/s/g, "")}`}
+                  href={`tel:${phone.replace(/\s/g, "")}`}
                   className="text-ink/80 underline underline-offset-2 hover:text-aurora2 transition-colors"
                 >
-                  {CONTACT.phone}
+                  {phone}
                 </a>
               </p>
               <p className="text-ink/60 whitespace-nowrap">
                 Email:{" "}
                 <a
-                  href={`mailto:${CONTACT.email}`}
+                  href={`mailto:${email}`}
                   className="text-ink/80 underline underline-offset-2 hover:text-aurora2 transition-colors"
                 >
-                  {CONTACT.email}
+                  {email}
                 </a>
               </p>
             </div>
@@ -97,7 +101,7 @@ export default function Footer() {
               Office hours
             </h4>
             <dl className="flex flex-col gap-5 text-sm">
-              {CONTACT.hours.map(([day, time]) => (
+              {hours.map(([day, time]) => (
                 <div key={day}>
                   <dt className="text-ink/60">{day}</dt>
                   <dd className="text-aurora2 font-mono text-[13px] m-0 mt-0.5">{time}</dd>

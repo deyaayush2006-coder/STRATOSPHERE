@@ -1,5 +1,6 @@
 import React from "react";
-import { SITE_BACKDROP } from "../../data";
+import { useContent } from "../content/ContentProvider";
+import { mediaUrl } from "../lib/api";
 
 // Fixed backdrop, stacked bottom to top. Mount once, at the root.
 
@@ -37,6 +38,7 @@ function useScrollDepth() {
 }
 
 export default function SiteBackground() {
+  const backdrop = mediaUrl(useContent("site")?.backdrop);
   const depthRef = useScrollDepth();
 
   return (
@@ -45,9 +47,9 @@ export default function SiteBackground() {
       <div className="absolute inset-0 bg-sky" />
 
       {/* 2 — campus photo, held at --backdrop-opacity so it reads as texture */}
-      {SITE_BACKDROP && (
+      {backdrop && (
         <img
-          src={SITE_BACKDROP}
+          src={backdrop}
           alt=""
           style={{ opacity: "var(--backdrop-opacity)" }}
           className="absolute inset-0 h-full w-full object-cover object-top"

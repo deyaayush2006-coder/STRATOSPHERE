@@ -1,8 +1,11 @@
 import React from "react";
 import Reveal from "./Reveal";
-import { ABOUT } from "../../data";
+import { useContent } from "../content/ContentProvider";
 
 export default function About() {
+  const ABOUT = useContent("about") ?? {};
+  const { body = [], pillars = [], facts = [] } = ABOUT;
+
   return (
     <section id="about" className="px-6 py-24 md:py-28 scroll-mt-28 max-w-6xl mx-auto">
       <Reveal className="grid md:grid-cols-2 gap-8 md:gap-16 items-start">
@@ -14,7 +17,7 @@ export default function About() {
         <div className="md:-mt-1">
           <p className="text-ink text-lg leading-relaxed mb-5">{ABOUT.lead}</p>
 
-          {ABOUT.body.map((paragraph, i) => (
+          {body.map((paragraph, i) => (
             <p key={i} className="text-ink/70 mb-5 last:mb-0 leading-relaxed">
               {paragraph}
             </p>
@@ -22,7 +25,7 @@ export default function About() {
         </div>
       </Reveal>
       <Reveal className="mt-16 md:mt-20 grid md:grid-cols-2 gap-12 md:gap-0">
-        {ABOUT.pillars.map((pillar, i) => (
+        {pillars.map((pillar, i) => (
           <div
             key={pillar.title}
             className={i === 0 ? "md:pr-12" : "md:border-l md:border-ink/40 md:pl-12"}
@@ -37,7 +40,7 @@ export default function About() {
 
       <Reveal className="mt-20 md:mt-24 pt-12 border-t border-ink/10">
         <dl className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-6">
-          {ABOUT.facts.map((fact) => (
+          {facts.map((fact) => (
             <div key={fact.label} className="text-center">
               <dd className="text-4xl md:text-5xl font-semibold text-ink tracking-[-0.02em] m-0">
                 {fact.value}

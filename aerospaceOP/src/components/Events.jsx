@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import Reveal from "./Reveal";
 import SectionHeader from "./SectionHeader";
-import { EVENTS } from "../../data";
+import { useContent } from "../content/ContentProvider";
+import { mediaUrl } from "../lib/api";
 
 function EventCard({ event }) {
   const [failed, setFailed] = useState(false);
@@ -16,7 +17,7 @@ function EventCard({ event }) {
 
       {event.image && !failed && (
         <img
-          src={event.image}
+          src={mediaUrl(event.image)}
           alt=""
           loading="lazy"
           onError={() => setFailed(true)}
@@ -51,6 +52,8 @@ function EventCard({ event }) {
 }
 
 export default function Events() {
+  const EVENTS = useContent("events") ?? [];
+
   const upcoming = EVENTS.filter((e) => e.when === "upcoming");
   const past = EVENTS.filter((e) => e.when === "past");
 

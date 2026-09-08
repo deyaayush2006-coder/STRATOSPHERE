@@ -1,9 +1,14 @@
 import React from "react";
+import { useContent } from "../content/ContentProvider";
+import { mediaUrl } from "../lib/api";
+
 export default function Hero({
   lineA = "Stratosphere",
   lineB = "Aerospace Club",
   lineC = "Jadavpur University",
 }) {
+  const heroVideo = mediaUrl(useContent("site")?.heroVideo) || "/vid.mp4";
+
   const chars = (text, offset = 0) => {
     const words = text.split(" ");
     let i = offset;
@@ -39,7 +44,7 @@ export default function Hero({
         aria-hidden="true"
       >
         <video
-          src="/vid.mp4"
+          src={heroVideo}
           autoPlay
           muted
           loop

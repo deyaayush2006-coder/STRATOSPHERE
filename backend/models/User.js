@@ -1,6 +1,13 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
+/* Two levels, and the gap between them is deliberate:
+   - editor  — can change site content and upload media
+   - admin   — the above, plus adding/removing other accounts
+   There is no public sign-up route. Accounts exist only because an admin
+   created one, so an unknown visitor can never end up with either role. */
+const ROLES = ["editor", "admin"];
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -24,6 +31,18 @@ const userSchema = new mongoose.Schema(
       minlength: 8,
       select: false, // never return password by default on queries
     },
+    role: {
+      type: String,
+      enum: ROLES,
+      default: "editor",
+    },
+    /* Suspend a handed-over account instead of deleting it, so the
+       "updatedBy" trail on old content still resolves to a name. */
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    lastLoginAt: Date,
   },
   { timestamps: true }
 );
@@ -46,4 +65,17 @@ userSchema.methods.comparePassword = function comparePassword(candidatePassword)
   return bcrypt.compare(candidatePassword, this.password);
 };
 
+userSchema.methods.toPublic = function toPublic() {
+  return {
+    id: this._id,
+    name: this.name,
+    email: this.email,
+    role: this.role,
+    isActive: this.isActive,
+    lastLoginAt: this.lastLoginAt,
+    createdAt: this.createdAt,
+  };
+};
+
 module.exports = mongoose.model("User", userSchema);
+module.exports.ROLES = ROLES;

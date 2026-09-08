@@ -1,7 +1,8 @@
 import React from "react";
 import Reveal from "./Reveal";
 import SectionHeader from "./SectionHeader";
-import { SHOWCASE_CLIPS } from "../../data";
+import { useContent } from "../content/ContentProvider";
+import { mediaUrl } from "../lib/api";
 function Clip({ clip, className = "" }) {
   return (
     <figure className={`relative overflow-hidden rounded-lg bg-panel ${className}`}>
@@ -9,9 +10,9 @@ function Clip({ clip, className = "" }) {
         className="h-full w-full object-cover"
         controls
         preload="metadata"
-        poster={clip.poster}
+        poster={mediaUrl(clip.poster)}
       >
-        <source src={clip.src} type="video/mp4" />
+        <source src={mediaUrl(clip.src)} type="video/mp4" />
       </video>
       <figcaption className="absolute inset-x-0 bottom-0 pointer-events-none bg-gradient-to-t from-base/80 to-transparent px-4 pt-8 pb-3">
         <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-aurora2">
@@ -24,6 +25,8 @@ function Clip({ clip, className = "" }) {
 }
 
 export default function VideoShowcase() {
+  const SHOWCASE_CLIPS = useContent("showcaseClips") ?? [];
+
   if (SHOWCASE_CLIPS.length === 0) return null;
 
   const [feature, ...rest] = SHOWCASE_CLIPS;

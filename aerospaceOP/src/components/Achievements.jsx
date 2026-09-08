@@ -1,9 +1,11 @@
 import React from "react";
 import Reveal from "./Reveal";
 import SectionHeader from "./SectionHeader";
-import { ACHIEVEMENTS } from "../../data";
+import { useContent } from "../content/ContentProvider";
 
 export default function Achievements() {
+  const ACHIEVEMENTS = useContent("achievements");
+
   return (
     <section id="achievements" className="px-6 py-24 md:py-28 scroll-mt-28 max-w-6xl mx-auto">
       <SectionHeader

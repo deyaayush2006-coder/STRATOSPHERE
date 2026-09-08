@@ -1,105 +1,114 @@
-# Auth Backend (Express + MongoDB + JWT)
+# Stratosphere content API
 
-A minimal, production-leaning backend for user registration and login.
+Express + MongoDB + JWT. Backs the site dashboard: content sections, uploaded
+images, and the accounts that can sign in.
 
-## Features
-- Register with name, email, password
-- Passwords hashed with bcrypt (never stored in plain text)
-- Login returns a JWT access token
-- `GET /api/auth/me` — example protected route that requires the token
-- Input validation (express-validator)
-- Basic rate limiting on auth endpoints
-- CORS configured for your frontend origin
+## What it does
 
-## Project structure
+- Serves the site's editable content at `GET /api/content` (public)
+- Accepts edits from the dashboard on `PUT /api/content/:key` (signed in)
+- Stores uploaded images in MongoDB and serves them from `/api/media/:id`
+- Two roles: **editor** (content + images) and **admin** (that, plus accounts)
+- **No public sign-up.** Accounts come from `npm run seed` or from an admin
+  using the Accounts tab. Anyone who finds the API cannot create themselves one.
+
+## Layout
+
 ```
 backend/
 ├── config/
-│   └── db.js              # MongoDB connection
-├── controllers/
-│   └── authController.js  # register/login/getMe logic
+│   ├── db.js               MongoDB connection (+ public DNS for Atlas SRV)
+│   └── sections.js         the only content keys the API will accept
+├── controllers/            auth · content · media · users
 ├── middleware/
-│   ├── auth.js             # verifies JWT on protected routes
-│   └── validate.js         # formats express-validator errors
-├── models/
-│   └── User.js              # Mongoose schema + password hashing
-├── routes/
-│   └── auth.js               # /api/auth/* routes
-├── .env.example
-├── .gitignore
-├── package.json
-└── server.js                 # app entry point
+│   ├── auth.js             requireAuth (re-reads the account) + requireAdmin
+│   └── validate.js         formats express-validator errors
+├── models/                 User · Content · Media
+├── routes/                 /api/auth · /api/content · /api/media · /api/users
+├── scripts/seed.mjs        first admin + content from the site's defaults
+└── server.js               CORS, rate limits, error handling
 ```
 
 ## Setup
 
-1. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-2. **Configure environment variables**
-   Copy `.env.example` to `.env` and fill in real values:
-   ```bash
-   cp .env.example .env
-   ```
-   - `MONGO_URI` — your MongoDB connection string (local Mongo or a free MongoDB Atlas cluster)
-   - `JWT_SECRET` — any long random string (e.g. generate one with `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`)
-   - `CLIENT_ORIGIN` — the URL of your frontend (e.g. `http://localhost:3000`)
-
-3. **Run MongoDB**
-   Either run MongoDB locally, or create a free cluster at https://www.mongodb.com/atlas and paste its connection string into `MONGO_URI`.
-
-4. **Start the server**
-   ```bash
-   npm run dev      # with nodemon, auto-restarts on changes
-   # or
-   npm start
-   ```
-   The server runs on `http://localhost:5000` by default.
-
-## API Reference
-
-### Register
-`POST /api/auth/register`
-```json
-{
-  "name": "Jane Doe",
-  "email": "jane@example.com",
-  "password": "at-least-8-characters"
-}
-```
-Response `201`:
-```json
-{
-  "message": "Account created successfully",
-  "token": "eyJhbGciOi...",
-  "user": { "id": "...", "name": "Jane Doe", "email": "jane@example.com" }
-}
+```bash
+npm install
+cp .env.example .env      # then fill it in
+npm run seed              # creates the first admin, fills the content sections
+npm run dev               # http://localhost:5000
 ```
 
-### Login
-`POST /api/auth/login`
-```json
-{
-  "email": "jane@example.com",
-  "password": "at-least-8-characters"
-}
-```
-Response `200`: same shape as register (`token` + `user`).
+`.env` needs at minimum `MONGO_URI`, `JWT_SECRET`, and — for the first run only —
+`ADMIN_EMAIL` and `ADMIN_PASSWORD`. The server refuses to start without
+`JWT_SECRET` rather than signing tokens with `undefined`.
 
-### Get current user (protected)
-`GET /api/auth/me`
-Header: `Authorization: Bearer <token>`
+`npm run seed` is safe to re-run: an existing admin is left alone and its
+password is never reset from here, and content sections that have been edited
+are skipped. Pass `-- --force` to overwrite edited sections with the bundled
+defaults.
 
-Response `200`:
-```json
-{
-  "user": { "id": "...", "name": "Jane Doe", "email": "jane@example.com", "createdAt": "..." }
-}
-```
+## API
 
-## How authentication works
-1. On register/login, the server signs a JWT containing the user's ID and returns it to the client.
-2. The client stores this token (e.g. in memory, or a secure cookie — avoid `localStorage` for anything sensitive if you can help it) and sends it back on future requests as `Authorization: Bearer <token>`.
-3. `middleware/auth.js` verifies the token on protected routes and attaches `req.userId` for the route handler to use.
+| Method | Path                | Access | Purpose |
+| ------ | ------------------- | ------ | ------- |
+| GET    | `/api/health`       | public | liveness |
+| POST   | `/api/auth/login`   | public | returns a JWT (10 attempts / 15 min / IP) |
+| GET    | `/api/auth/me`      | signed in | the current account |
+| POST   | `/api/auth/password`| signed in | change your own password |
+| GET    | `/api/content`      | public | every stored section, keyed by name |
+| GET    | `/api/content/:key` | public | one section |
+| PUT    | `/api/content/:key` | signed in | replace a section |
+| DELETE | `/api/content/:key` | signed in | drop it, so the site falls back to defaults |
+| GET    | `/api/media/:id`    | public | the image bytes |
+| GET    | `/api/media`        | signed in | the library listing |
+| POST   | `/api/media`        | signed in | upload one image (multipart `file`) |
+| DELETE | `/api/media/:id`    | signed in | delete an image |
+| GET/POST | `/api/users`      | **admin** | list / create accounts |
+| PATCH/DELETE | `/api/users/:id` | **admin** | rename, change role, suspend, delete |
+
+Send the token as `Authorization: Bearer <token>`.
+
+## How the content model works
+
+Content is one document per section (`key` + a `Mixed` `value`), not a schema
+per content type. Page content grows fields constantly — a card gains a tag, an
+event gains a time — and a strict schema would mean a migration each time.
+Validation is at the route instead: the key must be one of
+`config/sections.js`, the shape must match (list vs object), and the payload
+must be under 512KB.
+
+**Sections the API has never been given are simply absent from `GET /api/content`.**
+The site ships with a full copy of its own content and falls back to it per
+section, so an empty database, a sleeping API, or a "Reset section" in the
+dashboard all render the site correctly rather than blanking it.
+
+## Images in MongoDB
+
+Uploads are stored as bytes on a `Media` document, not on disk — Render and
+Railway wipe the filesystem on every deploy. The browser resizes to 1600px and
+re-encodes to WebP before uploading, so a 200KB photo lands as roughly 50KB and
+a phone photo shrinks far more. The server caps uploads at 4MB and rejects
+anything that is not an image.
+
+`/api/media/:id` is served with `immutable` caching: a re-upload gets a new id,
+so the bytes behind a URL never change.
+
+## Deploying
+
+Needs a host that runs a persistent process — Render, Railway and Fly all do.
+Set in the host's environment:
+
+- `MONGO_URI`, `JWT_SECRET`
+- `CLIENT_ORIGIN` — the deployed site origin, comma-separated if more than one.
+  **Not** a wildcard.
+- `NODE_ENV=production` — this switches off the loopback CORS exemption that
+  makes `npm run dev` work on whatever port Vite picks.
+
+Leave `ADMIN_PASSWORD` out of the production environment once the first admin
+exists.
+
+## Losing access
+
+If every admin password is lost, there is no email reset. Set a new password
+hash directly on the `users` collection, or delete the admin row and re-run
+`npm run seed` with fresh `ADMIN_*` values.

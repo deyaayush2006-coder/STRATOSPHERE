@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Reveal from "./Reveal";
 import SectionHeader from "./SectionHeader";
-import { PROJECTS } from "../../data";
+import { useContent } from "../content/ContentProvider";
+import { mediaUrl } from "../lib/api";
 
 function Cover({ project }) {
   const [failed, setFailed] = useState(false);
@@ -10,7 +11,7 @@ function Cover({ project }) {
 
   return (
     <img
-      src={project.image}
+      src={mediaUrl(project.image)}
       alt=""
       loading="lazy"
       onError={() => setFailed(true)}
@@ -20,6 +21,8 @@ function Cover({ project }) {
 }
 
 export default function Projects() {
+  const PROJECTS = useContent("projects") ?? [];
+
   return (
     <section id="projects" className="px-6 py-24 md:py-28 scroll-mt-28 max-w-6xl mx-auto">
       <SectionHeader
@@ -55,7 +58,7 @@ export default function Projects() {
               <p className="text-sm text-ink/55 mt-3 leading-relaxed">{p.summary}</p>
 
               <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-aurora2 mt-5 block">
-                {p.parts.length > 0 ? `${p.parts.length} parts →` : "Read more →"}
+                {p.parts?.length > 0 ? `${p.parts.length} parts →` : "Read more →"}
               </span>
             </div>
           </Reveal>

@@ -1,8 +1,12 @@
 import React, { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
-import { NAV_LINKS } from "../../data";
+import { useContent } from "../content/ContentProvider";
+import { mediaUrl } from "../lib/api";
 
 export default function NavCard({ currentPath = "" }) {
+  const NAV_LINKS = useContent("navLinks") ?? [];
+  const site = useContent("site") ?? {};
+
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(null);
 
@@ -17,7 +21,7 @@ export default function NavCard({ currentPath = "" }) {
       <div className="flex items-center gap-4 px-5 py-3.5">
         <a href="/#overview" className="flex flex-1 items-center gap-2.5 min-w-0">
           <img
-            src="/1674144810258.jpg"
+            src={mediaUrl(site.logo) || "/1674144810258.jpg"}
             alt=""
             width="200"
             height="200"

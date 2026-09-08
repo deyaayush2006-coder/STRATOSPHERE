@@ -1,50 +1,29 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-function generateToken(userId) {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+function generateToken(user) {
+  return jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || "12h",
   });
 }
 
-// @route  POST /api/auth/register
-// @desc   Create a new user account
-// @access Public
-exports.register = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
-      return res.status(409).json({ message: "An account with this email already exists" });
-    }
-
-    const user = await User.create({ name, email, password });
-    const token = generateToken(user._id);
-
-    return res.status(201).json({
-      message: "Account created successfully",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
-    });
-  } catch (error) {
-    return res.status(500).json({ message: "Something went wrong during registration", error: error.message });
-  }
-};
+/* There is no register endpoint. This backend sits behind an unlisted admin
+   panel, so accounts are created two ways only: `npm run seed` for the first
+   admin, and POST /api/users for everyone after that. A public sign-up route
+   would hand anyone who found the URL an account. */
 
 // @route  POST /api/auth/login
-// @desc   Authenticate a user and return a token
-// @access Public
-exports.login = async (req, res) => {
+// @desc   Authenticate an editor/admin and return a token
+// @access Public (rate limited in server.js)
+exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     // .select("+password") because the schema excludes it by default
-    const user = await User.findOne({ email: email.toLowerCase() }).select("+password");
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select("+password");
+
+    /* Same message for "no such user" and "wrong password": telling them
+       apart lets someone enumerate which addresses have accounts. */
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
@@ -54,41 +33,55 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const token = generateToken(user._id);
+    if (!user.isActive) {
+      return res.status(403).json({ message: "This account has been suspended" });
+    }
+
+    user.lastLoginAt = new Date();
+    await user.save({ validateBeforeSave: false });
 
     return res.status(200).json({
       message: "Logged in successfully",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
+      token: generateToken(user),
+      user: user.toPublic(),
     });
   } catch (error) {
-    return res.status(500).json({ message: "Something went wrong during login", error: error.message });
+    return next(error);
   }
 };
 
 // @route  GET /api/auth/me
-// @desc   Get the currently logged-in user's profile
-// @access Private (requires valid JWT)
+// @desc   The signed-in account; the dashboard calls this on load to
+//         check a stored token is still good before rendering anything.
+// @access Private
 exports.getMe = async (req, res) => {
+  return res.status(200).json({ user: req.user.toPublic() });
+};
+
+// @route  POST /api/auth/password
+// @desc   Change your own password
+// @access Private
+exports.changePassword = async (req, res, next) => {
   try {
-    const user = await User.findById(req.userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.userId).select("+password");
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Current password is incorrect" });
     }
 
+    user.password = newPassword; // hashed by the pre-save hook
+    await user.save();
+
+    /* The old token stays valid until it expires — it is bound to the user
+       id, not the password. Hand back a fresh one so the client at least
+       stops carrying the pre-change token around. */
     return res.status(200).json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-      },
+      message: "Password changed",
+      token: generateToken(user),
     });
   } catch (error) {
-    return res.status(500).json({ message: "Something went wrong", error: error.message });
+    return next(error);
   }
 };

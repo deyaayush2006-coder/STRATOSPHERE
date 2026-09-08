@@ -1,9 +1,11 @@
 import React from "react";
 import Reveal from "./Reveal";
 import SectionHeader from "./SectionHeader";
-import { ANNOUNCEMENTS } from "../../data";
+import { useContent } from "../content/ContentProvider";
 
 export default function Announcements() {
+  const ANNOUNCEMENTS = useContent("announcements");
+
   const pinned = ANNOUNCEMENTS.find((a) => a.pinned);
   const rest = ANNOUNCEMENTS.filter((a) => a !== pinned);
 

@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { PROJECTS } from "../../data";
+import { useContent } from "../content/ContentProvider";
+import { mediaUrl } from "../lib/api";
 export default function ProjectDetail() {
   const { slug, partSlug } = useParams();
   const [coverFailed, setCoverFailed] = useState(false);
+  const PROJECTS = useContent("projects") ?? [];
 
   const project = PROJECTS.find((p) => p.slug === slug);
   if (!project) return <Navigate to="/" replace />;
@@ -40,7 +42,7 @@ export default function ProjectDetail() {
         <article className="glass rounded-3xl overflow-hidden">
           {project.image && !coverFailed && (
             <img
-              src={project.image}
+              src={mediaUrl(project.image)}
               alt={project.title}
               onError={() => setCoverFailed(true)}
               className="w-full aspect-video object-cover bg-panel"
@@ -85,7 +87,7 @@ export default function ProjectDetail() {
           {/* the open part */}
           <article className="glass rounded-3xl overflow-hidden">
             <img
-              src={active.image}
+              src={mediaUrl(active.image)}
               alt={`${active.name} — ${project.title}`}
               className="w-full aspect-video object-cover bg-panel"
               loading="lazy"
@@ -97,14 +99,14 @@ export default function ProjectDetail() {
                 {active.name}
               </h2>
 
-              {active.detail.map((para, i) => (
+              {(active.detail ?? []).map((para, i) => (
                 <p key={i} className="text-ink/65 mt-4 leading-relaxed max-w-2xl">
                   {para}
                 </p>
               ))}
 
               <dl className="grid sm:grid-cols-3 gap-6 mt-9 pt-8 border-t border-ink/10">
-                {active.specs.map(([label, value]) => (
+                {(active.specs ?? []).map(([label, value]) => (
                   <div key={label} className="flex flex-col gap-1.5">
                     <dt className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/35">
                       {label}

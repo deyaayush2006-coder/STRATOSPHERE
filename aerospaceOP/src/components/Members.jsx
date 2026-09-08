@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import Reveal from "./Reveal";
 import SectionHeader from "./SectionHeader";
-import { MEMBER_COHORTS } from "../../data";
+import { useContent } from "../content/ContentProvider";
+import { mediaUrl } from "../lib/api";
 
 // Screens of scroll each committee holds the pinned panel for.
 const SCREENS_PER_COHORT = 1;
@@ -27,7 +28,7 @@ function Avatar({ member }) {
 
   return (
     <img
-      src={member.image}
+      src={mediaUrl(member.image)}
       alt=""
       loading="lazy"
       onError={() => setFailed(true)}
@@ -104,7 +105,7 @@ function CohortHeading({ cohort }) {
 function CohortGrid({ cohort, animate = false, active = true }) {
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      {cohort.members.map((m, i) => (
+      {(cohort.members ?? []).map((m, i) => (
         <div
           key={`${cohort.year}-${m.name}-${m.role}`}
           className={
@@ -124,11 +125,11 @@ function CohortGrid({ cohort, animate = false, active = true }) {
 }
 
 // Progress readout and jump control in one.
-function YearRail({ active, onPick, barRef }) {
+function YearRail({ cohorts, active, onPick, barRef }) {
   return (
     <div className="mb-5 shrink-0">
       <div className="flex items-center gap-2 overflow-x-auto pb-2.5">
-        {MEMBER_COHORTS.map((c, i) => (
+        {cohorts.map((c, i) => (
           <button
             key={c.year}
             type="button"
@@ -158,6 +159,9 @@ function YearRail({ active, onPick, barRef }) {
 }
 
 export default function Members() {
+  const MEMBER_COHORTS = useContent("memberCohorts") ?? [];
+  const cohortCount = MEMBER_COHORTS.length;
+
   const trackRef = useRef(null);
   const barRef = useRef(null);
   const [active, setActive] = useState(0);
@@ -196,8 +200,8 @@ export default function Members() {
 
       // equal-width buckets, last one included
       const index = Math.min(
-        MEMBER_COHORTS.length - 1,
-        Math.floor(progress * MEMBER_COHORTS.length)
+        cohortCount - 1,
+        Math.floor(progress * cohortCount)
       );
       setActive((prev) => (prev === index ? prev : index));
     };
@@ -215,7 +219,7 @@ export default function Members() {
       window.removeEventListener("resize", onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [pinned]);
+  }, [pinned, cohortCount]);
 
   // Aim for the middle of the bucket so a click never lands on a boundary.
   function jumpTo(index) {
@@ -224,11 +228,11 @@ export default function Members() {
     const rect = el.getBoundingClientRect();
     const top = rect.top + window.scrollY;
     const travel = rect.height - window.innerHeight;
-    const target = top + ((index + 0.5) / MEMBER_COHORTS.length) * travel;
+    const target = top + ((index + 0.5) / cohortCount) * travel;
     window.scrollTo({ top: target, behavior: "smooth" });
   }
 
-  const trackScreens = MEMBER_COHORTS.length * SCREENS_PER_COHORT + 1;
+  const trackScreens = cohortCount * SCREENS_PER_COHORT + 1;
 
   return (
     <section id="members" className="scroll-mt-28">
@@ -247,7 +251,7 @@ export default function Members() {
         >
           {/* the pin; pt-16 clears the sticky nav */}
           <div className="sticky top-0 h-screen flex flex-col justify-start px-6 pt-16 pb-6 max-w-6xl mx-auto">
-            <YearRail active={active} onPick={jumpTo} barRef={barRef} />
+            <YearRail cohorts={MEMBER_COHORTS} active={active} onPick={jumpTo} barRef={barRef} />
 
             {/* all committees stay mounted for the cross-fade; inset-0 keeps each
                 panel inside the pin instead of overflowing the next section */}
