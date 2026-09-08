@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 
-// Web3Forms delivers submissions to the club inbox. The access key is public by
-// design: it only ever sends to the address that registered it. The env var is
-// there to swap keys without a code change; regenerate at web3forms.com if the
-// key is ever abused.
+// Web3Forms delivers submissions to the club inbox. Set VITE_WEB3FORMS_KEY in
+// .env locally and in the Vercel project settings — without it the form has no
+// key to send and every submission fails.
 const ENDPOINT = "https://api.web3forms.com/submit";
-const ACCESS_KEY =
-  import.meta.env.VITE_WEB3FORMS_KEY || "1269a44b-42ca-4a49-9455-c27cb6cd8067";
+const ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_KEY;
 
 // Fixed colours, not theme tokens: a light control on a dark panel, which must not invert.
 const FIELD =
