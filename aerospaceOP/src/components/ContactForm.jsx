@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 
-// Posts to the API in server/; falls back to the local dev port.
-const API = import.meta.env.VITE_API_URL || "http://localhost:4000";
+// Web3Forms delivers submissions to the club inbox. The access key is public by
+// design: it only ever sends to the address that registered it. The env var is
+// there to swap keys without a code change; regenerate at web3forms.com if the
+// key is ever abused.
+const ENDPOINT = "https://api.web3forms.com/submit";
+const ACCESS_KEY =
+  import.meta.env.VITE_WEB3FORMS_KEY || "1269a44b-42ca-4a49-9455-c27cb6cd8067";
 
 // Fixed colours, not theme tokens: a light control on a dark panel, which must not invert.
 const FIELD =
@@ -23,23 +28,24 @@ export default function ContactForm() {
     setError("");
 
     try {
-      const res = await fetch(`${API}/api/feedback`, {
+      const res = await fetch(ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          access_key: ACCESS_KEY,
+          subject: data.get("subject") || "New message from the Stratosphere site",
           name: data.get("name") || "",
           email: data.get("email") || "",
-          subject: data.get("subject") || "",
           message: data.get("message") || "",
-          website: data.get("website") || "", // honeypot
+          botcheck: data.get("website") ? true : "", // honeypot
           page: typeof window !== "undefined" ? window.location.pathname : "",
         }),
       });
 
       const payload = await res.json().catch(() => ({}));
 
-      if (!res.ok || !payload.ok) {
-        setError(payload.error || "Could not send that. Please try again.");
+      if (!res.ok || !payload.success) {
+        setError(payload.message || "Could not send that. Please try again.");
         setStatus("error");
         return;
       }
