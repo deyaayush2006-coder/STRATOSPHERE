@@ -1,0 +1,9 @@
+# The club site is meant to be indexed.
+User-agent: *
+Allow: /
+
+# The dashboard is deliberately not listed here. Naming a private path in
+# robots.txt publishes it — this file is the first thing anyone reads. The
+# panel serves "noindex, nofollow" from the page itself instead, and every
+# unknown URL renders the home page rather than a 404 page that would confirm
+# a guess.
