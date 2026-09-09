@@ -3,7 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import Reveal from "./Reveal";
 import SectionHeader from "./SectionHeader";
+import Drone from "./Drone";
 import { mediaUrl } from "@/lib/media-url";
+
+/* Head start before the first card lands, so the drone is already over the
+   grid rather than still entering from the left, and the step between cards
+   after that. Sixteen members finish at 240 + 15*45 = 915ms, comfortably
+   inside the drone's 1.6s crossing. */
+const DELIVERY_LEAD = 240;
+const DELIVERY_STEP = 45;
 
 // Screens of scroll each committee holds the pinned panel for.
 const SCREENS_PER_COHORT = 1;
@@ -102,7 +110,9 @@ function CohortHeading({ cohort }) {
   );
 }
 
-// Stagger on the way in, zero on the way out, so a year leaves as one block.
+/* Stagger on the way in, zero on the way out, so a year leaves as one block.
+   Cards read in DOM order, left to right along each row, which is the same
+   direction the drone travels — so they land in its wake. */
 function CohortGrid({ cohort, animate = false, active = true }) {
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -116,7 +126,15 @@ function CohortGrid({ cohort, animate = false, active = true }) {
                 }`
               : "h-full"
           }
-          style={animate ? { transitionDelay: active ? `${i * 35}ms` : "0ms" } : undefined}
+          style={
+            animate
+              ? {
+                  transitionDelay: active
+                    ? `${DELIVERY_LEAD + i * DELIVERY_STEP}ms`
+                    : "0ms",
+                }
+              : undefined
+          }
         >
           <MemberCard member={m} />
         </div>
@@ -164,21 +182,31 @@ export default function Members({ memberCohorts = [] }) {
 
   const trackRef = useRef(null);
   const barRef = useRef(null);
+  const panelsRef = useRef([]);
   const [active, setActive] = useState(0);
 
-  // Reduced-motion and anything under a laptop get the plain stacked list.
-  // Do not add a height test here: a guessed minimum locked real screens out.
+  /* Only reduced-motion opts out now — phones get the pin too. There is no
+     width test any more: the effect is the point of the section, and a phone
+     is where most people meet it.
+     Still no height test. A guessed minimum locked real screens out. */
   const [pinned, setPinned] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia(
-      "(min-width: 1024px) and (prefers-reduced-motion: no-preference)"
-    );
+    const mq = window.matchMedia("(prefers-reduced-motion: no-preference)");
     const sync = () => setPinned(mq.matches);
     sync();
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
+
+  /* A committee taller than the pin scrolls inside its own panel — on a phone,
+     where the grid is one column, that is every committee. Put the incoming
+     year back to its heading, or arriving at it lands you at whatever offset
+     the previous one had been left at. */
+  useEffect(() => {
+    const panel = panelsRef.current[active];
+    if (panel) panel.scrollTop = 0;
+  }, [active]);
 
   useEffect(() => {
     if (!pinned) return;
@@ -247,18 +275,51 @@ export default function Members({ memberCohorts = [] }) {
         <div
           ref={trackRef}
           className="relative"
-          style={{ height: `${trackScreens * 100}vh` }}
+          style={{ height: `${trackScreens * 100}svh` }}
         >
-          {/* the pin; pt-16 clears the sticky nav */}
-          <div className="sticky top-0 h-screen flex flex-col justify-start px-6 pt-16 pb-6 max-w-6xl mx-auto">
+          {/* The pin. pt-16 clears the sticky nav.
+              svh, not vh: on a phone 100vh is the *large* viewport, measured
+              with the browser toolbar hidden, so a 100vh sticky panel hangs
+              behind the toolbar and loses its bottom row whenever the toolbar
+              is showing. svh is the small viewport — always visible, and it
+              does not resize as the toolbar retracts, so the pin never jumps
+              mid-scroll. */}
+          <div className="sticky top-0 h-[100svh] flex flex-col justify-start px-6 pt-16 pb-6 max-w-6xl mx-auto">
             <YearRail cohorts={memberCohorts} active={active} onPick={jumpTo} barRef={barRef} />
 
             {/* all committees stay mounted for the cross-fade; inset-0 keeps each
                 panel inside the pin instead of overflowing the next section */}
             <div className="relative flex-1 min-h-0">
+              {/* The courier. It crosses the panel every time the year changes
+                  and the cards stagger in behind it, so a committee reads as
+                  something the drone just dropped off rather than a fade.
+
+                  key={active} is what drives it: remounting the node restarts
+                  the CSS animation, which re-running it on the same element
+                  would not. It sits outside the scrolling panels so it is
+                  neither clipped by them nor carried along when one scrolls. */}
+              <div
+                key={active}
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 top-[12%] z-20 animate-drone-deliver"
+              >
+                <div className="relative w-fit animate-drone-hover text-aurora2">
+                  <span
+                    className="absolute -inset-5 rounded-full bg-aurora2/20 blur-2xl"
+                    aria-hidden="true"
+                  />
+                  <Drone size={44} className="relative drop-shadow-[0_0_12px_rgba(34,211,238,0.55)]" />
+                </div>
+              </div>
+
               {memberCohorts.map((cohort, i) => (
                 <div
                   key={cohort.year}
+                  /* Block body: React 19 reads a returned value as a cleanup
+                     function, and an assignment expression returns the node. */
+                  ref={(node) => {
+                    panelsRef.current[i] = node;
+                  }}
                   className={`absolute inset-0 overflow-y-auto overflow-x-hidden transition-[visibility] duration-500 ${
                     i === active ? "visible" : "invisible"
                   }`}

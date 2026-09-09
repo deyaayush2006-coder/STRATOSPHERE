@@ -258,16 +258,21 @@ export const SECTIONS = [
     label: "Backdrop & logo",
     icon: "🖼️",
     kind: "object",
-    blurb: "The images behind everything: the fixed backdrop, the nav logo, and the hero video.",
+    blurb: "What sits behind everything: the backdrop reel, the still behind it, and the nav logo.",
     fields: [
-      { name: "backdrop", label: "Page backdrop", type: "image", hint: "Held at low opacity behind every section" },
-      { name: "logo", label: "Nav logo", type: "image" },
       {
         name: "heroVideo",
-        label: "Hero video",
+        label: "Backdrop video",
         type: "text",
-        hint: "A path under public/ (e.g. /vid.mp4) or a full URL. Video is not uploaded through this panel.",
+        hint: "Plays behind the whole site at low opacity. A path under public/ (e.g. /vid.mp4) or a full URL. Video is not uploaded through this panel — leave it empty to use the still on its own.",
       },
+      {
+        name: "backdrop",
+        label: "Backdrop still",
+        type: "image",
+        hint: "The video's poster while it loads, and what shows instead of it for anyone who has asked for less motion.",
+      },
+      { name: "logo", label: "Nav logo", type: "image" },
     ],
   },
 

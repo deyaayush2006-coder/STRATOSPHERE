@@ -58,8 +58,7 @@ export const HERO_PHOTOS = [
 
 /* Taken from the club's existing site. */
 export const CONTACT = {
-  email: "aerospace.club@ju.ac.in",
-  phone: "+91 98306 69894",
+  email: "juaerospace.club@jadavpuruniversity.in",
   address: [
     "Aerospace Club, Mechanical Department",
     "Jadavpur University",

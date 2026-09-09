@@ -71,15 +71,6 @@ export default function Footer({ contact = {}, footerCols = [] }) {
                   </span>
                 ))}
               </p>
-              <p className="text-ink/60">
-                Phone:{" "}
-                <a
-                  href={`tel:${phone.replace(/\s/g, "")}`}
-                  className="text-ink/80 underline underline-offset-2 hover:text-aurora2 transition-colors"
-                >
-                  {phone}
-                </a>
-              </p>
               <p className="text-ink/60 whitespace-nowrap">
                 Email:{" "}
                 <a

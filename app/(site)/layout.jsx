@@ -2,6 +2,7 @@ import NavCard from "@/components/NavCard";
 import Footer from "@/components/Footer";
 import SiteBackground from "@/components/SiteBackground";
 import { getContent } from "@/lib/content";
+import Hero from "@/components/Hero";
 
 /* The public shell: backdrop, nav, footer. Everything under app/(site) renders
    inside it, and the dashboard — which is outside this group — does not.
@@ -18,9 +19,10 @@ export default async function SiteLayout({ children }) {
   // clip, not hidden: overflow-x-hidden here breaks sticky inside
   return (
     <div className="relative w-full min-h-screen bg-base overflow-x-clip">
-      <SiteBackground backdrop={content.site?.backdrop} />
+      <SiteBackground backdrop={content.site?.backdrop} video={content.site?.heroVideo} />
       <div className="relative z-10">
         <NavCard navLinks={content.navLinks} site={content.site} />
+        <Hero hero={content.site?.hero} />
         {children}
         <Footer contact={content.contact} footerCols={content.footerCols} />
       </div>
