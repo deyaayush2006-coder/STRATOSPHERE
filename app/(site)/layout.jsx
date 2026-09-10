@@ -22,7 +22,7 @@ export default async function SiteLayout({ children }) {
       <SiteBackground backdrop={content.site?.backdrop} video={content.site?.heroVideo} />
       <div className="relative z-10">
         <NavCard navLinks={content.navLinks} site={content.site} />
-        <Hero hero={content.site?.hero} />
+        <Hero />
         {children}
         <Footer contact={content.contact} footerCols={content.footerCols} />
       </div>

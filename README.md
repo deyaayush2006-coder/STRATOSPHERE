@@ -82,12 +82,12 @@ detects Next.js on its own — there is nothing to configure.
 Add all six environment variables from `.env.local` under **Settings →
 Environment Variables** before the first deploy, then deploy.
 
-Two of them are read at build time, not at request time, so **changing
-`NEXT_PUBLIC_ADMIN_PATH` or `NEXT_PUBLIC_SITE_URL` needs a redeploy** before it
-takes effect.
+You do not need a domain. Leave `NEXT_PUBLIC_SITE_URL` empty and the deploy
+picks up its own `*.vercel.app` address for the social card images; set it
+only if the club ever gets a domain of its own.
 
-Finally, in **Supabase → Authentication → URL Configuration**, set the Site URL
-to your Vercel domain.
+`NEXT_PUBLIC_ADMIN_PATH` is read at build time rather than per request, so
+**changing it needs a redeploy** before it takes effect.
 
 ## How content reaches the page
 

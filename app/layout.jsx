@@ -26,11 +26,29 @@ const TITLE = "Stratosphere — Aerospace Club, Jadavpur University";
 const DESCRIPTION =
   "Stratosphere is the Aerospace Club of Jadavpur University — a student team building rockets, drones and satellites, and running workshops and competitions on campus.";
 
-/* Set NEXT_PUBLIC_SITE_URL in Vercel so the social card images resolve to
-   absolute URLs. Falls back to the current deployment. */
+/* Where the social card images resolve from. They have to be absolute URLs —
+   a relative path in an og:image is ignored by every scraper.
+ *
+ * Nothing needs setting for this to work on Vercel. The chain is:
+ *
+ *   NEXT_PUBLIC_SITE_URL            a real domain, once the club has one
+ *   VERCEL_PROJECT_PRODUCTION_URL   the project's stable *.vercel.app address,
+ *                                   the same on every production deploy
+ *   VERCEL_URL                      this one deployment's address, which is
+ *                                   unique per build — right for a preview,
+ *                                   wrong for anything shared, because it dies
+ *                                   when the next deploy supersedes it
+ *   localhost                       development
+ *
+ * Both VERCEL_ vars are injected by Vercel itself, so the production domain is
+ * picked up automatically. Only set NEXT_PUBLIC_SITE_URL to override it. */
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),

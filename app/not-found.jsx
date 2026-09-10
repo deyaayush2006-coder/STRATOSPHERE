@@ -1,6 +1,7 @@
 import NavCard from "@/components/NavCard";
 import Footer from "@/components/Footer";
 import SiteBackground from "@/components/SiteBackground";
+import Hero from "@/components/Hero";
 import Announcements from "@/components/Announcements";
 import VideoShowcase from "@/components/VideoShowcase";
 import About from "@/components/About";
@@ -25,7 +26,8 @@ export default async function NotFound() {
       <SiteBackground backdrop={content.site?.backdrop} video={content.site?.heroVideo} />
       <div className="relative z-10">
         <NavCard navLinks={content.navLinks} site={content.site} />
-        <main id="overview" className="scroll-mt-28">
+        <Hero />
+        <main>
           <Announcements announcements={content.announcements} />
           <VideoShowcase showcaseClips={content.showcaseClips} />
           <About about={content.about} />
