@@ -89,24 +89,37 @@ export default function SiteBackground({ backdrop, video }) {
           playsInline
           preload="auto"
           style={{ opacity: "var(--backdrop-opacity)" }}
-          /* The element takes the footage's own ratio (848/480 = 53/30) at full
-             width and hangs from the top, so the frame is never cropped
-             sideways at any size. Stretched over the whole viewport instead it
-             lost about two thirds of its width on a portrait phone, and 57% on
-             an iPad held upright.
+          /* MOBILE (below md): the reel is stretched to finish 3px above the
+             Announcements heading. It starts at top-24, the offset the hero
+             used to carry so the burnt-in title clears the nav card, and its
+             height is whatever reaches that landing:
 
-             No breakpoint on purpose: a width test got this wrong, because what
-             decides it is whether the viewport is narrower than the footage,
-             not how many pixels across it is. Letting the ratio drive it covers
-             every screen — on one wider than 16:9 the band simply runs past the
-             bottom edge and the parent clips it, which costs height rather than
-             width and is the safe axis to lose.
+               62vh    the hero, which is min-h-[62vh] and holds no content
+               + 66px  the nav, the first thing in the flow
+               + 96px  the section's own py-24 above its heading
+               -  3px  the requested gap
+               = 62vh + 159px   <- where the bottom edge goes
+               - 96px  the top-24 the reel starts at
+               = 62vh + 63px    <- so this is the height
 
-             The mask fades the lower edge out so the band has no hard boundary
-             where it ends against the sky. */
-          className="absolute inset-x-0 top-0 w-full aspect-[53/30] object-cover object-center
-            [-webkit-mask-image:linear-gradient(to_bottom,#000_85%,transparent)]
-            [mask-image:linear-gradient(to_bottom,#000_85%,transparent)]
+             Measured exact on 320, 390 and 430px phones. If the hero height,
+             the nav height or that py-24 change, this has to move with them.
+
+             The trade: object-cover fills a portrait box by scaling the footage
+             until it covers, which crops the sides — a phone shows roughly a
+             third of the frame width. Filling the space and keeping the whole
+             frame are the same knob turned opposite ways, and filling it is
+             what was asked for.
+
+             DESKTOP (md up): unchanged. The reel hangs from the top at the
+             footage's own ratio (848/480 = 53/30), full width, uncropped. */
+          className="absolute inset-x-0 w-full object-cover object-center
+            top-24 h-[calc(62vh+63px)] aspect-auto
+            [-webkit-mask-image:linear-gradient(to_bottom,#000_92%,transparent)]
+            [mask-image:linear-gradient(to_bottom,#000_92%,transparent)]
+            md:top-0 md:h-auto md:aspect-[53/30]
+            md:[-webkit-mask-image:linear-gradient(to_bottom,#000_85%,transparent)]
+            md:[mask-image:linear-gradient(to_bottom,#000_85%,transparent)]
             motion-reduce:hidden"
         />
       )}
