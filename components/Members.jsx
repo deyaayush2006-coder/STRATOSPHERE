@@ -3,15 +3,32 @@
 import { useEffect, useRef, useState } from "react";
 import Reveal from "./Reveal";
 import SectionHeader from "./SectionHeader";
-import Drone from "./Drone";
+import Plane from "./Plane";
 import { mediaUrl } from "@/lib/media-url";
 
-/* Head start before the first card lands, so the drone is already over the
-   grid rather than still entering from the left, and the step between cards
-   after that. Sixteen members finish at 240 + 15*45 = 915ms, comfortably
-   inside the drone's 1.6s crossing. */
-const DELIVERY_LEAD = 240;
-const DELIVERY_STEP = 45;
+/* Three things run per year change, in this order, so the section reads as one
+   move rather than several competing ones:
+
+     0ms     the outgoing committee fades out (500ms, no delay)
+     0ms     the year stamps itself across the panel, oversized, gradient
+             sweeping through the letterforms
+     450ms   the glider enters below the floor and starts climbing
+     700ms   the bottom row appears behind it, then upward row by row
+     1725ms  the last card
+     1850ms  the glider leaves through the top; the year has settled to a
+             watermark the committee sits on
+
+   Cards reveal bottom-to-top, against DOM order, because that is the direction
+   the glider travels — see the reversed index in CohortGrid.
+
+   Two constraints hold this together, and both break quietly:
+     - REVEAL_LEAD must be past the stamp's arrival, or the cards land on top
+       of it while it is still full size;
+     - LEAD + n*STEP must stay inside GLIDER_DELAY + the climb duration in
+       globals.css, or the craft exits before the committee is all there. */
+const GLIDER_DELAY = 450;
+const REVEAL_LEAD = 700;
+const REVEAL_STEP = 55;
 
 // Screens of scroll each committee holds the pinned panel for.
 const SCREENS_PER_COHORT = 1;
@@ -111,12 +128,17 @@ function CohortHeading({ cohort }) {
 }
 
 /* Stagger on the way in, zero on the way out, so a year leaves as one block.
-   Cards read in DOM order, left to right along each row, which is the same
-   direction the drone travels — so they land in its wake. */
+   The index is reversed: DOM order runs top-left to bottom-right, and the
+   glider climbs the other way, so the last card in the markup is the first one
+   uncovered. That is what makes the reveal follow the craft up the panel
+   instead of running against it. */
 function CohortGrid({ cohort, animate = false, active = true }) {
+  const members = cohort.members ?? [];
+  const last = members.length - 1;
+
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      {(cohort.members ?? []).map((m, i) => (
+      {members.map((m, i) => (
         <div
           key={`${cohort.year}-${m.name}-${m.role}`}
           className={
@@ -130,7 +152,7 @@ function CohortGrid({ cohort, animate = false, active = true }) {
             animate
               ? {
                   transitionDelay: active
-                    ? `${DELIVERY_LEAD + i * DELIVERY_STEP}ms`
+                    ? `${REVEAL_LEAD + (last - i) * REVEAL_STEP}ms`
                     : "0ms",
                 }
               : undefined
@@ -290,25 +312,56 @@ export default function Members({ memberCohorts = [] }) {
             {/* all committees stay mounted for the cross-fade; inset-0 keeps each
                 panel inside the pin instead of overflowing the next section */}
             <div className="relative flex-1 min-h-0">
-              {/* The courier. It crosses the panel every time the year changes
-                  and the cards stagger in behind it, so a committee reads as
-                  something the drone just dropped off rather than a fade.
+              {/* The glider. Every time the year changes it climbs from below
+                  the panel out through the top, and the committee appears in
+                  its wake — the rise is what uncovers them, rather than a fade
+                  that happens to run at the same time.
+
+                  inset-0 on purpose: the keyframes translate in percentages of
+                  this element, so it has to be the size of the panel for 112%
+                  to mean "a panel-height below the floor".
 
                   key={active} is what drives it: remounting the node restarts
                   the CSS animation, which re-running it on the same element
                   would not. It sits outside the scrolling panels so it is
                   neither clipped by them nor carried along when one scrolls. */}
+              {/* The year, announcing the committee before it arrives. Sits
+                  behind the panels — they carry no background of their own — so
+                  the cards land on top of it as it settles to a watermark.
+                  Keyed on active for the same reason the glider is: remounting
+                  is what restarts a CSS animation.
+
+                  bg-[length:200%_100%] is what makes the gradient sweep
+                  possible; without a background wider than the box there is
+                  nothing for background-position to travel across. */}
+              <div
+                key={`stamp-${active}`}
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden"
+              >
+                <span
+                  className="animate-year-stamp bg-gradient-to-r from-aurora1 via-aurora2 to-aurora3
+                    bg-[length:200%_100%] bg-clip-text font-display text-transparent
+                    text-[clamp(3.5rem,17vw,10rem)] font-bold leading-none tracking-[-0.04em] whitespace-nowrap"
+                >
+                  {memberCohorts[active]?.year}
+                </span>
+              </div>
+
               <div
                 key={active}
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 top-[12%] z-20 animate-drone-deliver"
+                className="pointer-events-none absolute inset-0 z-20 animate-glider-climb"
+                style={{ animationDelay: `${GLIDER_DELAY}ms` }}
               >
-                <div className="relative w-fit animate-drone-hover text-aurora2">
-                  <span
-                    className="absolute -inset-5 rounded-full bg-aurora2/20 blur-2xl"
-                    aria-hidden="true"
+                <div className="absolute left-[18%] top-0 w-fit text-aurora2">
+                  {/* the contrail, tapering away below the craft */}
+                  <span className="absolute left-1/2 top-8 h-40 w-px -translate-x-1/2 bg-gradient-to-b from-aurora2/50 to-transparent" />
+                  <span className="absolute -inset-6 rounded-full bg-aurora2/20 blur-2xl" />
+                  <Plane
+                    size={54}
+                    className="relative animate-glider-bank drop-shadow-[0_0_16px_rgba(34,211,238,0.6)]"
                   />
-                  <Drone size={44} className="relative drop-shadow-[0_0_12px_rgba(34,211,238,0.55)]" />
                 </div>
               </div>
 

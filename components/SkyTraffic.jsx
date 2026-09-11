@@ -1,16 +1,10 @@
 
 import Drone from "./Drone";
+import Plane from "./Plane";
 
 // Background aircraft. One transform animation per craft, no will-change:
 // at this count a layer per craft costs more GPU memory than it saves.
 
-function Plane({ size }) {
-  return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
-      <path d="M22 12c0 .5-.4.9-.9.9h-6.3l-3.1 6.4c-.1.3-.4.4-.7.4h-1c-.3 0-.6-.3-.5-.7l1.6-6.1H7.4l-1.2 2c-.1.2-.3.3-.5.3h-.8c-.3 0-.5-.3-.4-.6l.8-2.6-.8-2.6c-.1-.3.1-.6.4-.6h.8c.2 0 .4.1.5.3l1.2 2h3.7L9.5 4.9c-.1-.3.2-.7.5-.7h1c.3 0 .6.2.7.4l3.1 6.4h6.3c.5 0 .9.4.9 1Z" />
-    </svg>
-  );
-}
 
 // path -> animation class, facing, and nose angle
 const PATHS = {
