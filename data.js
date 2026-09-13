@@ -158,35 +158,53 @@ export const MEMBER_COHORTS = [
   { year: "2026–27", tag: "Current", current: true, blurb: "Sixteen students from Mechanical, Electrical and Chemical Engineering run the club today.", members: MEMBERS },
 ];
 
+/* How much of the results list the home page shows. Same rule as the
+ * announcements feed: nothing is deleted when the number comes down, the rest
+ * fold into the archive underneath. Four rather than three, so the list still
+ * reaches back past the current season on a fresh install.
+ * Set in the dashboard under "Achievement display". */
+export const ACHIEVEMENT_SETTINGS = {
+  visibleCount: 4,
+  showArchive: true,
+  archiveLabel: "Earlier achievements",
+};
+
+/* `postedAt` is the real moment and the sort key; `year` is the label the row
+   shows, which is often just "2025". */
 export const ACHIEVEMENTS = [
   {
     year: "January 2025",
     tag: "Competition",
     title: "NSSC Contingent Award 2025",
+    postedAt: "2025-01-27T11:15:00.000Z",
     body: "The club represented Jadavpur University at the National Students Space Challenge at IIT Kharagpur. The team won the Contingent Award for exceptional participation, teamwork, and innovation in aerospace competitions.",
   },
   {
     year: "2025",
     tag: "Research",
     title: "Aircraft Design Projects (V-tail & H-tail)",
+    postedAt: "2025-08-20T09:00:00.000Z",
     body: "The team finished detailed aerodynamic and structural designs for both V-tail and H-tail aircraft configurations. These projects serve as stepping stones for participation in the National Aeromodelling Competition 2025-26, highlighting the commitment to research and design.",
   },
   {
     year: "2025",
     tag: "Competition",
     title: "Technical Events: Jal Astra & Skysprint",
+    postedAt: "2025-04-19T17:00:00.000Z",
     body: "The club successfully organized two large-scale aeromodelling events. Both events attracted over 100 team registrations, providing hands-on learning experiences and promoting excitement for aerospace across campus.",
   },
   {
     year: "April 2025",
     tag: "Recognition",
     title: "Seminar on Aerospace Engineering",
+    postedAt: "2025-04-10T12:00:00.000Z",
     body: "The club conducted a seminar for over 200+ undergraduate students.",
   },
   {
     year: "2024",
     tag: "Innovation",
     title: "RC Plane 1.0, Design & Manufacturing",
+    postedAt: "2024-11-15T10:00:00.000Z",
     body: "The club successfully completed its first fully functional RC aircraft, built entirely in-house. The project included conceptual design, fuselage and wing construction, electronic installation, and test flights. It demonstrated the skills of the team in aeromodelling and systems integration.",
   },
 ];
@@ -238,10 +256,27 @@ export const EVENTS = [
     image: "/images/events/skysprint-2025.jpg",
   },
 ];
+/* How much of the feed the home page shows.
+ *
+ * Nothing is ever thrown away: every announcement stays in the table with the
+ * moment it was posted. `visibleCount` only decides how many of the newest
+ * ones are on the page, and the rest fold into the archive underneath.
+ * The committee changes this in the dashboard under "Announcement display". */
+export const ANNOUNCEMENT_SETTINGS = {
+  visibleCount: 3,
+  showArchive: true,
+  archiveLabel: "Earlier announcements",
+};
+
+/* `postedAt` is the real timestamp and the sort key; `date` is the free-text
+   label the card actually shows, which is often "Dates TBD" rather than a
+   date at all. Keeping them apart is what lets the archive stay in order
+   while the cards still read the way the committee wrote them. */
 export const ANNOUNCEMENTS = [
   {
     id: "windcraft-2026",
     date: "April 2026",
+    postedAt: "2026-04-02T14:30:00.000Z",
     tag: "Recap",
     title: "Windcraft: our first-ever glider making session",
     body:
@@ -251,6 +286,7 @@ export const ANNOUNCEMENTS = [
   {
     id: "season-2026",
     date: "Dates TBD",
+    postedAt: "2026-05-18T09:00:00.000Z",
     tag: "Upcoming",
     title: "SkySprint 2026 and JalAstra 2026 are being planned",
     body:
@@ -259,6 +295,7 @@ export const ANNOUNCEMENTS = [
   {
     id: "nssc-2025",
     date: "January 2025",
+    postedAt: "2025-01-27T11:15:00.000Z",
     tag: "Result",
     title: "Contingent Award at NSSC 2025, IIT Kharagpur",
     body:

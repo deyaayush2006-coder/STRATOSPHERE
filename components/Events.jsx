@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Reveal from "./Reveal";
+import CardRail from "./CardRail";
 import SectionHeader from "./SectionHeader";
 import { mediaUrl } from "@/lib/media-url";
 
@@ -10,9 +11,9 @@ function EventCard({ event }) {
   const upcoming = event.when === "upcoming";
 
   return (
-    <article className="group relative glass rounded-2xl overflow-hidden hover:border-aurora2/30 hover:-translate-y-1 transition duration-300">
+    <article className="group relative h-full flex flex-col glass rounded-2xl overflow-hidden hover:border-aurora2/30 hover:-translate-y-1 transition duration-200">
       <span
-        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-aurora2/70 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 z-10"
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-aurora2/70 to-transparent opacity-0 group-hover:opacity-100 transition duration-200 z-10"
         aria-hidden="true"
       />
 
@@ -65,23 +66,21 @@ export default function Events({ events = [] }) {
 
       {upcoming.length > 0 && (
         <Reveal className="mb-14">
-          <h3 className="text-2xl md:text-3xl text-ink font-semibold tracking-[-0.02em] mb-6">Upcoming Events</h3>
-          <div className="grid md:grid-cols-2 gap-5">
+          <CardRail title="Upcoming Events" label="upcoming events" cols="md:grid-cols-2">
             {upcoming.map((e) => (
               <EventCard key={e.title} event={e} />
             ))}
-          </div>
+          </CardRail>
         </Reveal>
       )}
 
       {past.length > 0 && (
         <Reveal>
-          <h3 className="text-2xl md:text-3xl text-ink font-semibold tracking-[-0.02em] mb-6">Past Events</h3>
-          <div className="grid md:grid-cols-3 gap-5">
+          <CardRail title="Past Events" label="past events">
             {past.map((e) => (
               <EventCard key={e.title + e.date} event={e} />
             ))}
-          </div>
+          </CardRail>
         </Reveal>
       )}
     </section>

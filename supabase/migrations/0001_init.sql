@@ -136,6 +136,9 @@ create table if not exists public.announcements (
   -- published_on is the sortable one; date_label is what actually renders.
   date_label   text not null default '',
   published_on date,
+  -- When it went up, to the minute. The archive is ordered by this, and it is
+  -- what keeps an old announcement findable after it has left the front page.
+  posted_at    timestamptz not null default now(),
   pinned       boolean not null default false,
   published    boolean not null default true,
   sort_order   integer not null default 0,
@@ -163,6 +166,9 @@ create table if not exists public.achievements (
   id         uuid primary key default gen_random_uuid(),
   title      text not null,
   year_label text not null default '',
+  -- The sortable date behind year_label, which is free text and often just a
+  -- year. This is what orders the list and what the archive shows.
+  posted_at  timestamptz not null default now(),
   tag        text not null default '',
   body       text not null default '',
   published  boolean not null default true,
@@ -225,8 +231,10 @@ create table if not exists public.cohort_members (
 );
 
 create index if not exists announcements_order_idx  on public.announcements (sort_order);
+create index if not exists announcements_posted_idx on public.announcements (posted_at desc);
 create index if not exists events_order_idx         on public.events (sort_order);
 create index if not exists achievements_order_idx   on public.achievements (sort_order);
+create index if not exists achievements_posted_idx  on public.achievements (posted_at desc);
 create index if not exists projects_order_idx       on public.projects (sort_order);
 create index if not exists project_parts_owner_idx  on public.project_parts (project_id, sort_order);
 create index if not exists cohorts_order_idx        on public.cohorts (sort_order);

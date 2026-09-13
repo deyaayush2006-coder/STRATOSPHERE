@@ -23,6 +23,69 @@ function TextInput({ field, value, onChange }) {
   );
 }
 
+/* Kept as a string in the draft rather than coerced on every keystroke:
+   parsing as you type makes an empty box turn into 0 and a half-typed "1" into
+   a number the moment you reach for the second digit. The reader normalises
+   what it gets, so the box only has to hold what the committee typed. */
+function NumberInput({ field, value, onChange }) {
+  return (
+    <input
+      type="number"
+      inputMode="numeric"
+      className={`${FIELD} max-w-32`}
+      min={field.min ?? 0}
+      max={field.max ?? undefined}
+      step={field.step ?? 1}
+      value={value ?? ""}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  );
+}
+
+/* A wall-clock field over an ISO string.
+   datetime-local speaks the browser's local time and nothing else, so the two
+   helpers either side are the whole point: what is stored stays unambiguous
+   UTC, and what is typed stays the time the committee is actually looking at
+   on the clock in front of them. */
+const pad = (n) => String(n).padStart(2, "0");
+
+function toLocalInput(iso) {
+  if (!iso) return "";
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return "";
+  return (
+    `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}` +
+    `T${pad(at.getHours())}:${pad(at.getMinutes())}`
+  );
+}
+
+function fromLocalInput(local) {
+  if (!local) return "";
+  const at = new Date(local); // no offset in the string, so this reads as local
+  return Number.isNaN(at.getTime()) ? "" : at.toISOString();
+}
+
+function DateTimeInput({ field, value, onChange }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <input
+        type="datetime-local"
+        className={`${FIELD} max-w-64`}
+        value={toLocalInput(value)}
+        onChange={(e) => onChange(fromLocalInput(e.target.value))}
+      />
+      <Button variant="ghost" onClick={() => onChange(new Date().toISOString())}>
+        Now
+      </Button>
+      {value && (
+        <Button variant="ghost" onClick={() => onChange("")}>
+          Clear
+        </Button>
+      )}
+    </div>
+  );
+}
+
 function TextArea({ field, value, onChange }) {
   return (
     <textarea
@@ -424,6 +487,8 @@ export function ListInput({ field, value, onChange }) {
 
 const INPUTS = {
   text: TextInput,
+  number: NumberInput,
+  datetime: DateTimeInput,
   textarea: TextArea,
   select: SelectInput,
   checkbox: CheckboxInput,

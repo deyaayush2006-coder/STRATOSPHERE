@@ -117,6 +117,22 @@
   /* The year stamp between one committee and the next: arrives oversized,
      settles, then drops back to a watermark the cards sit on top of. */
   --animate-year-stamp: yearStamp 1.9s cubic-bezier(.16, .84, .3, 1) both;
+
+  /* The craft riding the flight path in the members section. Deliberately
+     small: its heading is already set by a rotate() on the element above it,
+     read off the tangent of the path, and this only has to stop that heading
+     from looking welded on. */
+  --animate-craft-bob: craftBob 2.8s ease-in-out infinite;
+
+  /* Opening a committee. These are short on purpose.
+     Anything that happens in answer to a click is read as the click being
+     slow, so the whole dialog — veil, panel and the cards inside it — is on
+     screen inside a third of a second. The longer, softer timings elsewhere on
+     the page are for things that arrive on their own as you scroll, where
+     nobody is waiting on them. */
+  --animate-veil-in: veilIn 0.14s ease-out both;
+  --animate-panel-in: panelIn 0.2s cubic-bezier(.2, .8, .2, 1) both;
+  --animate-card-in: cardIn 0.22s ease-out both;
 }
 
 @keyframes blobFloat {
@@ -203,6 +219,32 @@
    It does not end at zero: the last keyframe parks it as a faint watermark, so
    the year stays legible behind the cards for as long as that committee is up
    rather than vanishing the moment it has been read. */
+@keyframes veilIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* A short rise rather than a scale: scaling the panel would resample the text
+   inside it for the whole of the animation, which is the one thing here that
+   is genuinely expensive to do at speed. */
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* The craft's own drift, composed under the heading its parent carries.
+   Percentages here would be of the craft's own tiny box, so this stays in
+   pixels and degrees. */
+@keyframes craftBob {
+  0%, 100% { transform: translateY(-2px) rotate(-3.5deg); }
+  50%      { transform: translateY(2px) rotate(3.5deg); }
+}
+
 @keyframes yearStamp {
   0%   { opacity: 0; transform: scale(1.45) translateY(6%); background-position: 140% 50%; }
   22%  { opacity: 1; }

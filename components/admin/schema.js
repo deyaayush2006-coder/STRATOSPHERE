@@ -10,6 +10,26 @@
 
 const SLUG_HINT = "Used in the page URL. Lowercase, dashes, no spaces.";
 
+/* The posted time, on one line of a list row.
+   Fixed locale and fixed zone because this renders on the server first and
+   then hydrates — letting either end pick its own would make the two disagree.
+   Asia/Kolkata is the clock the committee is working to. */
+const POSTED = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Kolkata",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+function postedLabel(item) {
+  if (!item?.postedAt) return "";
+  const at = new Date(item.postedAt);
+  return Number.isNaN(at.getTime()) ? "" : POSTED.format(at);
+}
+
 export const SECTIONS = [
   {
     key: "announcements",
@@ -18,19 +38,64 @@ export const SECTIONS = [
     kind: "list",
     itemName: "announcement",
     blurb:
-      "The updates feed on the home page. One entry can be pinned to the top as the featured card.",
+      "Everything the club has ever posted. One entry can be pinned to the top as the featured card; how many of the rest reach the home page is set under Announcement display. Nothing here is ever dropped from the record — older entries move into the archive on the page.",
     title: (a) => a.title,
-    subtitle: (a) => [a.date, a.tag].filter(Boolean).join(" · "),
+    subtitle: (a) => [postedLabel(a), a.date, a.tag].filter(Boolean).join(" · "),
     flag: (a) => (a.published === false ? "Draft" : a.pinned ? "Pinned" : null),
-    blank: () => ({ id: "", date: "", tag: "Update", title: "", body: "", pinned: false, published: true }),
+    blank: () => ({
+      id: "",
+      date: "",
+      postedAt: new Date().toISOString(),
+      tag: "Update",
+      title: "",
+      body: "",
+      pinned: false,
+      published: true,
+    }),
     fields: [
       { name: "title", label: "Headline", type: "text", required: true },
       { name: "id", label: "Id", type: "text", hint: SLUG_HINT, slugFrom: "title" },
       { name: "date", label: "Date", type: "text", hint: "Free text — April 2026, or Dates TBD" },
+      {
+        name: "postedAt",
+        label: "Posted",
+        type: "datetime",
+        hint: "The real time this went up. It decides the order of the feed and the archive, and it is what the card shows once the free-text date above stops being enough to place it. Left empty, it is stamped when you save.",
+      },
       { name: "tag", label: "Tag", type: "text", hint: "Recap, Upcoming, Result…" },
       { name: "body", label: "Body", type: "textarea", rows: 7 },
       { name: "pinned", label: "Pin as the featured announcement", type: "checkbox" },
       { name: "published", label: "Show this on the site", type: "checkbox" },
+    ],
+  },
+
+  {
+    key: "announcementSettings",
+    label: "Announcement display",
+    icon: "🔢",
+    kind: "object",
+    blurb:
+      "How much of the feed reaches the home page. This only changes what is on display — every announcement stays on record with the time it was posted, and the ones that do not fit fold into the archive underneath.",
+    fields: [
+      {
+        name: "visibleCount",
+        label: "Recent announcements on the page",
+        type: "number",
+        min: 0,
+        max: 50,
+        hint: "How many of the newest ones show under the featured card. The pinned card is always on the page and is not counted here. Set 0 to show the pinned card on its own.",
+      },
+      {
+        name: "showArchive",
+        label: "Offer the older ones in an archive below",
+        type: "checkbox",
+      },
+      {
+        name: "archiveLabel",
+        label: "Archive heading",
+        type: "text",
+        hint: "The wording on the button that opens it.",
+      },
     ],
   },
 
@@ -186,17 +251,61 @@ export const SECTIONS = [
     icon: "🏆",
     kind: "list",
     itemName: "achievement",
-    blurb: "The results list. Newest first reads best here.",
+    blurb:
+      "Everything the club has won, run or finished. How many of the most recent reach the home page is set under Achievement display — the rest move into the archive on the page rather than off the record.",
     title: (a) => a.title,
-    subtitle: (a) => [a.year, a.tag].filter(Boolean).join(" · "),
+    subtitle: (a) => [postedLabel(a), a.year, a.tag].filter(Boolean).join(" · "),
     flag: (a) => (a.published === false ? "Draft" : null),
-    blank: () => ({ year: "", tag: "", title: "", body: "", published: true }),
+    blank: () => ({
+      year: "",
+      postedAt: new Date().toISOString(),
+      tag: "",
+      title: "",
+      body: "",
+      published: true,
+    }),
     fields: [
       { name: "title", label: "Title", type: "text", required: true },
-      { name: "year", label: "When", type: "text", hint: "e.g. January 2025" },
+      { name: "year", label: "When", type: "text", hint: "e.g. January 2025, or just 2025" },
+      {
+        name: "postedAt",
+        label: "Happened",
+        type: "datetime",
+        hint: "The real date behind the label above. It decides the order of the list and the archive, and it is what the row shows once the label stops being enough to place it. Left empty, it is stamped when you save.",
+      },
       { name: "tag", label: "Tag", type: "text", hint: "Competition, Research, Recognition…" },
       { name: "body", label: "Description", type: "textarea", rows: 5 },
       { name: "published", label: "Show this on the site", type: "checkbox" },
+    ],
+  },
+
+  {
+    key: "achievementSettings",
+    label: "Achievement display",
+    icon: "🔢",
+    kind: "object",
+    blurb:
+      "How much of the results list reaches the home page. This only changes what is on display — every achievement stays on record with its date, and the ones that do not fit fold into the archive underneath.",
+    fields: [
+      {
+        name: "visibleCount",
+        label: "Recent achievements on the page",
+        type: "number",
+        min: 0,
+        max: 50,
+        hint: "How many of the most recent ones show. Everything older moves into the archive below them.",
+      },
+      {
+        name: "showArchive",
+        label: "Offer the older ones in an archive below",
+        type: "checkbox",
+      },
+      {
+        name: "archiveLabel",
+        label: "Archive heading",
+        type: "text",
+        hint: "The wording on the button that opens it.",
+      },
     ],
   },
 

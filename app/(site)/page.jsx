@@ -12,11 +12,17 @@ export default async function Home() {
 
   return (
     <main>
-      <Announcements announcements={content.announcements} />
+      <Announcements
+        announcements={content.announcements}
+        announcementSettings={content.announcementSettings}
+      />
       <VideoShowcase showcaseClips={content.showcaseClips} />
       <About about={content.about} />
       <Members memberCohorts={content.memberCohorts} />
-      <Achievements achievements={content.achievements} />
+      <Achievements
+        achievements={content.achievements}
+        achievementSettings={content.achievementSettings}
+      />
       <Events events={content.events} />
       <Projects projects={content.projects} />
     </main>

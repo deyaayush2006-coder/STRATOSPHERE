@@ -58,6 +58,43 @@ const fail = (error, what) => {
 
 const withoutId = ({ id, ...rest }) => rest;
 
+/* A write naming a column the database does not have.
+ *
+ * This is the gap between deploying a feature and applying its migration, and
+ * it is a gap that really happens: the code ships, the SQL is run later, and
+ * in between every save of that section fails outright. A whole section of the
+ * dashboard going read-only is a far worse outcome than one new field not
+ * being stored yet, so the column is dropped and the write goes through.
+ *
+ * It is loud in the server log on purpose. Silently discarding a field the
+ * committee has just filled in is only acceptable while somebody is on their
+ * way to run the migration, so the log says which one.
+ */
+const MISSING_COLUMN = /Could not find the '([^']+)' column/i;
+
+async function writeRows(run, rows, table) {
+  let payload = rows;
+
+  /* Bounded, and the bound is not arbitrary: each pass can only remove a
+     column, so it cannot loop longer than the row is wide. A handful covers
+     any realistic drift without spinning on an error it cannot fix. */
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const { data, error } = await run(payload);
+    if (!error) return { data };
+
+    const missing = error.message?.match(MISSING_COLUMN)?.[1];
+    if (!missing || !payload.some((row) => missing in row)) return { error };
+
+    console.warn(
+      `[content] ${table}.${missing} is not in the database, so it was not saved. ` +
+        "Apply the migrations in supabase/migrations to keep it."
+    );
+    payload = payload.map(({ [missing]: _dropped, ...rest }) => rest);
+  }
+
+  return await run(payload);
+}
+
 /* Replaces a whole collection in one call.
  *
  * The dashboard edits a section as a single draft and saves it in one go — a
@@ -88,14 +125,23 @@ async function replaceCollection(supabase, key, items) {
 
   // 2 — update the rows that were already there.
   if (existing.length) {
-    fail((await supabase.from(cfg.table).upsert(existing)).error, `Could not save ${key}`);
+    const { error } = await writeRows(
+      (batch) => supabase.from(cfg.table).upsert(batch),
+      existing,
+      cfg.table
+    );
+    fail(error, `Could not save ${key}`);
   }
 
   /* 3 — insert the new ones. Separate from the upsert because PostgREST needs
      every object in a batch to carry the same keys, and a new row has no id. */
   let inserted = [];
   if (fresh.length) {
-    const { data, error } = await supabase.from(cfg.table).insert(fresh).select();
+    const { data, error } = await writeRows(
+      (batch) => supabase.from(cfg.table).insert(batch).select(),
+      fresh,
+      cfg.table
+    );
     fail(error, `Could not add new ${key}`);
     inserted = data ?? [];
   }
@@ -136,10 +182,20 @@ async function replaceChildren(supabase, cfg, list, rows, inserted) {
   const create = childRows.filter((r) => !r.id).map(withoutId);
 
   if (update.length) {
-    fail((await supabase.from(child.table).upsert(update)).error, `Could not save ${child.key}`);
+    const { error } = await writeRows(
+      (batch) => supabase.from(child.table).upsert(batch),
+      update,
+      child.table
+    );
+    fail(error, `Could not save ${child.key}`);
   }
   if (create.length) {
-    fail((await supabase.from(child.table).insert(create)).error, `Could not add ${child.key}`);
+    const { error } = await writeRows(
+      (batch) => supabase.from(child.table).insert(batch),
+      create,
+      child.table
+    );
+    fail(error, `Could not add ${child.key}`);
   }
 }
 

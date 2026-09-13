@@ -1,7 +1,37 @@
 import ContactForm from "./ContactForm";
 
+/* Where the committee's dashboard answers.
+ *
+ * Read from the same environment variable the middleware routes on, so the
+ * link follows the panel whenever it is renamed instead of pointing at a path
+ * that has stopped existing. Inlined at build time, which is why it can sit at
+ * module scope in a server component.
+ *
+ * Worth knowing: the panel is served from an unguessable path precisely so it
+ * stays out of crawlers and scanner wordlists, and linking to it here gives
+ * that up — the URL is now on every page of the site. The login and the row
+ * level security policies are the actual security boundary, so the panel is no
+ * weaker for it; what is lost is the quiet. Drop this link, not the rename, if
+ * the club would rather keep it.
+ */
+const ADMIN_PATH = (process.env.NEXT_PUBLIC_ADMIN_PATH || "control-tower").replace(/^\/+|\/+$/g, "");
+const ADMIN_HREF = `/${ADMIN_PATH}`;
+
+/* Matched on the heading rather than on position, so reordering the columns in
+   the dashboard does not move the link out of Useful Links. */
+const isUsefulLinks = (col) => /useful/i.test(col?.title || "");
+
 export default function Footer({ contact = {}, footerCols = [] }) {
   const { address = [], hours = [], email = "", phone = "" } = contact;
+
+  /* The admin link hangs off a column, so there has to be one. A committee
+     that clears every footer column in the dashboard would otherwise take the
+     way back into the dashboard with it. */
+  const columns = footerCols.length ? footerCols : [{ title: "Useful Links", links: [] }];
+
+  /* Which column it joins. Falls back to the first, so the link survives the
+     heading being renamed as well. */
+  const adminCol = Math.max(columns.findIndex(isUsefulLinks), 0);
 
   return (
     <footer
@@ -38,7 +68,7 @@ export default function Footer({ contact = {}, footerCols = [] }) {
 
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-x-10 gap-y-10 py-10 border-t border-ink/[0.08]">
           <nav className="flex flex-wrap gap-x-2 gap-y-8">
-          {footerCols.map((c, i) => (
+          {columns.map((c, i) => (
             // the flex gap is shared, so nudge only the third column
             <div key={c.title} className={i === 2 ? "lg:ml-8" : undefined}>
               <h4 className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/35 mb-4">
@@ -54,6 +84,22 @@ export default function Footer({ contact = {}, footerCols = [] }) {
                     {l.label}
                   </a>
                 ))}
+
+                {/* Rendered here rather than added to the editable link list,
+                    so it cannot be lost by a footer edit and always points at
+                    wherever the panel is currently served from. */}
+                {i === adminCol && (
+                  <a
+                    href={ADMIN_HREF}
+                    rel="nofollow"
+                    className="text-sm text-ink/60 hover:text-aurora2 transition-colors w-fit inline-flex items-center gap-1.5"
+                  >
+                    Admin Portal
+                    <span aria-hidden="true" className="font-mono text-[10px] text-ink/35">
+                      ↗
+                    </span>
+                  </a>
+                )}
               </div>
             </div>
           ))}
