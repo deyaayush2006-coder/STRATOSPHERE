@@ -695,11 +695,16 @@ export default function Members({ memberCohorts = [] }) {
         {/* The aircraft. Placed by transform alone, from the line itself, so it
             rides the curve rather than approximating it. Opacity is left to
             the class, which is why the transform above can be set on its own
-            every frame without the two fighting. */}
+            every frame without the two fighting.
+
+            It is decoration over the years, never in front of them: the wrapper
+            takes no pointer events, so a year stays clickable at the moment the
+            aircraft is passing over it. The halo below is wider than the plane
+            itself and would otherwise swallow a click from some way off. */}
         <div
           ref={craftRef}
           aria-hidden="true"
-          className={`absolute left-0 top-0 z-10 w-fit text-aurora2 will-change-transform
+          className={`absolute left-0 top-0 z-10 w-fit text-aurora2 pointer-events-none will-change-transform
             transition-opacity duration-300 ${arrived ? "opacity-0" : "opacity-100"}`}
         >
           <span className="absolute -inset-7 rounded-full bg-aurora2/20 blur-2xl" />
