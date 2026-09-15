@@ -2,6 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getContent } from "@/lib/content";
 import { mediaUrl } from "@/lib/media-url";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import CadGallery from "@/components/CadGallery";
+import ModelViewer from "@/components/ModelViewer";
+import Telemetry from "@/components/Telemetry";
+import Thesis from "@/components/Thesis";
 import PartCover from "./PartCover";
 
 /* One route for both /projects/<slug> and /projects/<slug>/<part>. An optional
@@ -43,16 +48,23 @@ export default async function ProjectDetail({ params }) {
   const partSlug = part?.[0];
   const active = parts.find((p) => p.slug === partSlug) ?? parts[0];
 
-  return (
-    <main className="px-6 pt-32 pb-20 max-w-6xl mx-auto">
-      <Link
-        href="/#projects"
-        className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/40 hover:text-aurora2 transition-colors"
-      >
-        ← All projects
-      </Link>
+  /* The trail. The part is only on it when the URL actually names one —
+     landing on /projects/cansat opens the first part, but the reader did not
+     navigate to it and a crumb claiming they did would be a dead level. */
+  const trail = [
+    { label: "Home", href: "/" },
+    { label: "Projects", href: "/#projects" },
+    { label: project.title, href: partSlug ? `/projects/${project.slug}` : undefined },
+    ...(partSlug && active ? [{ label: active.name }] : []),
+  ];
 
-      <header className="mt-6 mb-12">
+  return (
+    /* pt-28 rather than pt-32: the hero band that used to sit above this is
+       gone, so the page starts under the nav card and nothing else. */
+    <main className="px-6 pt-28 pb-20 max-w-6xl mx-auto">
+      <Breadcrumbs trail={trail} className="mb-6" />
+
+      <header className="mb-12">
         <div className="flex flex-wrap items-center gap-3">
           <span className="font-mono text-sm text-ink/35">{project.n}</span>
           <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-aurora2">
@@ -74,6 +86,7 @@ export default async function ProjectDetail({ params }) {
             <PartCover
               src={mediaUrl(project.image)}
               alt={project.title}
+              priority
               className="w-full aspect-video object-cover bg-panel"
             />
           )}
@@ -114,39 +127,87 @@ export default async function ProjectDetail({ params }) {
           </nav>
 
           {/* the open part */}
-          <article className="glass rounded-3xl overflow-hidden">
-            <PartCover
-              src={mediaUrl(active.image)}
-              alt={`${active.name} — ${project.title}`}
-              className="w-full aspect-video object-cover bg-panel"
-            />
+          <div className="min-w-0">
+            <article className="glass rounded-3xl overflow-hidden">
+              <PartCover
+                src={mediaUrl(active.image)}
+                alt={`${active.name} — ${project.title}`}
+                priority
+                className="w-full aspect-video object-cover bg-panel"
+              />
 
-            <div className="p-8 md:p-10">
-              <span className="mono-label">{project.title}</span>
-              <h2 className="text-2xl md:text-3xl text-ink font-semibold mt-3 tracking-[-0.02em]">
-                {active.name}
-              </h2>
+              <div className="p-8 md:p-10">
+                <span className="mono-label">{project.title}</span>
+                <h2 className="text-2xl md:text-3xl text-ink font-semibold mt-3 tracking-[-0.02em]">
+                  {active.name}
+                </h2>
 
-              {(active.detail ?? []).map((para, i) => (
-                <p key={i} className="text-ink/65 mt-4 leading-relaxed max-w-2xl">
-                  {para}
-                </p>
-              ))}
-
-              <dl className="grid sm:grid-cols-3 gap-6 mt-9 pt-8 border-t border-ink/10">
-                {(active.specs ?? []).map(([label, value]) => (
-                  <div key={label} className="flex flex-col gap-1.5">
-                    <dt className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/35">
-                      {label}
-                    </dt>
-                    <dd className="font-mono text-base text-ink m-0">{value}</dd>
-                  </div>
+                {(active.detail ?? []).map((para, i) => (
+                  <p key={i} className="text-ink/65 mt-4 leading-relaxed max-w-2xl">
+                    {para}
+                  </p>
                 ))}
-              </dl>
-            </div>
-          </article>
+
+                <dl className="grid sm:grid-cols-3 gap-6 mt-9 pt-8 border-t border-ink/10">
+                  {(active.specs ?? []).map(([label, value]) => (
+                    <div key={label} className="flex flex-col gap-1.5">
+                      <dt className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/35">
+                        {label}
+                      </dt>
+                      <dd className="font-mono text-base text-ink m-0">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </article>
+
+            {/* Anything this particular part carries of its own. Both hide
+                themselves when there is nothing set, so a part with only prose
+                on it looks exactly as it did before any of this existed. */}
+            {active.model && (
+              <div className="mt-8">
+                <span className="mono-label">{active.name} — 3D model</span>
+                <ModelViewer
+                  src={active.model}
+                  caption={active.modelCaption}
+                  className="mt-4"
+                />
+              </div>
+            )}
+
+            <CadGallery shots={active.cad ?? []} title={`${active.name} — CAD & drawings`} />
+          </div>
         </div>
       )}
+
+      {/* The project as a whole, under whichever part is open. These are the
+          long-form additions: the model you can turn over, the drawings behind
+          it, the write-up, and the flight data. Each one is its own component
+          and each returns null when the dashboard has nothing in it, so a
+          project that uses none of them renders the page above and stops. */}
+      {project.model && (
+        <section className="mt-12">
+          <span className="mono-label">3D model</span>
+          <ModelViewer src={project.model} caption={project.modelCaption} className="mt-5" />
+        </section>
+      )}
+
+      <CadGallery shots={project.cad ?? []} />
+
+      <Thesis sections={project.thesis ?? []} />
+
+      {/* Flattened rather than one telemetry object, because the dashboard
+          edits the same shape the page renders and its forms are a flat list
+          of fields per item. The assembling happens here, once. */}
+      <Telemetry
+        telemetry={{
+          csv: project.telemetryCsv,
+          x: project.telemetryX,
+          charts: project.telemetryCharts,
+        }}
+        title={project.telemetryTitle}
+        blurb={project.telemetryBlurb}
+      />
     </main>
   );
 }

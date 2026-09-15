@@ -19,7 +19,7 @@ lib/
   mappers.js         database rows <-> the shapes the components render
   supabase/          one client per context: public, signed-in, service role
 supabase/
-  migrations/        the schema. Run 0001_init.sql once, whole
+  migrations/        the schema. Run 0001_init.sql, then each numbered file
   seed.mjs           fills a fresh project and makes the first admin
 data.js              the content the site ships with
 ```
@@ -34,6 +34,12 @@ this site needs. Then open **SQL Editor**, paste the whole of
 
 That creates every table, the row level security policies, and the `media`
 storage bucket. It is safe to run again if something goes wrong halfway.
+
+Then run the numbered files after it, in order, the same way — `0002`, `0003`,
+`0004`. Each one adds columns to what `0001` created and each is safe to re-run.
+**`0004` is not optional on an existing project**: it adds the columns behind
+the 3D models, the CAD galleries, the write-ups and the flight data, and until
+it has been run, saving a project in the dashboard fails on the missing columns.
 
 ### 2. Fill in the environment
 
@@ -172,3 +178,36 @@ which.
 
 Deleting an image does not clear it from the sections that use it — those will
 show a gap until the reference is fixed. Check where it is used first.
+
+Everything on the site is rendered through `next/image`, so a photo is served
+resized and as AVIF or WebP at whatever width the layout actually paints it —
+committee portraits are fetched at 48px rather than at full resolution. Remote
+files are only optimised if their host is allowed in `next.config.mjs`, which
+reads the Supabase hostname out of the environment; anything under `public/`
+needs no entry.
+
+## What a project page can carry
+
+Beyond the write-up and its parts, each project in the dashboard takes four
+extras. All four are optional and each hides its own section when empty, so a
+project that uses none of them renders exactly as it did before they existed.
+
+- **A 3D model** — a `.glb` path that visitors drag to rotate. Put the file in
+  `public/models/` (see the note in that folder) and write the path. Not an
+  upload: the media library is built around images. Parts can carry one each as
+  well as the project itself.
+- **CAD drawings** — ordinary images through the picker, shown as a grid that
+  opens full size.
+- **A technical write-up** — headed sections of prose, with an optional row of
+  key figures under each. A blank line in the body starts a new paragraph, and
+  that is the only formatting there is.
+- **Flight data** — a pasted CSV with a header row. The page works out the
+  charts, the peak/min/final figures and a data table from it. Long logs are
+  thinned for drawing, but the quoted figures are always taken from every row,
+  so an apogee cannot be lost to the decimation.
+
+The parsing all happens on the server, in `lib/telemetry.js` — a visitor gets a
+few hundred points and a set of finished numbers, not the raw log and a parser
+to run over it. `three` and `recharts` are loaded only by the pages that
+actually draw something, so a project with none of these extras pays nothing
+for them.

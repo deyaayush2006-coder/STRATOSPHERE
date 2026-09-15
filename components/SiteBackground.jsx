@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { mediaUrl } from "@/lib/media-url";
 
 // Fixed backdrop, stacked bottom to top. Mount once, at the root.
@@ -62,9 +64,19 @@ function useHaltWhenStill(ref, enabled) {
 
 export default function SiteBackground({ backdrop, video }) {
   const still = mediaUrl(backdrop);
-  const reel = mediaUrl(video);
   const depthRef = useScrollDepth();
   const reelRef = useRef(null);
+
+  /* The reel belongs to the front page only.
+   *
+   * It is staged against the hero band, which exists to give it a clear run
+   * before the first section. A project page has no hero — it opens straight
+   * into a breadcrumb and a title — so the reel was playing behind body copy
+   * with nowhere to land, and the page below had to start a screen further
+   * down to clear it. The still carries those pages instead, which is what
+   * every other layer here was already doing. */
+  const onHome = usePathname() === "/";
+  const reel = onHome ? mediaUrl(video) : "";
 
   useHaltWhenStill(reelRef, Boolean(reel));
 
@@ -89,35 +101,27 @@ export default function SiteBackground({ backdrop, video }) {
           playsInline
           preload="auto"
           style={{ opacity: "var(--backdrop-opacity)" }}
-          /* MOBILE (below md): the reel is stretched to finish 3px above the
-             Announcements heading. It starts at top-24, the offset the hero
-             used to carry so the burnt-in title clears the nav card, and its
-             height is whatever reaches that landing:
-
-               62vh    the hero, which is min-h-[62vh] and holds no content
-               + 66px  the nav, the first thing in the flow
-               + 96px  the section's own py-24 above its heading
-               -  3px  the requested gap
-               = 62vh + 159px   <- where the bottom edge goes
-               - 96px  the top-24 the reel starts at
-               = 62vh + 63px    <- so this is the height
-
-             Measured exact on 320, 390 and 430px phones. If the hero height,
-             the nav height or that py-24 change, this has to move with them.
-
-             The trade: object-cover fills a portrait box by scaling the footage
-             until it covers, which crops the sides — a phone shows roughly a
-             third of the frame width. Filling the space and keeping the whole
-             frame are the same knob turned opposite ways, and filling it is
-             what was asked for.
-
-             DESKTOP (md up): unchanged. The reel hangs from the top at the
-             footage's own ratio (848/480 = 53/30), full width, uncropped. */
-          className="absolute inset-x-0 w-full object-cover object-center
-            top-24 h-[calc(62vh+63px)] aspect-auto
-            [-webkit-mask-image:linear-gradient(to_bottom,#000_92%,transparent)]
-            [mask-image:linear-gradient(to_bottom,#000_92%,transparent)]
-            md:top-0 md:h-auto md:aspect-[53/30]
+          /* The whole frame, at every width.
+           *
+           * The reel hangs from the top of the page, spans the full width, and
+           * is given a box of the footage's own ratio (848/480 = 53/30), so
+           * object-cover has nothing left to crop and the frame arrives intact.
+           *
+           * A phone used to get its own treatment: the same footage stretched
+           * down a tall portrait box so it filled the band above the first
+           * section exactly. Covering a portrait box means scaling a landscape
+           * frame until it covers, and that threw away roughly two thirds of
+           * the width — on a phone the reel was a moving close-up of whatever
+           * happened to be dead centre. Filling the band and keeping the frame
+           * are the same knob turned opposite ways; the frame wins, and the
+           * hero below is shorter on mobile to match what the reel now needs.
+           *
+           * The bottom fade starts earlier on a phone, where the reel ends
+           * higher up the screen and a hard edge would be obvious. */
+          className="absolute inset-x-0 top-24 w-full h-auto aspect-[53/30] object-cover object-center
+            [-webkit-mask-image:linear-gradient(to_bottom,#000_72%,transparent)]
+            [mask-image:linear-gradient(to_bottom,#000_72%,transparent)]
+            md:top-0
             md:[-webkit-mask-image:linear-gradient(to_bottom,#000_85%,transparent)]
             md:[mask-image:linear-gradient(to_bottom,#000_85%,transparent)]
             motion-reduce:hidden"
@@ -128,13 +132,19 @@ export default function SiteBackground({ backdrop, video }) {
           preference is asking about, so that reader gets the still instead.
           It is also the plain backdrop when no video is set at all. */}
       {still && (
-        <img
+        /* fill rather than a width/height pair: the box is the viewport, and
+           the backdrop is the largest image on the page, so it is also the one
+           that most wants resizing down to the device. priority because it is
+           painted before anything scrolls — lazy-loading the thing behind the
+           fold-one content just delays it. */
+        <Image
           src={still}
           alt=""
+          fill
+          priority
+          sizes="100vw"
           style={{ opacity: "var(--backdrop-opacity)" }}
-          className={`absolute inset-0 h-full w-full object-cover object-top ${
-            reel ? "motion-safe:hidden" : ""
-          }`}
+          className={`object-cover object-top ${reel ? "motion-safe:hidden" : ""}`}
         />
       )}
 

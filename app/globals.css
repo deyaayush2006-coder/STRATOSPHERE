@@ -37,6 +37,29 @@
   --border: rgba(255, 255, 255, 0.10);
   --ring: rgba(255, 255, 255, 0.35);
   --radius: 0.625rem;
+
+  /* Flight-data series, assigned in this order and never cycled.
+   *
+   * Kept apart from the aurora accents on purpose. Those are brand — they are
+   * picked to look right over the backdrop, and two of them are near enough
+   * the same hue that a chart drawn in them would read as one line. These are
+   * picked to be told apart: every adjacent pair clears the colour-vision
+   * separation floor on both surfaces, and each step is contrast-checked
+   * against the mode it is used in. Light is the second set, restepped for a
+   * pale ground rather than flipped.
+   *
+   * SVG reads these through var(), so a chart changes with the theme toggle
+   * without re-rendering. */
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+  --viz-3: #199e70;
+  --viz-4: #c98500;
+  --viz-5: #d55181;
+  --viz-6: #008300;
+
+  /* the grid and axes, which have to stay behind the data */
+  --viz-grid: rgba(255, 255, 255, 0.07);
+  --viz-axis: rgba(255, 255, 255, 0.35);
 }
 
 :root[data-theme="light"] {
@@ -66,6 +89,19 @@
 
   --border: rgba(11, 18, 32, 0.10);
   --ring: rgba(11, 18, 32, 0.35);
+
+  /* The same six hues, stepped for the pale surface. Four of them sit under
+     3:1 against this ground, which is why every chart carries its series name
+     and its figures as text rather than leaving the line to identify itself. */
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-4: #eda100;
+  --viz-5: #e87ba4;
+  --viz-6: #008300;
+
+  --viz-grid: rgba(11, 18, 32, 0.08);
+  --viz-axis: rgba(11, 18, 32, 0.45);
 }
 
 @theme {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Reveal from "./Reveal";
 import CardRail from "./CardRail";
 import SectionHeader from "./SectionHeader";
@@ -18,10 +19,16 @@ function EventCard({ event }) {
       />
 
       {event.image && !failed && (
-        <img
+        /* Event posters are the heaviest images the home page carries — they
+           come off a phone or a poster tool at full resolution and are painted
+           into a card about 380px wide. */
+        <Image
           src={mediaUrl(event.image)}
           alt=""
+          width={800}
+          height={450}
           loading="lazy"
+          sizes="(max-width: 640px) 88vw, (max-width: 1024px) 45vw, 380px"
           onError={() => setFailed(true)}
           className="w-full aspect-video object-cover bg-panel"
         />

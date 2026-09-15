@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { resetSection, saveSection, changeOwnPassword } from "@/app/control-tower/actions";
+import { resetSection, saveSection, changeOwnPassword } from "@/app/admin/actions";
 import { SECTIONS } from "./schema";
 import { Badge, Button, FIELD, Label, Notice, Spinner } from "./ui";
 import SectionEditor from "./SectionEditor";

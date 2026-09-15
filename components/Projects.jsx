@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import Reveal from "./Reveal";
 import SectionHeader from "./SectionHeader";
@@ -12,10 +13,17 @@ function Cover({ project }) {
   if (!project.image || failed) return null;
 
   return (
-    <img
+    /* The intrinsic size is the 16:9 the class crops to, which is all
+       next/image needs to hold the box before the file lands. `sizes` is the
+       widest a card is ever painted: these sit in a horizontal rail, roughly
+       full width on a phone and a third of a 6xl column above that. */
+    <Image
       src={mediaUrl(project.image)}
       alt=""
+      width={800}
+      height={450}
       loading="lazy"
+      sizes="(max-width: 640px) 88vw, (max-width: 1024px) 45vw, 380px"
       onError={() => setFailed(true)}
       className="w-full aspect-video object-cover bg-panel"
     />

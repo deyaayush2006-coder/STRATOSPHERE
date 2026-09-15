@@ -36,7 +36,7 @@ export default function Footer({ contact = {}, footerCols = [] }) {
   return (
     <footer
       id="contact"
-      className="mt-16 mx-4 mb-4 rounded-3xl glass scroll-mt-28 px-6 md:px-10 py-14"
+      className="mt-16 mx-auto mb-4 rounded-3xl glass scroll-mt-28 px-6 md:px-10 py-14"
     >
       <div className="max-w-6xl mx-auto">
         <div className="mb-14 grid md:grid-cols-2 gap-10 md:gap-14 items-start">

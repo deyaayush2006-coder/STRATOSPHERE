@@ -1,3 +1,4 @@
+import Hero from "@/components/Hero";
 import Announcements from "@/components/Announcements";
 import VideoShowcase from "@/components/VideoShowcase";
 import About from "@/components/About";
@@ -12,6 +13,7 @@ export default async function Home() {
 
   return (
     <main>
+      <Hero />
       <Announcements
         announcements={content.announcements}
         announcementSettings={content.announcementSettings}

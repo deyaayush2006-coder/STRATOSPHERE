@@ -162,6 +162,15 @@ export const SECTIONS = [
       body: "",
       image: "",
       published: true,
+      model: "",
+      modelCaption: "",
+      cad: [],
+      thesis: [],
+      telemetryTitle: "",
+      telemetryBlurb: "",
+      telemetryX: "",
+      telemetryCsv: "",
+      telemetryCharts: [],
       parts: [],
     }),
     fields: [
@@ -186,6 +195,132 @@ export const SECTIONS = [
       },
       { name: "image", label: "Cover image", type: "image" },
       { name: "published", label: "Show this on the site", type: "checkbox" },
+
+      {
+        name: "model",
+        label: "3D model",
+        type: "text",
+        hint:
+          "A .glb or .gltf file, which visitors can drag to rotate on the project page. " +
+          "Put the file in public/models/ and write the path here (e.g. /models/f22-raptor.glb), " +
+          "or paste a full URL. Export it from your CAD tool as glTF and keep it under about " +
+          "10 MB — it downloads before it can be shown. Leave empty and no model is shown.",
+      },
+      {
+        name: "modelCaption",
+        label: "Model caption",
+        type: "text",
+        hint: "Shown under the model — the scale, the revision, what it was exported from",
+      },
+      {
+        name: "cad",
+        label: "CAD drawings & renders",
+        type: "list",
+        itemName: "drawing",
+        hint:
+          "Shown as a grid on the project page; clicking one opens it full size. " +
+          "Images only — the model above is the interactive one.",
+        title: (s) => s.caption || s.src,
+        compact: true,
+        blank: () => ({ src: "", caption: "" }),
+        fields: [
+          { name: "src", label: "Image", type: "image", required: true },
+          {
+            name: "caption",
+            label: "Caption",
+            type: "text",
+            hint: "What the drawing shows. Also what a screen reader reads out.",
+          },
+        ],
+      },
+      {
+        name: "thesis",
+        label: "Technical write-up",
+        type: "list",
+        itemName: "section",
+        hint:
+          "The long-form report on the project — design rationale, analysis, testing, results. " +
+          "One entry per section; leave the whole thing empty and the page stops at the parts above.",
+        title: (s) => s.heading,
+        subtitle: (s) => (s.body || "").slice(0, 80),
+        blank: () => ({ heading: "", body: "", figures: [] }),
+        fields: [
+          { name: "heading", label: "Section heading", type: "text", required: true },
+          {
+            name: "body",
+            label: "Body",
+            type: "textarea",
+            rows: 10,
+            hint: "Leave a blank line between paragraphs and they come out as paragraphs.",
+          },
+          {
+            name: "figures",
+            label: "Key figures",
+            type: "pairList",
+            keyLabel: "Label",
+            valueLabel: "Value",
+            hint: "Optional — shown as a row under the section, e.g. Apogee / 412 m",
+          },
+        ],
+      },
+
+      {
+        name: "telemetryTitle",
+        label: "Flight data — heading",
+        type: "text",
+        hint: "e.g. Launch 3 — 14 March 2026. Left empty it reads Telemetry.",
+      },
+      {
+        name: "telemetryBlurb",
+        label: "Flight data — intro",
+        type: "textarea",
+        rows: 3,
+        hint: "A line or two about the flight this data came from",
+      },
+      {
+        name: "telemetryCsv",
+        label: "Flight data — CSV",
+        type: "textarea",
+        rows: 10,
+        hint:
+          "Paste the cleaned log, first row the column names: time,altitude,pressure,temperature. " +
+          "Charts and the peak/min/final figures are worked out from this. " +
+          "Long logs are thinned for drawing — the figures are always taken from every row. " +
+          "Leave empty and the whole flight-data section is hidden.",
+      },
+      {
+        name: "telemetryX",
+        label: "Flight data — x axis column",
+        type: "text",
+        hint:
+          "The column every chart is plotted against. Left empty, a column called time " +
+          "(or t, seconds, elapsed) is used, and failing that the first numeric one.",
+      },
+      {
+        name: "telemetryCharts",
+        label: "Flight data — charts",
+        type: "list",
+        itemName: "chart",
+        hint:
+          "Which columns get a chart, in order. Leave this empty and every numeric column " +
+          "other than the x axis gets one.",
+        title: (c) => c.label || c.field,
+        subtitle: (c) => [c.field, c.unit].filter(Boolean).join(" · "),
+        compact: true,
+        blank: () => ({ field: "", label: "", unit: "" }),
+        fields: [
+          {
+            name: "field",
+            label: "Column name",
+            type: "text",
+            required: true,
+            hint: "Exactly as it is spelled in the CSV header",
+          },
+          { name: "label", label: "Chart title", type: "text", hint: "e.g. Altitude" },
+          { name: "unit", label: "Unit", type: "text", hint: "e.g. m, hPa, °C" },
+        ],
+      },
+
       {
         name: "parts",
         label: "Parts",
@@ -194,7 +329,17 @@ export const SECTIONS = [
         hint: "Leave empty and the project page just shows the overview above",
         title: (part) => part.name,
         subtitle: (part) => part.blurb,
-        blank: () => ({ slug: "", name: "", blurb: "", image: "", detail: [], specs: [] }),
+        blank: () => ({
+          slug: "",
+          name: "",
+          blurb: "",
+          image: "",
+          detail: [],
+          specs: [],
+          model: "",
+          modelCaption: "",
+          cad: [],
+        }),
         fields: [
           { name: "name", label: "Part name", type: "text", required: true },
           { name: "slug", label: "URL slug", type: "text", hint: SLUG_HINT, slugFrom: "name" },
@@ -202,6 +347,29 @@ export const SECTIONS = [
           { name: "image", label: "Image", type: "image" },
           { name: "detail", label: "Paragraphs", type: "stringList", itemName: "paragraph", multiline: true },
           { name: "specs", label: "Specs", type: "pairList", keyLabel: "Label", valueLabel: "Value" },
+          {
+            name: "model",
+            label: "3D model",
+            type: "text",
+            hint:
+              "A .glb or .gltf for this part specifically, shown under it and rotatable. " +
+              "Path under public/models/ or a full URL. The project's own model is set further up.",
+          },
+          { name: "modelCaption", label: "Model caption", type: "text" },
+          {
+            name: "cad",
+            label: "CAD drawings & renders",
+            type: "list",
+            itemName: "drawing",
+            hint: "Shown as a grid under this part",
+            title: (s) => s.caption || s.src,
+            compact: true,
+            blank: () => ({ src: "", caption: "" }),
+            fields: [
+              { name: "src", label: "Image", type: "image", required: true },
+              { name: "caption", label: "Caption", type: "text" },
+            ],
+          },
         ],
       },
     ],
@@ -353,12 +521,68 @@ export const SECTIONS = [
     label: "Contact & hours",
     icon: "✉️",
     kind: "object",
-    blurb: "Shown in the footer, in two places. The email also powers the Email us link.",
+    blurb:
+      "The footer: the paragraph about the club, how to reach it, and the accounts it is on. " +
+      "The email also powers the Email us link on the contact form.",
     fields: [
+      {
+        name: "blurb",
+        label: "Footer paragraph",
+        type: "textarea",
+        rows: 4,
+        hint: "The first column of the footer — two or three lines on who the club is",
+      },
       { name: "email", label: "Email", type: "text" },
-      { name: "phone", label: "Phone", type: "text" },
+      {
+        name: "phone",
+        label: "Phone",
+        type: "text",
+        hint: "Shown in the footer and made dialable. Leave empty to hide the line.",
+      },
       { name: "address", label: "Address", type: "stringList", itemName: "line", hint: "One line per row" },
       { name: "hours", label: "Office hours", type: "pairList", keyLabel: "Day(s)", valueLabel: "Hours" },
+      {
+        name: "socials",
+        label: "Follow us",
+        type: "list",
+        itemName: "account",
+        hint:
+          "The icon row in the footer. Leave it empty and the whole Follow Us column is hidden — " +
+          "better than an empty column, and better than a wrong handle.",
+        title: (s) => s.label || s.platform,
+        subtitle: (s) => s.url,
+        compact: true,
+        blank: () => ({ platform: "instagram", url: "", label: "" }),
+        fields: [
+          {
+            name: "platform",
+            label: "Platform",
+            type: "select",
+            options: [
+              { value: "instagram", label: "Instagram" },
+              { value: "linkedin", label: "LinkedIn" },
+              { value: "facebook", label: "Facebook" },
+              { value: "x", label: "X (Twitter)" },
+              { value: "youtube", label: "YouTube" },
+              { value: "github", label: "GitHub" },
+              { value: "link", label: "Something else — generic link icon" },
+            ],
+          },
+          {
+            name: "url",
+            label: "Profile URL",
+            type: "text",
+            required: true,
+            hint: "The full address, https:// and all. A row with no URL is skipped.",
+          },
+          {
+            name: "label",
+            label: "Name it reads out as",
+            type: "text",
+            hint: "Optional — for screen readers. Left empty it uses the platform name.",
+          },
+        ],
+      },
     ],
   },
 

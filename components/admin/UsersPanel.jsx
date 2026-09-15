@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Badge, Button, ConfirmButton, FIELD, Label, Notice, Spinner } from "./ui";
-import { createUser, deleteUser, listUsers, updateUser } from "@/app/control-tower/actions";
+import { createUser, deleteUser, listUsers, updateUser } from "@/app/admin/actions";
 
 /* Who can sign in, and at what level. Admin-only — the tab is not rendered for
    an editor, and every action below re-checks on the server, because a hidden

@@ -1,4 +1,5 @@
 import Reveal from "./Reveal";
+import CountUp from "./CountUp";
 
 export default function About({ about = {} }) {
   const { body = [], pillars = [], facts = [] } = about;
@@ -39,8 +40,14 @@ export default function About({ about = {} }) {
         <dl className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-6">
           {facts.map((fact) => (
             <div key={fact.label} className="text-center">
-              <dd className="text-4xl md:text-5xl font-semibold text-ink tracking-[-0.02em] m-0">
-                {fact.value}
+              {/* Counts up the first time the row is scrolled to. The server
+                  still renders the finished figure, so the number is right
+                  before any of that runs. */}
+              <dd className="m-0">
+                <CountUp
+                  value={fact.value}
+                  className="block text-4xl md:text-5xl font-semibold text-ink tracking-[-0.02em]"
+                />
               </dd>
               <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink/45 mt-3">
                 {fact.label}

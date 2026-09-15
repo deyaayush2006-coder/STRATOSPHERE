@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SectionHeader from "./SectionHeader";
 import Plane from "./Plane";
 import { mediaUrl } from "@/lib/media-url";
@@ -137,9 +138,15 @@ function Avatar({ member }) {
   }
 
   return (
-    <img
+    /* 48px square, asked for at exactly that size. A committee page can carry
+       sixty of these, and the originals are full-resolution portraits — served
+       raw that is the heaviest thing on the section by an order of magnitude,
+       so the width and height here are what the optimiser resizes to. */
+    <Image
       src={mediaUrl(member.image)}
       alt=""
+      width={48}
+      height={48}
       loading="lazy"
       onError={() => setFailed(true)}
       className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-ink/15 bg-panel"
@@ -377,11 +384,22 @@ export default function Members({ memberCohorts = [] }) {
   const cohorts = memberCohorts;
   const count = cohorts.length;
 
+  /* Which committee "Present" means.
+     The dashboard's Current tick is the answer when a committee has it; the
+     last entry is the fallback, because the list is kept oldest-first and a
+     year nobody has ticked yet is still the one at the bottom of it. */
+  const presentIndex = useMemo(() => {
+    const flagged = cohorts.findIndex((c) => c.current);
+    return flagged >= 0 ? flagged : count - 1;
+  }, [cohorts, count]);
+  const present = cohorts[presentIndex];
+
   const trackRef = useRef(null);
   const pathRef = useRef(null);
   const trailRefs = useRef([]);
   const craftRef = useRef(null);
   const stationRefs = useRef([]);
+  const presentRef = useRef(null);
   const openedFrom = useRef(null);
 
   // Path lengths, kept off state: they change every scroll frame and must not
@@ -574,17 +592,20 @@ export default function Members({ memberCohorts = [] }) {
     setArrived(true);
   }, [flying, d, place]);
 
-  const openYear = useCallback((index) => {
-    openedFrom.current = index;
+  /* `node` is passed by anything that is not a year on the line — Present at
+     the foot of the route opens the same committee from its own button, and
+     focus has to come back to whichever of the two was actually clicked. */
+  const openYear = useCallback((index, node) => {
+    openedFrom.current = node ?? stationRefs.current[index] ?? null;
     setOpen(index);
   }, []);
 
-  /* Put the reader back on the year they opened, rather than at the top of the
-     document, which is where focus goes when the dialog it was in disappears. */
+  /* Put the reader back on the control they opened, rather than at the top of
+     the document, which is where focus goes when the dialog it was in
+     disappears. */
   const closeYear = useCallback(() => {
     setOpen(null);
-    const from = openedFrom.current;
-    if (from != null) stationRefs.current[from]?.focus();
+    openedFrom.current?.focus();
   }, []);
 
   if (count === 0) return null;
@@ -675,21 +696,34 @@ export default function Members({ memberCohorts = [] }) {
         ))}
 
         {/* Where the line ends. The aircraft flies into this and goes out as it
-            lands, so the last thing the route does is hand the word over. */}
+            lands, so the last thing the route does is hand the word over.
+
+            It is a station like any other year, not a label: Present is the
+            committee people actually come here to look up, and it was the one
+            word on the route that could not be opened. */}
         <div
           style={{ left: "50%", top: `${END_Y * 100}%` }}
-          className="absolute -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none"
+          className="absolute -translate-x-1/2 -translate-y-1/2 text-center"
         >
-          <span
-            className={`block font-display font-bold tracking-[-0.04em] leading-none
-              text-[clamp(2rem,8vw,3.5rem)] transition duration-300 ${
-                arrived
-                  ? "text-aurora2 drop-shadow-[0_0_30px_rgba(34,211,238,0.65)] scale-110"
-                  : "text-ink/20 scale-100"
-              }`}
+          <button
+            ref={presentRef}
+            type="button"
+            onClick={() => openYear(presentIndex, presentRef.current)}
+            aria-haspopup="dialog"
+            title={present ? `See the ${present.year} committee` : undefined}
+            className="group block outline-none"
           >
-            Present
-          </span>
+            <span
+              className={`block font-display font-bold tracking-[-0.04em] leading-none
+                text-[clamp(2rem,8vw,3.5rem)] transition duration-300 ${
+                  arrived
+                    ? "text-aurora2 drop-shadow-[0_0_30px_rgba(34,211,238,0.65)] scale-110"
+                    : "text-ink/20 scale-100 group-hover:text-ink/50"
+                }`}
+            >
+              Present
+            </span>
+          </button>
         </div>
 
         {/* The aircraft. Placed by transform alone, from the line itself, so it
@@ -719,6 +753,21 @@ export default function Members({ memberCohorts = [] }) {
         </div>
       </div>
 
+      {/* The committee running the club now, on the page.
+       *
+       * The route deliberately keeps every name behind a click, and for the
+       * archive that is right — nobody arrives wanting the 2023 committee by
+       * default. The present one is the exception: it is who the club *is*,
+       * and it was the one list a visitor had to know to go looking for. So it
+       * sits open under the line the aircraft has just landed on, and the
+       * dialog stays the way into every other year. */}
+      {present && (
+        <div className="max-w-6xl mx-auto mt-4 md:mt-8">
+          <CohortHeading cohort={present} className="mb-6 justify-center text-center" />
+          <CohortGrid cohort={present} stagger={false} />
+        </div>
+      )}
+
       {open != null && cohorts[open] && (
         <CommitteeDialog cohort={cohorts[open]} onClose={closeYear} />
       )}
@@ -729,12 +778,17 @@ export default function Members({ memberCohorts = [] }) {
           that cannot happen here. */}
       <noscript>
         <div className="max-w-6xl mx-auto mt-16 space-y-14">
-          {cohorts.map((c) => (
-            <div key={c.year}>
-              <CohortHeading cohort={c} className="mb-5" />
-              <CohortGrid cohort={c} stagger={false} />
-            </div>
-          ))}
+          {/* The present committee is skipped: it is on the page above for
+              everyone, scripts or no scripts, and listing it again here would
+              show it twice to exactly the readers this block is for. */}
+          {cohorts.map((c, i) =>
+            i === presentIndex ? null : (
+              <div key={c.year}>
+                <CohortHeading cohort={c} className="mb-5" />
+                <CohortGrid cohort={c} stagger={false} />
+              </div>
+            )
+          )}
         </div>
       </noscript>
     </section>

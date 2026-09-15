@@ -59,6 +59,12 @@ export const HERO_PHOTOS = [
 /* Taken from the club's existing site. */
 export const CONTACT = {
   email: "juaerospace.club@jadavpuruniversity.in",
+  phone: "",
+  /* The opening column of the footer — who the club is, in a paragraph. Kept
+     separate from ABOUT.lead, which is a headline on the page rather than a
+     description of the organisation. */
+  blurb:
+    "Stratosphere is the Aerospace Club of Jadavpur University — a student team that designs, builds and flies rockets, drones and satellites, and runs workshops and competitions across campus.",
   address: [
     "Aerospace Club, Mechanical Department",
     "Jadavpur University",
@@ -69,6 +75,10 @@ export const CONTACT = {
     ["Saturday", "10:00 AM - 2:00 PM"],
     ["Sunday", "Closed"],
   ],
+  /* The Follow Us column, which stays off the footer until there is something
+     in here. Empty rather than guessed: a wrong handle in a footer is worse
+     than no handle at all. Add them under Contact & hours in the dashboard. */
+  socials: [],
 };
 
 /* Showcase clips, first entry is the featured one. Paths point at public/.

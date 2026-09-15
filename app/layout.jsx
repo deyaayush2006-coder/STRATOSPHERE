@@ -77,18 +77,23 @@ export const viewport = {
   themeColor: "#06060c",
 };
 
-/* Runs before first paint, otherwise light-theme visitors get a dark flash
-   while React hydrates. Kept as a raw string on purpose: it has to be inline
-   and synchronous, which no component-level effect can be. */
+/* Runs before first paint, otherwise a visitor who has chosen light gets a
+   dark flash while React hydrates. Kept as a raw string on purpose: it has to
+   be inline and synchronous, which no component-level effect can be.
+ *
+ * Dark is the default, and it is what an unvisited browser gets. The OS
+ * preference is deliberately not read: this is a dark design — the backdrop
+ * reel, the blueprint ruling and the aurora accents are all lit for it — and a
+ * light-set laptop was landing on the pale theme without anyone having asked
+ * for it. Light is still one click away in the nav, and that choice is what
+ * gets remembered here. */
 const THEME_SCRIPT = `(function () {
+  var theme = "dark";
   try {
     var saved = localStorage.getItem("stratosphere-theme");
-    var prefersLight =
-      window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
-    document.documentElement.dataset.theme = saved || (prefersLight ? "light" : "dark");
-  } catch (e) {
-    document.documentElement.dataset.theme = "dark";
-  }
+    if (saved === "light" || saved === "dark") theme = saved;
+  } catch (e) {}
+  document.documentElement.dataset.theme = theme;
 })();`;
 
 export default function RootLayout({ children }) {

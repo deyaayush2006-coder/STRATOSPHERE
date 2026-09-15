@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import ThemeToggle from "./ThemeToggle";
 import { mediaUrl } from "@/lib/media-url";
 
@@ -20,11 +21,15 @@ export default function NavCard({ navLinks = [], site = {} }) {
         {/* A plain anchor, not next/link: every target is a hash on the home
             page, and the browser handles those without a client-side nav. */}
         <a href="/#overview" className="flex flex-1 items-center gap-2.5 min-w-0">
-          <img
+          {/* Asked for at the 36px it is drawn at, not at the 200px the source
+              happens to be. It is on every page and above the fold on all of
+              them, so it is fetched eagerly rather than lazily. */}
+          <Image
             src={mediaUrl(site.logo) || "/1674144810258.jpg"}
             alt=""
-            width="200"
-            height="200"
+            width={36}
+            height={36}
+            priority
             className="h-9 w-9 shrink-0 rounded-lg object-cover ring-1 ring-ink/20 transition-transform duration-300 ease-out hover:scale-110"
           />
 
