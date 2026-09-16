@@ -14,7 +14,7 @@ import ContactForm from "./ContactForm";
  * weaker for it; what is lost is the quiet. Drop this link, not the rename, if
  * the club would rather keep it.
  */
-const ADMIN_PATH = (process.env.NEXT_PUBLIC_ADMIN_PATH || "control-tower").replace(/^\/+|\/+$/g, "");
+const ADMIN_PATH = (process.env.NEXT_PUBLIC_ADMIN_PATH || "admin").replace(/^\/+|\/+$/g, "");
 const ADMIN_HREF = `/${ADMIN_PATH}`;
 
 /* Matched on the heading rather than on position, so reordering the columns in
@@ -91,10 +91,9 @@ export default function Footer({ contact = {}, footerCols = [] }) {
                 {i === adminCol && (
                   <a
                     href={ADMIN_HREF}
-                    rel="nofollow"
                     className="text-sm text-ink/60 hover:text-aurora2 transition-colors w-fit inline-flex items-center gap-1.5"
                   >
-                    Admin Portal
+                    Admin
                     <span aria-hidden="true" className="font-mono text-[10px] text-ink/35">
                       ↗
                     </span>

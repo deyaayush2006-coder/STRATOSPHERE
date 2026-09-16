@@ -10,9 +10,9 @@ phone. The public site is server-rendered from the same database.
 ```
 app/
   (site)/            the public pages — home, project write-ups
-  control-tower/     the dashboard, and every server action that writes
+  admin/             the dashboard, and every server action that writes
 components/
-  admin/             the editor: schema-driven forms, media library, accounts
+  control-tower/     the editor: schema-driven forms, media library, accounts
 lib/
   content.js         reads the whole site out of Supabase in one pass
   defaults.js        the bundled copy of every section
@@ -73,7 +73,7 @@ npm run dev
 ```
 
 The site is at <http://localhost:3000>, the dashboard at
-<http://localhost:3000/control-tower>. Sign in with the admin address and
+<http://localhost:3000/admin>. Sign in with the admin address and
 password you just set, then change that password from **Your account** and clear
 `ADMIN_PASSWORD` out of `.env.local`.
 
@@ -130,7 +130,7 @@ worlds. The components and the editor both speak the original flat shapes —
 
 ## Adding a field to the dashboard
 
-`components/admin/schema.js` generates every form in the panel — there is no
+`components/control-tower/schema.js` generates every form in the panel — there is no
 hand-written editor per section. A new field on a card is one line there:
 
 ```js

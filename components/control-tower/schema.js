@@ -54,7 +54,7 @@ export const SECTIONS = [
     }),
     fields: [
       { name: "title", label: "Headline", type: "text", required: true },
-      { name: "id", label: "Id", type: "text", hint: SLUG_HINT, slugFrom: "title" },
+      { name: "id", label: "Id", type: "text", hint: SLUG_HINT, slugFrom: "title", unique: true },
       { name: "date", label: "Date", type: "text", hint: "Free text — April 2026, or Dates TBD" },
       {
         name: "postedAt",
@@ -175,7 +175,7 @@ export const SECTIONS = [
     }),
     fields: [
       { name: "title", label: "Project name", type: "text", required: true },
-      { name: "slug", label: "URL slug", type: "text", hint: SLUG_HINT, slugFrom: "title", required: true },
+      { name: "slug", label: "URL slug", type: "text", hint: SLUG_HINT, slugFrom: "title", required: true, unique: true },
       { name: "n", label: "Number", type: "text", hint: "The small 01 / 02 label on the card" },
       { name: "status", label: "Status", type: "text", hint: "Ongoing, Completed, Paused…" },
       { name: "timeline", label: "Timeline", type: "text", hint: "e.g. Jan 2025 - Ongoing" },
@@ -342,7 +342,7 @@ export const SECTIONS = [
         }),
         fields: [
           { name: "name", label: "Part name", type: "text", required: true },
-          { name: "slug", label: "URL slug", type: "text", hint: SLUG_HINT, slugFrom: "name" },
+          { name: "slug", label: "URL slug", type: "text", hint: SLUG_HINT, slugFrom: "name", unique: true },
           { name: "blurb", label: "Short blurb", type: "text", hint: "Shown under the name in the side index" },
           { name: "image", label: "Image", type: "image" },
           { name: "detail", label: "Paragraphs", type: "stringList", itemName: "paragraph", multiline: true },
@@ -388,7 +388,7 @@ export const SECTIONS = [
     flag: (c) => (c.current ? "Current" : null),
     blank: () => ({ year: "", tag: "", current: false, blurb: "", members: [] }),
     fields: [
-      { name: "year", label: "Academic year", type: "text", required: true, hint: "e.g. 2026–27" },
+      { name: "year", label: "Academic year", type: "text", required: true, unique: true, hint: "e.g. 2026–27" },
       { name: "tag", label: "Tag", type: "text", hint: "Founded, Growth, Current…" },
       { name: "blurb", label: "One-line summary", type: "textarea", rows: 2 },
       { name: "current", label: "This is the committee running the club now", type: "checkbox" },

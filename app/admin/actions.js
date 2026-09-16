@@ -56,6 +56,19 @@ const fail = (error, what) => {
   if (error) throw new Error(`${what}: ${error.message}`);
 };
 
+/* The first value that appears twice, or undefined if they are all distinct.
+   Blanks are skipped: an unsaved row has no id yet, and an empty natural key
+   is filled in further down. */
+const firstRepeat = (values) => {
+  const seen = new Set();
+  for (const v of values) {
+    if (!v) continue;
+    if (seen.has(v)) return v;
+    seen.add(v);
+  }
+  return undefined;
+};
+
 const withoutId = ({ id, ...rest }) => rest;
 
 /* A write naming a column the database does not have.
@@ -116,6 +129,26 @@ async function replaceCollection(supabase, key, items) {
   const fresh = rows.filter((r) => !r.id).map(withoutId);
   const keptIds = existing.map((r) => r.id);
 
+  /* Both of these are one click away in the editor, and Postgres reports them
+     as constraint errors no committee member can act on — so they are caught
+     here, by name, before a single row is written. Nothing has been touched at
+     this point, so the section is left exactly as it was. */
+  if (firstRepeat(keptIds)) {
+    throw new Error(
+      `Two ${key} entries are pointing at the same saved row, so nothing was saved. ` +
+        "Delete one of them and make the copy again."
+    );
+  }
+  if (cfg.naturalKey) {
+    const clash = firstRepeat(rows.map((r) => r[cfg.naturalKey]));
+    if (clash) {
+      throw new Error(
+        `Two ${key} entries share the ${cfg.naturalKey} "${clash}", which has to be unique. ` +
+          "Change one of them and save again."
+      );
+    }
+  }
+
   // 1 — drop the rows the editor removed. Children cascade.
   let del = supabase.from(cfg.table).delete();
   del = keptIds.length
@@ -171,6 +204,14 @@ async function replaceChildren(supabase, cfg, list, rows, inserted) {
   );
 
   const keptIds = childRows.filter((r) => r.id).map((r) => r.id);
+
+  // Same one-click mistake as above, a level down — a duplicated part or member.
+  if (firstRepeat(keptIds)) {
+    throw new Error(
+      `Two ${child.key} are pointing at the same saved row, so nothing was saved. ` +
+        "Delete one of them and make the copy again."
+    );
+  }
 
   /* Scoped to these parents only. A child of a parent that was deleted in step
      1 is already gone by cascade, and must not be matched here. */

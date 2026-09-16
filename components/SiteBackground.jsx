@@ -9,11 +9,21 @@ import { mediaUrl } from "@/lib/media-url";
 
 // Fades the depth wash in over the first 80vh. Opacity is written straight
 // to the node so scrolling never re-renders the tree.
-function useScrollDepth() {
+//
+// `pinned` turns the fade off for pages that want the wash at full strength
+// from the first paint. The inline opacity is cleared on the way in, because
+// a client-side navigation reuses the node and would otherwise keep whatever
+// scroll position the previous page left written on it.
+function useScrollDepth(pinned) {
   const ref = useRef(null);
 
   useEffect(() => {
     let frame = 0;
+
+    if (pinned) {
+      if (ref.current) ref.current.style.opacity = "";
+      return undefined;
+    }
 
     const paint = () => {
       frame = 0;
@@ -35,7 +45,7 @@ function useScrollDepth() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, []);
+  }, [pinned]);
 
   return ref;
 }
@@ -63,8 +73,21 @@ function useHaltWhenStill(ref, enabled) {
 }
 
 export default function SiteBackground({ backdrop, video }) {
-  const still = mediaUrl(backdrop);
-  const depthRef = useScrollDepth();
+  const pathname = usePathname();
+
+  /* A project write-up gets the depth wash on its own: no reel, no photo, just
+     the blue-black gradient at full strength from the first paint.
+
+     Both of those layers are staged for the front page, where the hero band
+     gives them a clear run. A write-up opens straight into a breadcrumb and
+     body copy, so the photo was sitting behind paragraphs with nothing to
+     frame and only cost contrast. Skipping it also drops the largest image on
+     the page — it is `priority`, so it was competing with the text it sat
+     behind. */
+  const onProject = pathname.startsWith("/projects/");
+
+  const still = onProject ? "" : mediaUrl(backdrop);
+  const depthRef = useScrollDepth(onProject);
   const reelRef = useRef(null);
 
   /* The reel belongs to the front page only.
@@ -75,7 +98,7 @@ export default function SiteBackground({ backdrop, video }) {
    * with nowhere to land, and the page below had to start a screen further
    * down to clear it. The still carries those pages instead, which is what
    * every other layer here was already doing. */
-  const onHome = usePathname() === "/";
+  const onHome = pathname === "/";
   const reel = onHome ? mediaUrl(video) : "";
 
   useHaltWhenStill(reelRef, Boolean(reel));
@@ -148,8 +171,10 @@ export default function SiteBackground({ backdrop, video }) {
         />
       )}
 
-      {/* 3 — depth wash, transparent at the top so the hero keeps the bloom */}
-      <div ref={depthRef} className="absolute inset-0 opacity-0">
+      {/* 3 — depth wash, transparent at the top so the hero keeps the bloom.
+             On a project page there is no hero to keep it for, so it is opaque
+             from the top and becomes the background in its own right. */}
+      <div ref={depthRef} className={`absolute inset-0 ${onProject ? "" : "opacity-0"}`}>
         <div className="absolute inset-0 bg-[radial-gradient(130%_95%_at_50%_-15%,#0b2b5e_0%,#071733_34%,#040a18_66%,#03060d_100%)] [[data-theme=light]_&]:hidden" />
         <div className="absolute inset-0 hidden opacity-80 bg-[radial-gradient(130%_95%_at_50%_-15%,#b3cbea_0%,#c9daf0_40%,#dfe8f4_100%)] [[data-theme=light]_&]:block" />
       </div>

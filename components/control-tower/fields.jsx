@@ -438,6 +438,38 @@ export function ItemCard({ spec, item, index, count, onChange, onMove, onRemove,
   );
 }
 
+/* A copy is a new row, not a second reference to an existing one.
+ *
+ * Every item that came from the database carries `_id`, its row uuid, and a
+ * plain clone copies that along with everything else. Both cards then point at
+ * the same row, and the save sends it twice in one batch — which Postgres
+ * refuses outright ("ON CONFLICT DO UPDATE command cannot affect row a second
+ * time"), so the whole section fails to save. Nested items carry their own
+ * `_id` too, hence the recursion: duplicating a project has to free its parts,
+ * and duplicating a committee year has to free its members. */
+function withoutIds(value) {
+  if (Array.isArray(value)) return value.map(withoutIds);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => key !== "_id")
+        .map(([key, v]) => [key, withoutIds(v)])
+    );
+  }
+  return value;
+}
+
+/* Slugs and years are unique in the database, so a copy cannot keep the
+   original's. Suffixed rather than blanked: it stays recognisable next to the
+   row it came from, and reads as a placeholder to correct before saving. */
+function freeKey(base, taken) {
+  if (!base) return base; // blank is filled in on the way to the database
+  for (let n = 1; ; n += 1) {
+    const candidate = n === 1 ? `${base}-copy` : `${base}-copy-${n}`;
+    if (!taken.has(candidate)) return candidate;
+  }
+}
+
 export function ListInput({ field, value, onChange }) {
   const items = Array.isArray(value) ? value : [];
   const [openIndex, setOpenIndex] = useState(null);
@@ -457,6 +489,19 @@ export function ListInput({ field, value, onChange }) {
     setOpenIndex(items.length); // open the row that was just created
   };
 
+  const duplicate = (idx) => {
+    const copy = withoutIds(structuredClone(items[idx]));
+
+    for (const spec of field.fields ?? []) {
+      if (!spec.unique) continue;
+      const taken = new Set(items.map((it) => it?.[spec.name]).filter(Boolean));
+      copy[spec.name] = freeKey(copy[spec.name], taken);
+    }
+
+    onChange([...items.slice(0, idx + 1), copy, ...items.slice(idx + 1)]);
+    setOpenIndex(idx + 1); // open the copy, which needs editing before it is saved
+  };
+
   return (
     <div className="space-y-2">
       {items.map((item, i) => (
@@ -470,11 +515,7 @@ export function ListInput({ field, value, onChange }) {
           onChange={(next) => replace(i, next)}
           onMove={move}
           onRemove={(idx) => onChange(items.filter((_, j) => j !== idx))}
-          onDuplicate={
-            field.compact
-              ? undefined
-              : (idx) => onChange([...items.slice(0, idx + 1), structuredClone(items[idx]), ...items.slice(idx + 1)])
-          }
+          onDuplicate={field.compact ? undefined : duplicate}
         />
       ))}
 

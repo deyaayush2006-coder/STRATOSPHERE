@@ -8,11 +8,11 @@ import { NextResponse } from "next/server";
  *    token expires, mid-edit.
  *
  * 2. Serve the dashboard from an unguessable path. The route on disk is
- *    /control-tower; set NEXT_PUBLIC_ADMIN_PATH and it answers there instead,
- *    while /control-tower itself stops existing.
+ *    /admin; set NEXT_PUBLIC_ADMIN_PATH and it answers there instead,
+ *    while /admin itself stops existing.
  */
 
-const REAL = "control-tower";
+const REAL = "admin";
 const ADMIN_PATH = (process.env.NEXT_PUBLIC_ADMIN_PATH || REAL).replace(/^\/+|\/+$/g, "");
 
 export async function middleware(request) {

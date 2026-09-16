@@ -1,8 +1,8 @@
 import { createClient, getStaff } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/public";
 import { readContent } from "@/lib/content";
-import Dashboard from "@/components/admin/Dashboard";
-import LoginScreen from "@/components/admin/LoginScreen";
+import Dashboard from "@/components/control-tower/Dashboard";
+import LoginScreen from "@/components/control-tower/LoginScreen";
 
 /* Reads the session cookie, so it can never be cached or prerendered. */
 export const dynamic = "force-dynamic";
@@ -28,7 +28,7 @@ function SetupNotice() {
   );
 }
 
-export default async function ControlTower() {
+export default async function AdminPage() {
   if (!isSupabaseConfigured) return <SetupNotice />;
 
   /* A session cookie is not proof of anything on its own — it may belong to an
