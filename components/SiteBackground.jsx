@@ -122,29 +122,36 @@ export default function SiteBackground({ backdrop, video }) {
           muted
           loop
           playsInline
+          disablePictureInPicture
           preload="auto"
           style={{ opacity: "var(--backdrop-opacity)" }}
-          /* The whole frame, at every width.
+          /* The box is the footage's own ratio (848/480 = 53/30), so object-cover
+           * can never distort: the box and the frame agree on shape, and the
+           * width of the box is the only thing deciding how much of the frame
+           * survives.
            *
-           * The reel hangs from the top of the page, spans the full width, and
-           * is given a box of the footage's own ratio (848/480 = 53/30), so
-           * object-cover has nothing left to crop and the frame arrives intact.
+           * Desktop spans the full width, so the frame arrives whole.
            *
-           * A phone used to get its own treatment: the same footage stretched
-           * down a tall portrait box so it filled the band above the first
-           * section exactly. Covering a portrait box means scaling a landscape
-           * frame until it covers, and that threw away roughly two thirds of
-           * the width — on a phone the reel was a moving close-up of whatever
-           * happened to be dead centre. Filling the band and keeping the frame
-           * are the same knob turned opposite ways; the frame wins, and the
-           * hero below is shorter on mobile to match what the reel now needs.
+           * A phone blows the box up past the viewport by --reel-scale and
+           * centres it, trading the side margins for a taller band. At 1 the
+           * whole frame shows but the band is a thin strip; what the crop eats
+           * into is the club titling in the footage, so dial the variable back
+           * if the last word starts clipping. The hero below reads the same
+           * number, so whatever it is set to, the first section still starts
+           * exactly where the footage stops.
+           *
+           * What this must not go back to is covering a tall portrait box,
+           * which is where it started: that scales a landscape frame until it
+           * covers, throws away roughly two thirds of the width, and leaves the
+           * phone with a moving close-up of whatever is dead centre. Cropping
+           * evenly from both margins is the same trade made in proportion.
            *
            * The bottom fade starts earlier on a phone, where the reel ends
            * higher up the screen and a hard edge would be obvious. */
-          className="absolute inset-x-0 top-24 w-full h-auto aspect-[53/30] object-cover object-center
+          className="absolute top-24 left-1/2 -translate-x-1/2 w-[calc(100%*var(--reel-scale))] h-auto aspect-[53/30] object-cover object-center
             [-webkit-mask-image:linear-gradient(to_bottom,#000_72%,transparent)]
             [mask-image:linear-gradient(to_bottom,#000_72%,transparent)]
-            md:top-0
+            md:top-0 md:left-0 md:translate-x-0 md:w-full
             md:[-webkit-mask-image:linear-gradient(to_bottom,#000_85%,transparent)]
             md:[mask-image:linear-gradient(to_bottom,#000_85%,transparent)]
             motion-reduce:hidden"

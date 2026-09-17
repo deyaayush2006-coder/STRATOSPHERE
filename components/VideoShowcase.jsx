@@ -8,6 +8,10 @@ function Clip({ clip, className = "" }) {
       <video
         className="h-full w-full object-cover"
         controls
+        /* Keeps a tap on the play button inside the page. Without it, iOS
+           hands the clip to the fullscreen player and the grid underneath
+           goes with it. */
+        playsInline
         preload="metadata"
         poster={mediaUrl(clip.poster)}
       >

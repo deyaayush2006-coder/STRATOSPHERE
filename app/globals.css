@@ -28,6 +28,10 @@
   --grid-ink: rgba(255, 255, 255, 0.055);
   --grid-ink-soft: rgba(255, 255, 255, 0.028);
   --backdrop-opacity: 0.6;
+  /* How far the reel is blown up past the viewport on a phone. 1 shows the
+     whole frame; above that the side margins are cropped to buy a taller
+     band. Desktop ignores it — the md: rules pin the reel to full width. */
+  --reel-scale: 1.3;
   --craft-ink: #ffffff;
 
   /* glow behind type that sits over photography */
