@@ -18,7 +18,7 @@ export default async function SiteLayout({ children }) {
   // clip, not hidden: overflow-x-hidden here breaks sticky inside
   return (
     <div className="relative w-full min-h-screen bg-base overflow-x-clip">
-      <SiteBackground backdrop={content.site?.backdrop} video={content.site?.heroVideo} />
+      <SiteBackground backdrop={content.site?.backdrop} />
       <div className="relative z-10">
         <NavCard navLinks={content.navLinks} site={content.site} />
         {/* The hero band belongs to the front page and is rendered there. It

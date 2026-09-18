@@ -23,7 +23,7 @@ export default async function NotFound() {
 
   return (
     <div className="relative w-full min-h-screen bg-base overflow-x-clip">
-      <SiteBackground backdrop={content.site?.backdrop} video={content.site?.heroVideo} />
+      <SiteBackground backdrop={content.site?.backdrop} />
       <div className="relative z-10">
         <NavCard navLinks={content.navLinks} site={content.site} />
         <Hero />

@@ -108,7 +108,14 @@ export default function Announcements({ announcements = [], announcementSettings
   );
 
   return (
-    <section id="announcements" className="px-6 py-24 md:py-28 scroll-mt-28 max-w-6xl mx-auto">
+    /* Little padding at the top, unlike every other section: this one opens
+       directly under the reel, and the bottom quarter of that is already a
+       mask fading the footage out into the page. The breathing room above the
+       heading is that tail. A full py-24 on top of it read as a gap. */
+    <section
+      id="announcements"
+      className="px-6 pt-4 md:pt-6 pb-24 md:pb-28 scroll-mt-28 max-w-6xl mx-auto"
+    >
       <SectionHeader
         title="Announcements"
         blurb="Every club update in one place — the detail that does not fit in a caption, kept as an archive rather than a feed."

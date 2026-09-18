@@ -13,7 +13,7 @@ export default async function Home() {
 
   return (
     <main>
-      <Hero />
+      <Hero video={content.site?.heroVideo} backdrop={content.site?.backdrop} />
       <Announcements
         announcements={content.announcements}
         announcementSettings={content.announcementSettings}

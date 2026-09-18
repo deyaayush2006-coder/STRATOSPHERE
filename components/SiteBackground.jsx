@@ -50,117 +50,37 @@ function useScrollDepth(pinned) {
   return ref;
 }
 
-/* display:none hides a video without stopping it — it keeps decoding frames
-   and draining the battery, which is the opposite of what the preference is
-   asking for. The class swap handles what is seen; this handles what runs. */
-function useHaltWhenStill(ref, enabled) {
-  useEffect(() => {
-    const node = ref.current;
-    if (!node || !enabled) return undefined;
-
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => {
-      if (mq.matches) node.pause();
-      // Rejects when the browser blocks autoplay, which is not an error worth
-      // surfacing: the still is already showing underneath.
-      else node.play().catch(() => {});
-    };
-
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, [ref, enabled]);
-}
-
-export default function SiteBackground({ backdrop, video }) {
+export default function SiteBackground({ backdrop }) {
   const pathname = usePathname();
 
-  /* A project write-up gets the depth wash on its own: no reel, no photo, just
-     the blue-black gradient at full strength from the first paint.
-
-     Both of those layers are staged for the front page, where the hero band
-     gives them a clear run. A write-up opens straight into a breadcrumb and
-     body copy, so the photo was sitting behind paragraphs with nothing to
-     frame and only cost contrast. Skipping it also drops the largest image on
-     the page — it is `priority`, so it was competing with the text it sat
-     behind. */
-  const onProject = pathname.startsWith("/projects/");
-
-  const still = onProject ? "" : mediaUrl(backdrop);
-  const depthRef = useScrollDepth(onProject);
-  const reelRef = useRef(null);
-
-  /* The reel belongs to the front page only.
+  /* Two pages want nothing behind them but the depth wash.
    *
-   * It is staged against the hero band, which exists to give it a clear run
-   * before the first section. A project page has no hero — it opens straight
-   * into a breadcrumb and a title — so the reel was playing behind body copy
-   * with nowhere to land, and the page below had to start a screen further
-   * down to clear it. The still carries those pages instead, which is what
-   * every other layer here was already doing. */
+   * A project write-up gets it at full strength from the first paint. It opens
+   * straight into a breadcrumb and body copy, so the photo was sitting behind
+   * paragraphs with nothing to frame and only cost contrast. Skipping it also
+   * drops the largest image on the page — it is `priority`, so it was
+   * competing with the text it sat behind.
+   *
+   * The front page skips it because Hero is carrying the reel itself now, and
+   * the photo is the reel's poster. Leaving it here as well would put a
+   * full-screen campus photo behind every section below the fold, which is not
+   * something this page has ever shown. */
+  const onProject = pathname.startsWith("/projects/");
   const onHome = pathname === "/";
-  const reel = onHome ? mediaUrl(video) : "";
 
-  useHaltWhenStill(reelRef, Boolean(reel));
+  const still = onProject || onHome ? "" : mediaUrl(backdrop);
+  const depthRef = useScrollDepth(onProject);
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
       {/* 1 — sky */}
       <div className="absolute inset-0 bg-sky" />
 
-      {/* 2 — the club reel, held at --backdrop-opacity so it reads as texture
-             rather than as a player, and washed out by layer 3 as the page
-             scrolls. This is the slot the campus photo used to sit in.
-             The photo stays on as the poster, so the first paint is the
-             still rather than a black rectangle while the video buffers. */}
-      {reel && (
-        <video
-          ref={reelRef}
-          src={reel}
-          poster={still || undefined}
-          autoPlay
-          muted
-          loop
-          playsInline
-          disablePictureInPicture
-          preload="auto"
-          style={{ opacity: "var(--backdrop-opacity)" }}
-          /* The box is the footage's own ratio (848/480 = 53/30), so object-cover
-           * can never distort: the box and the frame agree on shape, and the
-           * width of the box is the only thing deciding how much of the frame
-           * survives.
-           *
-           * Desktop spans the full width, so the frame arrives whole.
-           *
-           * A phone blows the box up past the viewport by --reel-scale and
-           * centres it, trading the side margins for a taller band. At 1 the
-           * whole frame shows but the band is a thin strip; what the crop eats
-           * into is the club titling in the footage, so dial the variable back
-           * if the last word starts clipping. The hero below reads the same
-           * number, so whatever it is set to, the first section still starts
-           * exactly where the footage stops.
-           *
-           * What this must not go back to is covering a tall portrait box,
-           * which is where it started: that scales a landscape frame until it
-           * covers, throws away roughly two thirds of the width, and leaves the
-           * phone with a moving close-up of whatever is dead centre. Cropping
-           * evenly from both margins is the same trade made in proportion.
-           *
-           * The bottom fade starts earlier on a phone, where the reel ends
-           * higher up the screen and a hard edge would be obvious. */
-          className="absolute top-24 left-1/2 -translate-x-1/2 w-[calc(100%*var(--reel-scale))] h-auto aspect-[53/30] object-cover object-center
-            [-webkit-mask-image:linear-gradient(to_bottom,#000_72%,transparent)]
-            [mask-image:linear-gradient(to_bottom,#000_72%,transparent)]
-            md:top-0 md:left-0 md:translate-x-0 md:w-full
-            md:[-webkit-mask-image:linear-gradient(to_bottom,#000_85%,transparent)]
-            md:[mask-image:linear-gradient(to_bottom,#000_85%,transparent)]
-            motion-reduce:hidden"
-        />
-      )}
-
-      {/* A full-page video that never stops is exactly what a reduced-motion
-          preference is asking about, so that reader gets the still instead.
-          It is also the plain backdrop when no video is set at all. */}
+      {/* 2 — the campus photo, held at --backdrop-opacity so it reads as
+             texture rather than as a picture, and washed out by layer 3 as the
+             page scrolls. The front page and the write-ups opt out above; what
+             is left is every other page, which has no reel of its own and
+             would otherwise open on bare sky. */}
       {still && (
         /* fill rather than a width/height pair: the box is the viewport, and
            the backdrop is the largest image on the page, so it is also the one
@@ -174,7 +94,7 @@ export default function SiteBackground({ backdrop, video }) {
           priority
           sizes="100vw"
           style={{ opacity: "var(--backdrop-opacity)" }}
-          className={`object-cover object-top ${reel ? "motion-safe:hidden" : ""}`}
+          className="object-cover object-top"
         />
       )}
 
