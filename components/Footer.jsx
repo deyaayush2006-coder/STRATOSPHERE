@@ -1,4 +1,5 @@
 import ContactForm from "./ContactForm";
+import SocialIcon, { socialLabel } from "./SocialIcon";
 
 /* Where the committee's dashboard answers.
  *
@@ -22,7 +23,12 @@ const ADMIN_HREF = `/${ADMIN_PATH}`;
 const isUsefulLinks = (col) => /useful/i.test(col?.title || "");
 
 export default function Footer({ contact = {}, footerCols = [] }) {
-  const { address = [], hours = [], email = "", phone = "" } = contact;
+  const { address = [], hours = [], email = "", phone = "", socials = [] } = contact;
+
+  /* A row with no address is skipped rather than rendered as a dead icon —
+     the dashboard says so in the field's own hint, and a half-filled entry is
+     the normal state of a form someone is still working through. */
+  const accounts = socials.filter((s) => s?.url);
 
   /* The admin link hangs off a column, so there has to be one. A committee
      that clears every footer column in the dashboard would otherwise take the
@@ -61,12 +67,19 @@ export default function Footer({ contact = {}, footerCols = [] }) {
             >
               {email}
             </a>
+
           </div>
 
           <ContactForm />
         </div>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-x-10 gap-y-10 py-10 border-t border-ink/[0.08]">
+        {/* Four columns now, so the step to four waits for lg rather than
+            happening at md. At md this row is 768px wide at its narrowest and
+            the Contact us column carries an email address on a single
+            unbreakable line — a quarter of that is not enough for it, and it
+            would push the row wider than the page. Two-by-two until there is
+            room for four. */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-10 py-10 border-t border-ink/[0.08]">
           <nav className="flex flex-wrap gap-x-2 gap-y-8">
           {columns.map((c, i) => (
             // the flex gap is shared, so nudge only the third column
@@ -104,7 +117,11 @@ export default function Footer({ contact = {}, footerCols = [] }) {
           ))}
           </nav>
 
-          <div className="md:-ml-16">
+          {/* The -ml-16 that used to pull this left is gone with the third
+              column: it was nudging one cell of a three-up row, and in a
+              four-up one it put this heading out of line with the other
+              three and over the edge of the column before it. */}
+          <div>
             <h4 className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/35 mb-4">
               Contact us
             </h4>
@@ -116,7 +133,11 @@ export default function Footer({ contact = {}, footerCols = [] }) {
                   </span>
                 ))}
               </p>
-              <p className="text-ink/60 whitespace-nowrap">
+              {/* break-words, not nowrap. An email address is one unbreakable
+                  token, and a quarter-width column is narrower than this one
+                  is — held on one line it ran 82px past its own column and
+                  onto Office hours at 1024. */}
+              <p className="text-ink/60 break-words">
                 Email:{" "}
                 <a
                   href={`mailto:${email}`}
@@ -141,7 +162,47 @@ export default function Footer({ contact = {}, footerCols = [] }) {
               ))}
             </dl>
           </div>
+
+          {/* A column of its own, headed like the three beside it rather than
+              like the display headings upstairs. The whole thing goes when
+              there is nothing to put in it, rather than leaving a heading over
+              an empty row — which is also why it is the last column: an empty
+              list cannot leave a hole in the middle of the row. */}
+          {accounts.length > 0 && (
+            <div>
+              <h4 className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/35 mb-4">
+                Follow us
+              </h4>
+              <ul className="flex flex-wrap items-center gap-3">
+                {accounts.map((s) => {
+                  const name = s.label || socialLabel(s.platform);
+                  return (
+                    <li key={s.url}>
+                      {/* aria-label because the link's only content is a glyph
+                          marked aria-hidden — without it a screen reader
+                          announces the bare URL. target and rel together:
+                          these leave the site, and noopener stops the page
+                          they open from reaching back through window.opener. */}
+                      <a
+                        href={s.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={name}
+                        title={name}
+                        className="grid h-11 w-11 place-items-center rounded-full border border-ink/20 text-ink/70 transition
+                          hover:border-aurora2/50 hover:text-aurora2 focus-visible:outline focus-visible:outline-2
+                          focus-visible:outline-offset-2 focus-visible:outline-aurora2"
+                      >
+                        <SocialIcon platform={s.platform} className="h-[18px] w-[18px]" />
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
         </div>
+        
 
         <div className="flex flex-wrap gap-x-6 gap-y-2 justify-between pt-6 border-t border-ink/10 text-xs text-ink/40">
           <span>Made By Aerospace Club</span>

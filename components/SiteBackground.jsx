@@ -50,7 +50,11 @@ function useScrollDepth(pinned) {
   return ref;
 }
 
-export default function SiteBackground({ backdrop }) {
+/* `plain` is the same treatment a write-up gets — wash only, no photograph —
+   asked for directly rather than worked out from the path. The 404 needs it and
+   cannot be recognised by pathname, because its pathname is whatever the
+   visitor mistyped. */
+export default function SiteBackground({ backdrop, plain = false }) {
   const pathname = usePathname();
 
   /* Two pages want nothing behind them but the depth wash.
@@ -68,8 +72,8 @@ export default function SiteBackground({ backdrop }) {
   const onProject = pathname.startsWith("/projects/");
   const onHome = pathname === "/";
 
-  const still = onProject || onHome ? "" : mediaUrl(backdrop);
-  const depthRef = useScrollDepth(onProject);
+  const still = plain || onProject || onHome ? "" : mediaUrl(backdrop);
+  const depthRef = useScrollDepth(plain || onProject);
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
@@ -101,7 +105,7 @@ export default function SiteBackground({ backdrop }) {
       {/* 3 — depth wash, transparent at the top so the hero keeps the bloom.
              On a project page there is no hero to keep it for, so it is opaque
              from the top and becomes the background in its own right. */}
-      <div ref={depthRef} className={`absolute inset-0 ${onProject ? "" : "opacity-0"}`}>
+      <div ref={depthRef} className={`absolute inset-0 ${plain || onProject ? "" : "opacity-0"}`}>
         <div className="absolute inset-0 bg-[radial-gradient(130%_95%_at_50%_-15%,#0b2b5e_0%,#071733_34%,#040a18_66%,#03060d_100%)] [[data-theme=light]_&]:hidden" />
         <div className="absolute inset-0 hidden opacity-80 bg-[radial-gradient(130%_95%_at_50%_-15%,#b3cbea_0%,#c9daf0_40%,#dfe8f4_100%)] [[data-theme=light]_&]:block" />
       </div>

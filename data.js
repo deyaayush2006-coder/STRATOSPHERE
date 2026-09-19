@@ -75,10 +75,20 @@ export const CONTACT = {
     ["Saturday", "10:00 AM - 2:00 PM"],
     ["Sunday", "Closed"],
   ],
-  /* The Follow Us column, which stays off the footer until there is something
-     in here. Empty rather than guessed: a wrong handle in a footer is worse
-     than no handle at all. Add them under Contact & hours in the dashboard. */
-  socials: [],
+  /* The Follow Us column. It stays off the footer while this is empty — a
+     wrong handle in a footer is worse than no handle at all — and the
+     dashboard can edit it under Contact & hours.
+   *
+   * The Instagram address is the profile itself rather than the share link it
+   * was given as: the ?igsi= on the end is a tracking id identifying whoever
+   * copied it, and it is not needed to reach the account. The Facebook one is
+   * a /share/ link, which is a redirect rather than the page's own address —
+   * it works, but swap it for the real page URL when someone has it to hand. */
+  socials: [
+    { platform: "instagram", url: "https://www.instagram.com/aerospace_club_ju", label: "" },
+    { platform: "linkedin", url: "https://www.linkedin.com/company/aerospace-club-ju/", label: "" },
+    { platform: "facebook", url: "https://www.facebook.com/share/1EN7zWxE6i/", label: "" },
+  ],
 };
 
 /* Showcase clips, first entry is the featured one. Paths point at public/.
@@ -318,7 +328,7 @@ export const PROJECTS = [
     n: "01",
     title: "CanSat",
     status: "Ongoing",
-    timeline: "Jan 2025 - Ongoing",
+    timeline: "Jan 2025",
     summary: "Managing a full mission life cycle, from Preliminary Design Review to post-flight data analysis.",
     body: "The main task is to manage a mission life cycle, from the Preliminary Design Review (PDR) to post-flight data analysis, mirroring the rigorous standards of the global aerospace industry.",
     image: "/images/projects/cansat.jpg",
@@ -330,7 +340,7 @@ export const PROJECTS = [
     n: "02",
     title: "3D Printed Epsilon Model Development",
     status: "Ongoing",
-    timeline: "Feb 2026 - Present",
+    timeline: "Feb 2026",
     summary: "A high-fidelity scaled replica of the Epsilon launch vehicle, built by additive manufacturing.",
     body: "Project focuses on developing a high-fidelity scaled replica of the Epsilon launch vehicle, utilizing additive manufacturing to achieve complex aerodynamic geometries and internal structural ribbing, integrating lightweight PLA or PETG materials.",
     image: "/images/projects/epsilon-model.jpg",
@@ -341,7 +351,7 @@ export const PROJECTS = [
     n: "03",
     title: "F22 Raptor RC Model",
     status: "Ongoing",
-    timeline: "Jan 2026 - Ongoing",
+    timeline: "Jan 2026",
     summary: "A 3D-printed airframe on a high-thrust EDF system, mimicking fifth-generation stealth geometry.",
     body: "A lightweight, 3D-printed airframe and a high-thrust EDF (Electric Ducted Fan) system. By utilizing thin-wall printing techniques and carbon-fiber reinforcements, the model mimics the stealth geometry and aerodynamic stability of the fifth-generation fighter for both high-speed passes and low-speed high-alpha flight.",
     image: "/images/projects/f22-raptor.jpg",
