@@ -95,7 +95,7 @@ export const MEMBERS = [
   { name: "Satyam Roy", role: "Management Lead", dept: "Mechanical Engineering", image: "/images/team/satyam-roy.jpg", linkedin: "" },
   { name: "Syed Zishan Aziz", role: "RC Plane & Drone Lead", dept: "Mechanical Engineering", image: "/images/team/syed-zishan-aziz.jpg", linkedin: "https://www.linkedin.com/in/syed-zishan-aziz-3a48a1286" },
   { name: "Priyanshu Kumar", role: "CanSat Lead", dept: "Mechanical Engineering", image: "/images/team/priyanshu-kumar.jpg", linkedin: "https://www.linkedin.com/in/priyanshu-kumar-924252313" },
-  { name: "Swarnava Roy", role: "Event Lead", dept: "Mechanical Engineering", image: "/images/team/swarnava-roy.jpg", linkedin: "https://www.linkedin.com/in/swarnava-roy-277894336" },
+  { name: "Swarnava Roy", role: "Event Lead", dept: "Electrical Engineering", image: "/images/team/swarnava-roy.jpg", linkedin: "https://www.linkedin.com/in/swarnava-roy-277894336" },
   { name: "Kaulik Das", role: "Sponsorship Lead", dept: "Mechanical Engineering", image: "/images/team/kaulik-das.jpg", linkedin: "https://www.linkedin.com/in/kaulik-das-63273328b" },
   { name: "Debaditya Chaudhuri", role: "Publicity Chair", dept: "Mechanical Engineering", image: "/images/team/debaditya-chaudhuri.jpg", linkedin: "" },
   { name: "Shayan Charan", role: "Content Team Lead", dept: "Mechanical Engineering", image: "/images/team/shayan-charan.jpg", linkedin: "" },

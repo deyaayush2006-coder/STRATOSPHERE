@@ -174,6 +174,32 @@
   --animate-veil-in: veilIn 0.14s ease-out both;
   --animate-panel-in: panelIn 0.2s cubic-bezier(.2, .8, .2, 1) both;
   --animate-card-in: cardIn 0.22s ease-out both;
+
+  /* The entry loader: something in orbit while the page arrives, and a sweep
+     along the rule under it. Both are indeterminate on purpose. How far along
+     a page load is cannot honestly be measured from in here, and a bar that
+     invents a percentage is worse than one that admits it is only waiting.
+     Linear on the orbit, because an eased orbit reads as a wobble. */
+  --animate-orbit: orbitSpin 1.5s linear infinite;
+  --animate-sweep: trackSweep 1.4s cubic-bezier(.45, 0, .25, 1) infinite;
+  --animate-loader-in: loaderIn 0.45s ease both;
+}
+
+@keyframes orbitSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Starts and ends clear of the track, so the bar enters and leaves rather than
+   appearing at one edge. The bar is 30% wide, so 340% carries its left edge
+   just past the far end. */
+@keyframes trackSweep {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(340%); }
+}
+
+@keyframes loaderIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes blobFloat {
@@ -296,6 +322,14 @@
 @layer base {
   html[data-theme="light"] {
     color-scheme: light;
+  }
+
+  /* The intro is up. Nothing behind a full-screen curtain is worth scrolling
+     to, and a scrollbar next to it gives the game away. The attribute is put
+     here before first paint and taken off when the reel leaves, so this is
+     also what hands the page back. */
+  html[data-intro="pending"] {
+    overflow: hidden;
   }
 
   html {

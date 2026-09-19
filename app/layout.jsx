@@ -96,6 +96,58 @@ const THEME_SCRIPT = `(function () {
   document.documentElement.dataset.theme = theme;
 })();`;
 
+/* Decides, before anything is painted, whether the club reel plays as the way
+   into the site. Same reasoning as the theme script above: it has to be inline
+   and synchronous. React cannot make this call, because by the time it
+   hydrates the page has already been on screen for a while, and the overlay
+   would drop over a site the visitor was already reading.
+ *
+ * It sets the flag and marks the session in the same breath, so this is once
+ * per tab however the load went. The four ways out:
+ *
+ *   not the front page   a deep link to a write-up is not an entrance
+ *   already this session  clicking around the site is not a new arrival
+ *   reduced motion        a full-screen video is exactly what that asks about
+ *   storage unavailable   private windows throw here, so the reel is skipped
+ *                         rather than played on every single navigation
+ */
+const INTRO_SCRIPT = `(function () {
+  try {
+    if (location.pathname !== "/") return;
+    if (sessionStorage.getItem("stratosphere-intro") === "seen") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    sessionStorage.setItem("stratosphere-intro", "seen");
+    document.documentElement.dataset.intro = "pending";
+
+    /* The way out, bound here rather than in the component, because the
+       component is not listening yet. The curtain is painted with the first
+       frame but React takes over some time after that, and on the slow
+       connection where the wait actually matters that gap is at its widest —
+       the button would look live and do nothing for the whole of it. Dropping
+       the attribute is all it takes: CSS is what shows the overlay, so this
+       hides it whether or not anything has hydrated. React finds it already
+       gone and unmounts. Capture phase, so nothing downstream can swallow it.
+     */
+    var off = function () {
+      document.documentElement.removeAttribute("data-intro");
+    };
+    document.addEventListener(
+      "click",
+      function (e) {
+        if (e.target && e.target.closest && e.target.closest("[data-intro-skip]")) off();
+      },
+      true
+    );
+    document.addEventListener(
+      "keydown",
+      function (e) {
+        if (e.key === "Escape") off();
+      },
+      true
+    );
+  } catch (e) {}
+})();`;
+
 export default function RootLayout({ children }) {
   return (
     <html
@@ -105,6 +157,7 @@ export default function RootLayout({ children }) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: INTRO_SCRIPT }} />
       </head>
       <body>{children}</body>
     </html>
