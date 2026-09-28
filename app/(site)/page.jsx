@@ -1,5 +1,4 @@
 import Hero from "@/components/Hero";
-import Intro from "@/components/Intro";
 import Announcements from "@/components/Announcements";
 import VideoShowcase from "@/components/VideoShowcase";
 import About from "@/components/About";
@@ -14,7 +13,6 @@ export default async function Home() {
 
   return (
     <main>
-      <Intro />
       <Hero backdrop={content.site?.backdrop} />
       <Announcements
         announcements={content.announcements}

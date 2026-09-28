@@ -1,4 +1,4 @@
-import ContactForm from "./ContactForm";
+import FooterContact from "./FooterContact";
 import SocialIcon, { socialLabel } from "./SocialIcon";
 
 /* Where the committee's dashboard answers.
@@ -22,7 +22,17 @@ const ADMIN_HREF = `/${ADMIN_PATH}`;
    the dashboard does not move the link out of Useful Links. */
 const isUsefulLinks = (col) => /useful/i.test(col?.title || "");
 
-export default function Footer({ contact = {}, footerCols = [] }) {
+/* `compact` drops the contact block and leaves the links and the copyright.
+ *
+ * FooterContact already takes itself off the detail pages, and it decides that
+ * from the pathname because the layout that renders this has no idea which
+ * route is open. That cannot answer for the 404, which has no route of its own
+ * — it is whatever address was mistyped — so the caller says so instead.
+ *
+ * Two mechanisms for one block, which is worth being explicit about: the
+ * pathname check is a rule about a kind of page, and this is one page saying
+ * what it wants. Neither is a special case of the other. */
+export default function Footer({ contact = {}, footerCols = [], compact = false }) {
   const { address = [], hours = [], email = "", phone = "", socials = [] } = contact;
 
   /* A row with no address is skipped rather than rendered as a dead icon —
@@ -45,33 +55,11 @@ export default function Footer({ contact = {}, footerCols = [] }) {
       className="mt-16 mx-auto mb-4 rounded-3xl glass scroll-mt-28 px-6 md:px-10 py-14"
     >
       <div className="max-w-6xl mx-auto">
-        <div className="mb-14 grid md:grid-cols-2 gap-10 md:gap-14 items-start">
-          <div>
-            <h3 className="text-2xl md:text-3xl font-semibold text-aurora2 tracking-[-0.02em]">
-              Our Address
-            </h3>
-            <address className="not-italic font-mono text-sm text-ink/65 leading-relaxed mt-4">
-              {address.map((line) => (
-                <span key={line} className="block">
-                  {line}
-                </span>
-              ))}
-            </address>
-
-            <h3 className="text-2xl md:text-3xl font-semibold text-aurora2 tracking-[-0.02em] mt-10">
-              Email us
-            </h3>
-            <a
-              href={`mailto:${email}`}
-              className="inline-block font-mono text-sm text-ink/65 hover:text-aurora2 transition-colors mt-4"
-            >
-              {email}
-            </a>
-
-          </div>
-
-          <ContactForm />
-        </div>
+        {/* Rendering nothing here is already handled below: the links row
+            carries first:border-t-0 first:pt-0, so when the contact block is
+            absent it becomes the first child and drops the rule and the
+            padding that were only ever there to separate it from this. */}
+        {!compact && <FooterContact address={address} email={email} />}
 
         {/* Four columns now, so the step to four waits for lg rather than
             happening at md. At md this row is 768px wide at its narrowest and
@@ -79,7 +67,7 @@ export default function Footer({ contact = {}, footerCols = [] }) {
             unbreakable line — a quarter of that is not enough for it, and it
             would push the row wider than the page. Two-by-two until there is
             room for four. */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-10 py-10 border-t border-ink/[0.08]">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-10 py-10 border-t border-ink/[0.08] first:border-t-0 first:pt-0">
           <nav className="flex flex-wrap gap-x-2 gap-y-8">
           {columns.map((c, i) => (
             // the flex gap is shared, so nudge only the third column
@@ -162,12 +150,6 @@ export default function Footer({ contact = {}, footerCols = [] }) {
               ))}
             </dl>
           </div>
-
-          {/* A column of its own, headed like the three beside it rather than
-              like the display headings upstairs. The whole thing goes when
-              there is nothing to put in it, rather than leaving a heading over
-              an empty row — which is also why it is the last column: an empty
-              list cannot leave a hole in the middle of the row. */}
           {accounts.length > 0 && (
             <div>
               <h4 className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/35 mb-4">
@@ -178,11 +160,6 @@ export default function Footer({ contact = {}, footerCols = [] }) {
                   const name = s.label || socialLabel(s.platform);
                   return (
                     <li key={s.url}>
-                      {/* aria-label because the link's only content is a glyph
-                          marked aria-hidden — without it a screen reader
-                          announces the bare URL. target and rel together:
-                          these leave the site, and noopener stops the page
-                          they open from reaching back through window.opener. */}
                       <a
                         href={s.url}
                         target="_blank"

@@ -7,7 +7,7 @@ import CadGallery from "@/components/CadGallery";
 import ModelViewer from "@/components/ModelViewer";
 import Telemetry from "@/components/Telemetry";
 import Thesis from "@/components/Thesis";
-import PartCover from "./PartCover";
+import Cover from "@/components/Cover";
 
 /* One route for both /projects/<slug> and /projects/<slug>/<part>. An optional
    catch-all rather than two files, because the second segment only ever picks
@@ -83,7 +83,7 @@ export default async function ProjectDetail({ params }) {
         // no parts written yet, so just the overview
         <article className="glass rounded-3xl overflow-hidden">
           {project.image && (
-            <PartCover
+            <Cover
               src={mediaUrl(project.image)}
               alt={project.title}
               priority
@@ -129,7 +129,7 @@ export default async function ProjectDetail({ params }) {
           {/* the open part */}
           <div className="min-w-0">
             <article className="glass rounded-3xl overflow-hidden">
-              <PartCover
+              <Cover
                 src={mediaUrl(active.image)}
                 alt={`${active.name} — ${project.title}`}
                 priority

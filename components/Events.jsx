@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import Reveal from "./Reveal";
 import CardRail from "./CardRail";
 import SectionHeader from "./SectionHeader";
@@ -18,44 +19,49 @@ function EventCard({ event }) {
         aria-hidden="true"
       />
 
-      {event.image && !failed && (
-        /* Event posters are the heaviest images the home page carries — they
-           come off a phone or a poster tool at full resolution and are painted
-           into a card about 380px wide. */
-        <Image
-          src={mediaUrl(event.image)}
-          alt=""
-          width={800}
-          height={450}
-          loading="lazy"
-          sizes="(max-width: 640px) 88vw, (max-width: 1024px) 45vw, 380px"
-          onError={() => setFailed(true)}
-          className="w-full aspect-video object-cover bg-panel"
-        />
-      )}
+      {/* The whole card is the link, the way a project card is. The page at
+          /events/<slug> has no other way in — nothing else on the site points
+          at it. */}
+      <Link href={`/events/${event.slug}`} className="flex grow flex-col">
+        {event.image && !failed && (
+          /* Event posters are the heaviest images the home page carries — they
+             come off a phone or a poster tool at full resolution and are painted
+             into a card about 380px wide. */
+          <Image
+            src={mediaUrl(event.image)}
+            alt=""
+            width={800}
+            height={450}
+            loading="lazy"
+            sizes="(max-width: 640px) 88vw, (max-width: 1024px) 45vw, 380px"
+            onError={() => setFailed(true)}
+            className="w-full aspect-video object-cover bg-panel"
+          />
+        )}
 
-      <div className="p-7">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span
-            className={`font-mono text-[10px] uppercase tracking-[0.18em] rounded-full px-3 py-1 border ${
-              upcoming
-                ? "text-aurora2 border-aurora2/30"
-                : "text-ink/40 border-ink/15"
-            }`}
-          >
-            {event.date}
-          </span>
-          {event.time !== "TBD" && (
-            <span className="font-mono text-[11px] text-ink/35">{event.time}</span>
-          )}
+        <div className="p-7">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span
+              className={`font-mono text-[10px] uppercase tracking-[0.18em] rounded-full px-3 py-1 border ${
+                upcoming
+                  ? "text-aurora2 border-aurora2/30"
+                  : "text-ink/40 border-ink/15"
+              }`}
+            >
+              {event.date}
+            </span>
+            {event.time !== "TBD" && (
+              <span className="font-mono text-[11px] text-ink/35">{event.time}</span>
+            )}
+          </div>
+
+          <h3 className="text-ink text-[17px] font-semibold mt-4 tracking-[-0.01em] leading-snug">
+            {event.title}
+          </h3>
+          <p className="font-mono text-[11px] text-ink/40 mt-2">{event.location}</p>
+          <p className="text-sm text-ink/55 mt-3 leading-relaxed">{event.body}</p>
         </div>
-
-        <h3 className="text-ink text-[17px] font-semibold mt-4 tracking-[-0.01em] leading-snug">
-          {event.title}
-        </h3>
-        <p className="font-mono text-[11px] text-ink/40 mt-2">{event.location}</p>
-        <p className="text-sm text-ink/55 mt-3 leading-relaxed">{event.body}</p>
-      </div>
+      </Link>
     </article>
   );
 }

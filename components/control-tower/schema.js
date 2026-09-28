@@ -106,11 +106,13 @@ export const SECTIONS = [
     kind: "list",
     itemName: "event",
     blurb:
-      "Workshops and competitions. Upcoming and past are split automatically by the Status field.",
+      "Workshops and competitions. Upcoming and past are split automatically by the Status field. " +
+      "Each event also gets its own page — add a write-up and photos to fill it out.",
     title: (e) => e.title,
     subtitle: (e) => [e.date, e.location].filter(Boolean).join(" · "),
     flag: (e) => (e.published === false ? "Draft" : e.when === "upcoming" ? "Upcoming" : null),
     blank: () => ({
+      slug: "",
       when: "upcoming",
       date: "TBD",
       time: "TBD",
@@ -118,10 +120,22 @@ export const SECTIONS = [
       location: "",
       body: "",
       image: "",
+      registerUrl: "",
+      detail: [],
+      gallery: [],
       published: true,
     }),
     fields: [
       { name: "title", label: "Event name", type: "text", required: true },
+      {
+        name: "slug",
+        label: "URL slug",
+        type: "text",
+        hint: SLUG_HINT,
+        slugFrom: "title",
+        required: true,
+        unique: true,
+      },
       {
         name: "when",
         label: "Status",
@@ -136,6 +150,64 @@ export const SECTIONS = [
       { name: "location", label: "Location", type: "text" },
       { name: "body", label: "Description", type: "textarea", rows: 5 },
       { name: "image", label: "Poster", type: "image" },
+      {
+        name: "registerUrl",
+        label: "Registration link",
+        type: "text",
+        hint:
+          "A form or ticket page. Shown as a Register button on the event page while the " +
+          "status above is Upcoming, and dropped once it is Past — so a closed form stops " +
+          "being offered on its own.",
+      },
+      {
+        name: "detail",
+        label: "Write-up",
+        type: "list",
+        itemName: "section",
+        hint:
+          "The long version, on the event's own page — what it is, what to bring, rules, results. " +
+          "One entry per section; leave the whole thing empty and the page stops at the description above.",
+        title: (s) => s.heading,
+        subtitle: (s) => (s.body || "").slice(0, 80),
+        blank: () => ({ heading: "", body: "", figures: [] }),
+        fields: [
+          { name: "heading", label: "Section heading", type: "text", required: true },
+          {
+            name: "body",
+            label: "Body",
+            type: "textarea",
+            rows: 10,
+            hint: "Leave a blank line between paragraphs and they come out as paragraphs.",
+          },
+          {
+            name: "figures",
+            label: "Key figures",
+            type: "pairList",
+            keyLabel: "Label",
+            valueLabel: "Value",
+            hint: "Optional — shown as a row under the section, e.g. Teams / 104",
+          },
+        ],
+      },
+      {
+        name: "gallery",
+        label: "Photos",
+        type: "list",
+        itemName: "photo",
+        hint: "Shown as a grid on the event page; clicking one opens it full size.",
+        title: (s) => s.caption || s.src,
+        compact: true,
+        blank: () => ({ src: "", caption: "" }),
+        fields: [
+          { name: "src", label: "Image", type: "image", required: true },
+          {
+            name: "caption",
+            label: "Caption",
+            type: "text",
+            hint: "What the photo shows. Also what a screen reader reads out.",
+          },
+        ],
+      },
       { name: "published", label: "Show this on the site", type: "checkbox" },
     ],
   },
@@ -677,13 +749,10 @@ export const SECTIONS = [
 
 export const sectionByKey = Object.fromEntries(SECTIONS.map((s) => [s.key, s]));
 
-/* Title to URL slug. Anything that is not a letter or digit becomes a dash. */
-export function slugify(value) {
-  return String(value || "")
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+/, "")
-    .replace(/-+$/, "")
-    .slice(0, 60);
-}
+/* Title to URL slug. Anything that is not a letter or digit becomes a dash.
+ *
+ * Re-exported rather than defined here: the content layer needs the same rule
+ * to fall back on for a row written before its table had a slug column, and
+ * two copies of it would be two copies that can drift. fields.jsx imports it
+ * from this file, so that side is unchanged. */
+export { slugify } from "@/lib/slug";

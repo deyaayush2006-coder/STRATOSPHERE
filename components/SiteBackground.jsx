@@ -57,23 +57,26 @@ function useScrollDepth(pinned) {
 export default function SiteBackground({ backdrop, plain = false }) {
   const pathname = usePathname();
 
-  /* Two pages want nothing behind them but the depth wash.
+  /* The detail pages and the front page want nothing behind them but the
+   * depth wash.
    *
-   * A project write-up gets it at full strength from the first paint. It opens
+   * A write-up gets it at full strength from the first paint. Those pages open
    * straight into a breadcrumb and body copy, so the photo was sitting behind
    * paragraphs with nothing to frame and only cost contrast. Skipping it also
    * drops the largest image on the page — it is `priority`, so it was
-   * competing with the text it sat behind.
+   * competing with the text it sat behind. Events are the same shape of page
+   * as projects and want the same answer; the prefix test covers both rather
+   * than naming each route, so a third one does not have to remember.
    *
    * The front page skips it because Hero is carrying the reel itself now, and
    * the photo is the reel's poster. Leaving it here as well would put a
    * full-screen campus photo behind every section below the fold, which is not
    * something this page has ever shown. */
-  const onProject = pathname.startsWith("/projects/");
+  const onDetail = pathname.startsWith("/projects/") || pathname.startsWith("/events/");
   const onHome = pathname === "/";
 
-  const still = plain || onProject || onHome ? "" : mediaUrl(backdrop);
-  const depthRef = useScrollDepth(plain || onProject);
+  const still = plain || onDetail || onHome ? "" : mediaUrl(backdrop);
+  const depthRef = useScrollDepth(plain || onDetail);
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
@@ -105,7 +108,7 @@ export default function SiteBackground({ backdrop, plain = false }) {
       {/* 3 — depth wash, transparent at the top so the hero keeps the bloom.
              On a project page there is no hero to keep it for, so it is opaque
              from the top and becomes the background in its own right. */}
-      <div ref={depthRef} className={`absolute inset-0 ${plain || onProject ? "" : "opacity-0"}`}>
+      <div ref={depthRef} className={`absolute inset-0 ${plain || onDetail ? "" : "opacity-0"}`}>
         <div className="absolute inset-0 bg-[radial-gradient(130%_95%_at_50%_-15%,#0b2b5e_0%,#071733_34%,#040a18_66%,#03060d_100%)] [[data-theme=light]_&]:hidden" />
         <div className="absolute inset-0 hidden opacity-80 bg-[radial-gradient(130%_95%_at_50%_-15%,#b3cbea_0%,#c9daf0_40%,#dfe8f4_100%)] [[data-theme=light]_&]:block" />
       </div>

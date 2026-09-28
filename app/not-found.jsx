@@ -59,7 +59,13 @@ export default async function NotFound() {
           </div>
         </main>
 
-        <Footer contact={content.contact} footerCols={content.footerCols} />
+        {/* Links and copyright, no contact block. Someone who mistyped a URL
+            is looking for a way back, not a form — and the address and the
+            email are still in the columns, so nothing here was the only copy.
+            It is asked for rather than worked out, because FooterContact takes
+            itself off a page by matching the pathname and this page has no
+            pathname of its own: it answers whatever address was wrong. */}
+        <Footer contact={content.contact} footerCols={content.footerCols} compact />
       </div>
     </div>
   );

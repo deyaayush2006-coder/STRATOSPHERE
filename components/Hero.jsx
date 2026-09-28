@@ -8,7 +8,7 @@ export default function Hero({ backdrop }) {
     
     <header
       id="overview"
-      className="relative isolate grid overflow-hidden scroll-mt-28 mt-[calc(1rem+2px)]
+      className="relative isolate grid overflow-hidden scroll-mt-28 mt-[calc(1rem+10px)]
         min-h-[calc(100svh-5.25rem)]"
     >
       {still && (

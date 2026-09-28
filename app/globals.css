@@ -175,31 +175,167 @@
   --animate-panel-in: panelIn 0.2s cubic-bezier(.2, .8, .2, 1) both;
   --animate-card-in: cardIn 0.22s ease-out both;
 
-  /* The entry loader: something in orbit while the page arrives, and a sweep
-     along the rule under it. Both are indeterminate on purpose. How far along
-     a page load is cannot honestly be measured from in here, and a bar that
-     invents a percentage is worse than one that admits it is only waiting.
-     Linear on the orbit, because an eased orbit reads as a wobble. */
-  --animate-orbit: orbitSpin 1.5s linear infinite;
-  --animate-sweep: trackSweep 1.4s cubic-bezier(.45, 0, .25, 1) infinite;
+  /* The entry loader: the lockup arriving, with the wait itself said by
+     Tailwind's own pulse and bounce further down the overlay. All of it is
+     indeterminate on purpose. How far along a page load is cannot honestly be
+     measured from in here, and a bar that invents a percentage is worse than
+     one that admits it is only waiting. */
   --animate-loader-in: loaderIn 0.45s ease both;
+
+  /* The curtain deciding whether it is needed at all, and doing it in CSS
+     because JavaScript is not running yet when the question comes up.
+   *
+   * The loading screen is in the server-rendered HTML of every public page, so
+   * it is on screen in the first painted frame — long before React hydrates
+   * and can form an opinion. On a fast connection that is exactly wrong: the
+   * page is ready more or less immediately and the visitor gets a curtain
+   * flashed at them over a site that had already arrived.
+   *
+   * The delay is the whole mechanism. `both` holds the first frame, so for the
+   * first 400ms the overlay is hidden and inert, and a page that finishes
+   * inside that window is taken down by RouteLoader before this ever plays. It
+   * is only a page still assembling after 400ms — a slow connection, a cold
+   * cache — that sees the curtain fade in.
+   *
+   * visibility rather than opacity alone: a transparent overlay still swallows
+   * every click underneath it, which on a fast load is a third of a second of
+   * a page that looks finished and does nothing. */
+  --animate-curtain-in: curtainIn 0.35s ease-out 0.4s both;
+
+  /* The rocket going round the wordmark on the loading screen. Two halves of
+     one movement, which is why they share a period: change it in one place and
+     you have to change it in the other or the rocket starts sliding round its
+     own orbit.
+   *
+   * This is a real orbit rather than a drawing of one. The ring is a circle
+   * lying in a plane tilted away from the viewer — see --tilt on the stage in
+   * components/LoadingScreen — so the ellipse on screen is the circle in
+   * perspective, and the rocket is genuinely nearer at the bottom of it and
+   * further at the top. That is what the earlier offset-path version could not
+   * do: it drew the right shape, but every point on it was the same distance
+   * away, so nothing grew as it came round the front and the wordmark could
+   * not be passed behind.
+   *
+   * orbitSpin turns the disc. Everything pinned to it travels the rim.
+   */
+  --animate-orbit-spin: orbitSpin 5.5s linear infinite backwards;
+
+  /* And orbitFace points the rocket where it is going.
+   *
+   * Two jobs in one keyframe, because one element can only run one animation
+   * on `transform`. It undoes what the disc has done — left to itself a craft
+   * riding a tilted disc lies down in it, edge-on and all but gone at the
+   * sides of the ring and squashed to a third of its height at the top and
+   * bottom — and then it turns the rocket to the tangent of the ellipse as it
+   * appears on screen, which is the part that stops it looking like a sticker
+   * being slid round a track. What survives of the disc is the only part that
+   * should: the rocket's distance, which perspective turns into size.
+   *
+   * The angles are tabulated rather than swept, and the table is tied to the
+   * tilt. Both of those are explained at the keyframes themselves. */
+  --animate-orbit-face: orbitFace 5.5s linear infinite backwards;
+
+  /* One letter of the wordmark arriving — and arriving is the wrong word for
+     it, because there is no transition left at all. The duration is a
+     thousandth of a millisecond, which is a hard cut with the machinery of an
+     animation still around it.
+   *
+   * That machinery is the reason not to just set the letters visible. `both`
+   * is what holds each one at opacity 0 until its own delay comes up, and the
+   * delay is what spaces the keystrokes out — so the animation is doing the
+   * waiting, and the duration only decides whether the letter fades in at the
+   * end of the wait or simply appears. It appears. A key going down has no
+   * ease on it.
+   *
+   * The rhythm of the typing is therefore entirely the stagger, in
+   * components/LoadingScreen, and nothing here. */
+  --animate-letter-in: letterIn 0.001ms linear both;
+
+  /* The caret the name is being typed into. steps(1) because a cursor does not
+     fade — the blink is the whole of the effect and a soft one reads as a
+     pulsing dot rather than as something waiting for the next key. */
+  --animate-caret: caretBlink 1.05s steps(1, end) infinite;
 }
 
 @keyframes orbitSpin {
-  to { transform: rotate(360deg); }
+  from { transform: rotateZ(0deg); }
+  to   { transform: rotateZ(360deg); }
 }
 
-/* Starts and ends clear of the track, so the bar enters and leaves rather than
-   appearing at one edge. The bar is 30% wide, so 340% carries its left edge
-   just past the far end. */
-@keyframes trackSweep {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(340%); }
+/* Three rotations, and they have to be read right to left, because that is the
+   order a CSS transform list applies them to the element.
+ *
+ *   rotateZ(heading)  where the rocket is pointing, on screen
+ *   rotateX(-tilt)    undo the disc's lean
+ *   rotateZ(-spin)    undo the disc's turn
+ *
+ * The middle two are what stand the rocket up. The first is the whole of the
+ * heading, and it has to come last in the list so that it happens in screen
+ * space, after the other two have cancelled the disc out — put it at the front
+ * and the tilt closes over it and skews the angle everywhere except the top
+ * and bottom of the ring.
+ *
+ * The heading column is a table rather than a formula because CSS cannot work
+ * one out. The tangent of an ellipse does not turn at a constant rate: it
+ * barely moves along the top and the bottom and then swings through most of a
+ * quarter turn at each end, which is why a linear rotation looks so wrong —
+ * the rocket ends up broadside to its own path at the two ends. These are that
+ * angle sampled every 5% and linearly interpolated between, which is within
+ * 2.5 degrees of the true curve at its worst, a pixel and a half of nose on a
+ * 68px craft.
+ *
+ * It is computed for --tilt: 68deg. Change the tilt and this has to be
+ * regenerated, or the rocket will fly crabwise:
+ *
+ *   k = cos(tilt); heading(t) = atan2(cos(t) * k, -sin(t))
+ *
+ * unwrapped so it climbs from 90 to 450 across the loop rather than wrapping
+ * at 180, which would spin the rocket backwards through a whole turn. */
+@keyframes orbitFace {
+  0%   { transform: rotateZ(0deg)    rotateX(calc(var(--tilt) * -1)) rotateZ(90.00deg); }
+  5%   { transform: rotateZ(-18deg)  rotateX(calc(var(--tilt) * -1)) rotateZ(130.94deg); }
+  10%  { transform: rotateZ(-36deg)  rotateX(calc(var(--tilt) * -1)) rotateZ(152.72deg); }
+  15%  { transform: rotateZ(-54deg)  rotateX(calc(var(--tilt) * -1)) rotateZ(164.77deg); }
+  20%  { transform: rotateZ(-72deg)  rotateX(calc(var(--tilt) * -1)) rotateZ(173.06deg); }
+  25%  { transform: rotateZ(-90deg)  rotateX(calc(var(--tilt) * -1)) rotateZ(180.00deg); }
+  30%  { transform: rotateZ(-108deg) rotateX(calc(var(--tilt) * -1)) rotateZ(186.94deg); }
+  35%  { transform: rotateZ(-126deg) rotateX(calc(var(--tilt) * -1)) rotateZ(195.23deg); }
+  40%  { transform: rotateZ(-144deg) rotateX(calc(var(--tilt) * -1)) rotateZ(207.28deg); }
+  45%  { transform: rotateZ(-162deg) rotateX(calc(var(--tilt) * -1)) rotateZ(229.06deg); }
+  50%  { transform: rotateZ(-180deg) rotateX(calc(var(--tilt) * -1)) rotateZ(270.00deg); }
+  55%  { transform: rotateZ(-198deg) rotateX(calc(var(--tilt) * -1)) rotateZ(310.94deg); }
+  60%  { transform: rotateZ(-216deg) rotateX(calc(var(--tilt) * -1)) rotateZ(332.72deg); }
+  65%  { transform: rotateZ(-234deg) rotateX(calc(var(--tilt) * -1)) rotateZ(344.77deg); }
+  70%  { transform: rotateZ(-252deg) rotateX(calc(var(--tilt) * -1)) rotateZ(353.06deg); }
+  75%  { transform: rotateZ(-270deg) rotateX(calc(var(--tilt) * -1)) rotateZ(360.00deg); }
+  80%  { transform: rotateZ(-288deg) rotateX(calc(var(--tilt) * -1)) rotateZ(366.94deg); }
+  85%  { transform: rotateZ(-306deg) rotateX(calc(var(--tilt) * -1)) rotateZ(375.23deg); }
+  90%  { transform: rotateZ(-324deg) rotateX(calc(var(--tilt) * -1)) rotateZ(387.28deg); }
+  95%  { transform: rotateZ(-342deg) rotateX(calc(var(--tilt) * -1)) rotateZ(409.06deg); }
+  100% { transform: rotateZ(-360deg) rotateX(calc(var(--tilt) * -1)) rotateZ(450.00deg); }
+}
+
+/* Nothing but presence. The scale that used to be in here was there to give a
+   90ms pop some weight, and at the current duration there is no pop to give it
+   to — it would be a transform applied and undone inside a microsecond. */
+@keyframes letterIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes caretBlink {
+  0%, 50%      { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
 }
 
 @keyframes loaderIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
+}
+
+@keyframes curtainIn {
+  from { opacity: 0; visibility: hidden; }
+  to   { opacity: 1; visibility: visible; }
 }
 
 @keyframes blobFloat {
@@ -324,10 +460,16 @@
     color-scheme: light;
   }
 
-  /* The intro is up. Nothing behind a full-screen curtain is worth scrolling
-     to, and a scrollbar next to it gives the game away. The attribute is put
-     here before first paint and taken off when the reel leaves, so this is
-     also what hands the page back. */
+  /* The loading screen is up. Nothing behind a full-screen curtain is worth
+     scrolling to, and a scrollbar next to it gives the game away.
+   *
+   * components/RouteLoader sets the attribute and takes it off again, and it
+   * only sets it once the curtain is genuinely on screen — never during the
+   * grace period, where the page underneath is still the live one and locking
+   * it would be a third of a second of a site that does not scroll. That is
+   * also why this is no longer set before first paint: on a fast load the
+   * curtain never appears, and a lock put on in advance would take the
+   * scrollbar away and hand it straight back, which is a visible jump. */
   html[data-intro="pending"] {
     overflow: hidden;
   }
