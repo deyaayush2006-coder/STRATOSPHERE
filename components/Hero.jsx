@@ -7,11 +7,17 @@ import { mediaUrl } from "@/lib/media-url";
 /* The band at the top of the front page, and the photographs that run behind
  * its title.
  *
- * The backdrop still opens the run. It is the photo the dashboard sets, and
- * the only one a reader who has asked for less motion ever sees. The club's
- * own photos follow it (heroSlides, in lib/defaults). Each is held for HOLD,
- * then the next fades in over it across FADE while the one underneath stays
- * put, so the crossfade never dips through to the page behind.
+ * The run is the club's own photos (heroSlides, in lib/defaults), and not the
+ * site backdrop: that campus shot stays behind the other pages only. The first
+ * slide is the one a reader who has asked for less motion ever sees. Each is
+ * held for HOLD, then the next fades in over it across FADE while the one
+ * underneath stays put, so the crossfade never dips through to the page
+ * behind.
+ *
+ * Every photo fills the band edge to edge, cropped to fit rather than boxed
+ * in with bars. Its top edge is pinned to the top of the band: the crop comes
+ * off the bottom and sides, and the slow zoom grows from the top edge down
+ * rather than out from the middle.
  *
  * Only the photo on screen and the one after it are ever in the document. The
  * rest join as the run reaches them, so the page opens on one photograph
@@ -108,11 +114,12 @@ const PlayIcon = () => (
   </svg>
 );
 
-export default function Hero({ backdrop, slides = [] }) {
+export default function Hero({ slides = [] }) {
   const bandRef = useRef(null);
 
-  // The backdrop first, and not a second time if the list repeats it.
-  const photos = [backdrop, ...slides.map((slide) => slide?.src)]
+  // Each photo once, even if the list repeats one.
+  const photos = slides
+    .map((slide) => slide?.src)
     .filter((src, i, all) => src && all.indexOf(src) === i)
     .map(mediaUrl);
 
@@ -154,7 +161,7 @@ export default function Hero({ backdrop, slides = [] }) {
             // stall the run for good.
             onLoad={() => markReady(i)}
             onError={() => markReady(i)}
-            className={`object-cover object-center motion-reduce:animate-none ${
+            className={`object-cover object-top origin-top motion-reduce:animate-none ${
               i === index
                 ? "-z-10 opacity-100 transition-opacity duration-[1500ms] ease-in-out"
                 : `-z-20 ${i === prev ? "opacity-100" : "opacity-0"}`

@@ -169,7 +169,10 @@
      one is on screen — components/Hero holds it for 6.5s and then spends 1.5s
      fading the next one in over it — so it is never seen standing still.
      Alternate photos run it backwards, so the run eases in and out rather than
-     diving forward every time. */
+     diving forward every time.
+   *
+   * It never drops below full size: the photos cover the band, and anything
+   * under 1 would pull their edges in and show the page behind. */
   --animate-hero-push: heroPush 8s linear both;
   --animate-hero-pull: heroPull 8s linear both;
 
