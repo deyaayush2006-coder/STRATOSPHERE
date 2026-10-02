@@ -49,10 +49,38 @@ export const ABOUT = {
   ],
 };
 export const SITE_BACKDROP = "/images/hero/ju-campus.jpg";
-export const HERO_PHOTOS = [
+
+/* What the hero runs through after the backdrop, in this order, picked from
+   the club's Drive gallery. They sit behind the title as decoration, so alt is
+   a note on what each one shows rather than text the page reads out. */
+export const HERO_SLIDES = [
   {
-    src: "/images/hero/ju-campus.jpg",
-    alt: "Aerial view of the Jadavpur University campus and surrounding Kolkata",
+    src: "/images/hero/glider-flight-test.jpg",
+    alt: "Three members walking out across the field with their gliders for a test flight",
+  },
+  {
+    src: "/images/hero/drone-bench.jpg",
+    alt: "Two quadcopter frames, motors and parts laid out on the workbench",
+  },
+  {
+    src: "/images/hero/water-rocket-launch.jpg",
+    alt: "A water rocket streaking off its launcher as a crowd of members looks on",
+  },
+  {
+    src: "/images/hero/drone-build.jpg",
+    alt: "Members assembling drone kits together at a workshop table",
+  },
+  {
+    src: "/images/hero/drone-flight-dusk.jpg",
+    alt: "A drone flying over a crowd on the field at dusk",
+  },
+  {
+    src: "/images/hero/best-contingent.jpg",
+    alt: "Trophies, medals and the Best Contingent certificate from the National Students' Space Challenge",
+  },
+  {
+    src: "/images/hero/windcraft-glider-team.jpg",
+    alt: "Four WindCraft participants holding up the glider they built",
   },
 ];
 

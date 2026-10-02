@@ -165,6 +165,14 @@
      from looking welded on. */
   --animate-craft-bob: craftBob 2.8s ease-in-out infinite;
 
+  /* The slow push on each photo behind the hero title. 8s is the whole time
+     one is on screen — components/Hero holds it for 6.5s and then spends 1.5s
+     fading the next one in over it — so it is never seen standing still.
+     Alternate photos run it backwards, so the run eases in and out rather than
+     diving forward every time. */
+  --animate-hero-push: heroPush 8s linear both;
+  --animate-hero-pull: heroPull 8s linear both;
+
   /* Opening a committee. These are short on purpose.
      Anything that happens in answer to a click is read as the click being
      slow, so the whole dialog — veil, panel and the cards inside it — is on
@@ -452,6 +460,16 @@
   22%  { opacity: 1; }
   62%  { transform: scale(1) translateY(0); background-position: 0% 50%; }
   100% { opacity: 0.09; transform: scale(1) translateY(0); background-position: 0% 50%; }
+}
+
+@keyframes heroPush {
+  from { transform: scale(1); }
+  to   { transform: scale(1.08); }
+}
+
+@keyframes heroPull {
+  from { transform: scale(1.08); }
+  to   { transform: scale(1); }
 }
 
 @layer base {
