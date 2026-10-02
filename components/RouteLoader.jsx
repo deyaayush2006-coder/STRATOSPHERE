@@ -6,27 +6,24 @@ import { usePathname } from "next/navigation";
 import { typeWhenSeen } from "@/lib/typing-clock";
 import LoadingScreen from "./LoadingScreen";
 
-/* The loading screen, in front of the pages of the public site that need one.
+/* The loading screen, in front of the pages of the public site.
  *
- * It is a report on a wait, not a ceremony. A page that arrives at once shows
- * nothing at all — no curtain, no flash, no hold — and the visitor never
- * learns there is a loading screen on this site. It is only a navigation that
- * is still going after GRACE that gets one, which is the case it is for: a
- * cold cache, a phone on campus wifi, a project page with a model viewer on
- * it. This is why the delay is not a fixed one: a curtain that always runs
- * makes a fast site feel like a slow one, and there is nothing to report when
- * there was no wait.
+ * Two ways onto the screen, and they look exactly the same.
  *
- * Three things have to be true, and each one decides a piece of what is below.
+ * Opening the site, or reloading it. The curtain is in the server-rendered
+ * HTML, in front of everything else, and it is visible from the very first
+ * frame the browser paints. The page underneath is never seen half-built: the
+ * curtain stays until the window's load event has fired, the name has finished
+ * typing and MIN_SHOW has passed, and only then lifts off the finished page.
+ * An earlier version held the curtain hidden for a grace period on the first
+ * paint too, so that a fast load never showed it — which meant every load
+ * flashed the bare page for that grace period before the curtain faded in
+ * over it.
  *
- * Nothing may flash. That is the whole difficulty, because the first frame of
- * a real request is painted before any of this exists — the curtain is in the
- * server-rendered HTML, and React is not running yet to decide about it. So
- * the first decision is not made here at all: --animate-curtain-in holds the
- * overlay hidden for the grace period, and this component's job on a fast load
- * is to get it out of the tree before that runs out. Later navigations never
- * have that problem, because by then React is in charge and can simply wait
- * and see.
+ * Clicking between pages. By then React is in charge and can wait and see, so
+ * here the grace period stays: most clicks are answered from the router's
+ * prefetch cache inside GRACE, and a curtain for those would only make a fast
+ * site feel slow. A click still going after GRACE raises the same curtain.
  *
  * It must never delay a 404. That is not a check in here — it is where the
  * component sits. It is mounted by app/(site)/layout, and Next resolves the
@@ -39,61 +36,46 @@ import LoadingScreen from "./LoadingScreen";
  * the database to render the nav.
  *
  * And it must not be able to strand anyone. Every wait has a ceiling. If a
- * navigation is slow, blocked, or simply never commits, MAX_WAIT lifts the
- * curtain rather than leaving a visitor looking at a logo.
+ * load or a navigation is slow, blocked, or simply never finishes, MAX_WAIT
+ * lifts the curtain rather than leaving a visitor looking at a logo.
  */
 
-/* Under this, a navigation counts as instant and no curtain is ever shown.
-   It has to match the delay on --animate-curtain-in in app/globals.css, which
-   is the same threshold enforced in CSS for the first paint — change one and
-   the other has to move with it. */
+/* Under this, a click counts as instant and no curtain is raised for it. Only
+   clicks: the first load always shows the curtain. */
 const GRACE = 400;
 
-/* Once it is up, it stays up this long. Without a floor a wait that only just
-   crossed GRACE would put a full-screen lockup on the page for two frames,
-   which reads as a glitch rather than as loading.
+/* Once it is up, it stays up at least this long. Without a floor a wait that
+   only just crossed GRACE would put a full-screen lockup on the page for two
+   frames, which reads as a glitch rather than as loading.
  *
- * It is no longer what keeps the wordmark whole. The typing now waits for the
- * curtain to be seen before it starts (see lib/typing-clock), so it can finish
- * later than any fixed figure, and `typed` below is what holds the curtain
- * until it is done.
- * This is the floor for when there is no typing to wait for — a visitor with
- * reduced motion gets the lockup already assembled. */
+ * The typing waits for the curtain to be seen before it starts (see
+ * lib/typing-clock), so it can finish later than any fixed figure, and `typed`
+ * below is what holds the curtain until it is done. This is the floor for when
+ * there is no typing to wait for — a visitor with reduced motion gets the
+ * lockup already assembled. */
 const MIN_SHOW = 950;
 
-/* The ceiling, counted from the start of the navigation. Past this the page is
-   not coming, and a visitor is better off with whatever is behind the curtain
-   than with the curtain. */
+/* The ceiling, counted from the start of the load or navigation. Past this the
+   page is not coming, and a visitor is better off with whatever is behind the
+   curtain than with the curtain. */
 const MAX_WAIT = 8000;
 
 // Matches the fade LoadingScreen is given; they have to agree or the overlay
 // either flickers back in or leaves a gap of nothing.
 const FADE = 500;
 
-/* How long the served curtain has actually been on screen, in milliseconds, or
-   0 if it has not appeared yet.
- *
- * Read off the element's own running animation rather than worked out from any
- * clock of ours, because the only clock that agrees with the CSS is the one
- * the CSS is on. A CSS animation's currentTime counts from the moment the
- * element was created and includes the delay, so subtracting the delay gives
- * exactly how long the curtain has been visible — whatever the server did
- * beforehand, and whatever the delay is changed to.
- *
- * The fallbacks matter more than they look. If the animation cannot be found
- * the curtain is either already adopted or was never served, and a raised
- * curtain is timed by its own raise() rather than by this. Returning 0 says
- * "not visible", which is the answer that dismisses rather than the one that
- * shows something empty. */
-function shownFor() {
-  const el = document.querySelector("[data-route-loader]");
-  if (!el || typeof el.getAnimations !== "function") return 0;
-
-  const curtain = el.getAnimations().find((a) => a.animationName === "curtainIn");
-  if (!curtain) return 0;
-
-  const t = Number(curtain.currentTime);
-  return Number.isFinite(t) ? Math.max(0, t - GRACE) : 0;
+/* When the served curtain first appeared, on the Date.now() clock that the
+   rest of this file times with. It is in the first painted frame, so that is
+   the browser's first paint; if the browser cannot say, React mounting is the
+   nearest later moment, which only ever makes the hold a little longer. */
+function firstPaintAt() {
+  try {
+    const paint = performance.getEntriesByType("paint")[0];
+    if (paint) return Date.now() - (performance.now() - paint.startTime);
+  } catch {
+    // No Paint Timing API; fall through.
+  }
+  return Date.now();
 }
 
 /* Whether the name on the curtain has finished writing itself, and the line
@@ -128,18 +110,14 @@ function normalise(pathname) {
 export default function RouteLoader({ paths = [], trees = [] }) {
   const pathname = usePathname();
 
-  /* Four states, and the awkward one is the first.
+  /* Three states.
    *
-   *   arming    the server-rendered curtain, still undecided. CSS is keeping
-   *             it hidden; whether it is ever seen depends on which happens
-   *             first, the page finishing or the grace period running out.
-   *   idle      nothing rendered. Where a fast load and a fast click end up.
-   *   shown     deliberately on screen, and staying for at least MIN_SHOW.
+   *   shown     on screen, and staying for at least MIN_SHOW. Where every
+   *             page load starts, on both sides of hydration, so the server
+   *             HTML and the first client render agree.
    *   leaving   fading out.
-   *
-   * It starts at "arming" on both sides of hydration, so the server HTML and
-   * the first client render agree. */
-  const [phase, setPhase] = useState("arming");
+   *   idle      nothing rendered. */
+  const [phase, setPhase] = useState("shown");
 
   /* The same value, readable from a timer or a listener that was bound before
      the current render existed. Assigning during render rather than in an
@@ -189,10 +167,10 @@ export default function RouteLoader({ paths = [], trees = [] }) {
     setPhase(next);
   }, []);
 
-  /* Gone without a fade. For the case where the curtain was never visible in
-     the first place — there is nothing to fade, and a transition out of an
-     overlay nobody saw is FADE milliseconds of an invisible sheet sitting over
-     the page eating clicks. */
+  /* Gone without a fade. For a click that landed inside GRACE, where the
+     curtain was never raised — there is nothing to fade, and a transition out
+     of an overlay nobody saw is FADE milliseconds of an invisible sheet sitting
+     over the page eating clicks. */
   const drop = useCallback(() => {
     clearTimers();
     to("idle");
@@ -204,9 +182,9 @@ export default function RouteLoader({ paths = [], trees = [] }) {
     after(FADE, () => to("idle"));
   }, [after, clearTimers, to]);
 
-  /* Called when a navigation lands, whichever kind it was. If the curtain went
-     up it owes the visitor MIN_SHOW and a finished wordmark before it goes; if
-     it never did, this is the fast path and it leaves without being seen.
+  /* Called when a load or navigation lands. If the curtain is up it owes the
+     visitor MIN_SHOW and a finished wordmark before it goes; if it never went
+     up, this is a fast click and it leaves without being seen.
    *
    * The wordmark is waited on by polling rather than by a promise, so that it
    * lives on the same timers everything else here does and clearTimers still
@@ -230,15 +208,10 @@ export default function RouteLoader({ paths = [], trees = [] }) {
     release();
   }, [after, clearTimers, dismiss, drop]);
 
-  /* Which of the two curtains is on screen: the one the server put in the HTML,
-     or one this component has since put up itself.
-   *
-   * It is not the same question as the phase. A server-rendered curtain that
-   * gets adopted moves to "shown" like any other, but it is still the one
-   * whose animations started when the page was parsed, and telling
-   * LoadingScreen otherwise would restart the typing halfway through the
-   * showing. Once a click has raised one, every curtain after it is raised —
-   * the server's was only ever the first. */
+  /* Which of the two curtains this is: the one the server put in the HTML, or
+     one a click has since raised. They look the same; the difference is only
+     that a raised one must mount fresh, so its typing starts from the first
+     letter rather than carrying on from the served one's. */
   const raised = useRef(false);
 
   const raise = useCallback(() => {
@@ -247,58 +220,31 @@ export default function RouteLoader({ paths = [], trees = [] }) {
     to("shown");
   }, [to]);
 
-  /* The opening question, and the only one CSS has already had a go at: is
-     this page still loading, now that React is finally running?
-   *
-   * document.readyState answers that half. The other half — has the curtain
-   * actually appeared yet — has to be asked of the curtain itself, and that is
-   * what `shownFor` below is for.
-   *
-   * It used to be answered with performance.now(), on the reasoning that the
-   * CSS delay and the navigation were on the same clock. They are not. A CSS
-   * animation starts when its element is created, which is when the HTML is
-   * parsed; performance.now() counts from the start of the navigation, which
-   * is before the server has even answered. On a quick connection the two are
-   * within a few milliseconds of each other and it worked. On a slow first
-   * byte they are a second apart, and this would decide the curtain had long
-   * since faded in while CSS still had it hidden — so it adopted it, which
-   * forces it visible on the spot, while everything inside was still sitting
-   * out its own delay at opacity zero. A black screen with nothing on it, for
-   * exactly as long as the server had been slow. */
+  /* The first load. The curtain has been on screen since the first paint;
+     it comes down once the page — images, fonts, scripts — has finished
+     loading, and not before. */
   useEffect(() => {
-    const decide = () => {
+    shownAt.current = firstPaintAt();
+
+    const loaded = () => {
       /* A visitor who has already clicked through to somewhere else is not
          waiting on this page any more, and the click owns the curtain now. */
       if (navigating.current) return;
-
-      const seen = shownFor();
-
-      if (seen <= 0) {
-        // Never became visible. Take it out before it can.
-        drop();
-        return;
-      }
-
-      /* It is up, or is part way through fading in. Adopt it as a curtain we
-         chose to show, dated from when CSS started showing it rather than from
-         now, so MIN_SHOW is measured against what the visitor actually saw. */
-      shownAt.current = Date.now() - seen;
-      to("shown");
       settle();
     };
 
-    /* The ceiling goes on first, so that a decide() which runs synchronously
-       below can clear it. Registered the other way round it would survive the
-       fast path and drop a curtain over a finished page eight seconds in. */
+    /* The ceiling goes on first, so that a settle() which runs synchronously
+       below can clear it. Registered the other way round it would survive and
+       fade a curtain over a finished page eight seconds in. */
     after(MAX_WAIT, () => {
-      window.removeEventListener("load", decide);
+      window.removeEventListener("load", loaded);
       if (phaseRef.current !== "idle") dismiss();
     });
 
-    if (document.readyState === "complete") decide();
-    else window.addEventListener("load", decide, { once: true });
+    if (document.readyState === "complete") loaded();
+    else window.addEventListener("load", loaded, { once: true });
 
-    return () => window.removeEventListener("load", decide);
+    return () => window.removeEventListener("load", loaded);
     // Once, on mount: this is about the request that built the page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -380,10 +326,7 @@ export default function RouteLoader({ paths = [], trees = [] }) {
 
   /* Nothing behind a full-screen curtain is worth scrolling to, and a
      scrollbar next to it gives the game away. The attribute is the one
-     app/globals.css watches, and it goes on only once the curtain is really
-     there — never while arming, where the page underneath is still the live
-     one and taking its scrollbar away would be a visible jump on every fast
-     load.
+     app/globals.css watches.
    *
    * The cleanup is not a tidiness measure. A click into a slug that does not
    * exist tears this whole layout down and mounts the 404 under the root one
@@ -416,11 +359,10 @@ export default function RouteLoader({ paths = [], trees = [] }) {
 
   return (
     /* Keyed on which curtain this is, so that a raised one always mounts fresh
-       rather than inheriting the served one's half-finished animations. */
+       rather than inheriting the served one's half-finished animations. Both
+       are otherwise rendered identically. */
     <LoadingScreen
       key={raised.current ? "raised" : "served"}
-      reveal={raised.current ? "now" : "delayed"}
-      offset={raised.current ? 0 : GRACE}
       leaving={phase === "leaving"}
       fade={FADE}
     />

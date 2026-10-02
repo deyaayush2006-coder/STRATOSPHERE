@@ -50,31 +50,10 @@ const LETTER_STAGGER = 42;
 // After the last keystroke, not with it.
 const SUBTITLE_DELAY = WORDMARK.length * LETTER_STAGGER + 80;
 
-/* `reveal` is the difference between the two ways this gets put on screen.
- *
- * "delayed" is the first paint of a real request, where the curtain is in the
- * HTML before anything has had a chance to judge whether it is needed. It
- * hides itself for a grace period and fades in only if the page is still not
- * ready — see --animate-curtain-in in app/globals.css.
- *
- * "now" is a decision already made: RouteLoader has watched a navigation run
- * past the grace period and is showing this deliberately, so it appears in the
- * frame it is rendered in rather than waiting the grace period out twice.
- *
- * `offset` is the same difference, said to everything inside. A CSS animation
- * starts when its element is created, and on a real request that is when the
- * HTML is parsed — which is up to a grace period before the curtain is
- * actually on screen, and on a slow load a great deal longer, because the
- * curtain then sits there hidden while the page keeps arriving. Left alone,
- * the name finished typing itself behind a curtain nobody had seen yet and
- * what turned up was a lockup already assembled. So every delay in here is
- * measured from the moment the curtain becomes visible rather than from the
- * moment it was built, and `offset` is that moment.
- *
- * Leaving overrides both with animate-none. The keyframes hold opacity at 1
- * for as long as they are applied, and an animation outranks a transition — so
- * without dropping it the fade-out would simply not happen. */
-export default function LoadingScreen({ reveal = "now", offset = 0, leaving = false, fade = 500 }) {
+/* The same curtain whether it is the first paint of the site or raised by a
+   click: visible from the frame it is rendered in, and opaque, so nothing
+   behind it shows until RouteLoader lifts it. `leaving` fades it out. */
+export default function LoadingScreen({ leaving = false, fade = 500 }) {
   return (
     <div
       data-route-loader=""
@@ -82,13 +61,7 @@ export default function LoadingScreen({ reveal = "now", offset = 0, leaving = fa
       aria-live="polite"
       aria-label="Loading Stratosphere"
       className={`fixed inset-0 z-[100] grid place-items-center bg-base transition-opacity ease-out
-        ${
-          leaving
-            ? "animate-none opacity-0"
-            : reveal === "delayed"
-              ? "animate-curtain-in"
-              : "opacity-100"
-        }`}
+        ${leaving ? "opacity-0" : "opacity-100"}`}
       style={{ transitionDuration: `${fade}ms` }}
     >
       {/* Without JavaScript nothing is ever going to take this down, and a
@@ -98,6 +71,38 @@ export default function LoadingScreen({ reveal = "now", offset = 0, leaving = fa
       <noscript>
         <style>{`[data-route-loader]{display:none!important}`}</style>
       </noscript>
+
+      {/* The sky behind the lockup, so the curtain reads as the same place the
+          site is set in rather than as a blank sheet pulled over it. Built from
+          the backdrop's own tokens, so it follows the theme toggle. Out of the
+          flow and first in the tree, so it can neither move the stage nor be
+          drawn over it. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        {/* A bloom centred on the ring, breathing slowly. */}
+        <div
+          className="absolute left-1/2 top-1/2 h-[130vmin] w-[130vmin] -translate-x-1/2 -translate-y-1/2
+            animate-loader-bloom motion-reduce:animate-none
+            bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--sky-core)_42%,transparent)_0%,color-mix(in_oklab,var(--sky-core)_14%,transparent)_45%,transparent_100%)]"
+        />
+        {/* A low horizon wash, the way the site backdrop sits over the fold. */}
+        <div className="absolute inset-x-0 bottom-0 h-3/5 bg-[radial-gradient(120%_100%_at_50%_100%,var(--sky-horizon),transparent_70%)]" />
+
+        {/* Two layers of stars on tiles of different sizes, so the repeat never
+            lines up into a grid. Dark theme only: on the pale sky they read as
+            dust on the screen rather than as anything far away. */}
+        <div
+          className="absolute inset-0 animate-loader-twinkle motion-reduce:animate-none [[data-theme=light]_&]:hidden
+            [background-size:260px_260px]
+            [background-image:radial-gradient(1px_1px_at_24px_38px,#fff_100%,transparent),radial-gradient(1px_1px_at_142px_96px,#fff_100%,transparent),radial-gradient(1.5px_1.5px_at_208px_22px,#fff_100%,transparent),radial-gradient(1px_1px_at_74px_188px,#fff_100%,transparent),radial-gradient(1px_1px_at_230px_210px,#fff_100%,transparent)]
+            [mask-image:radial-gradient(ellipse_at_center,transparent_18%,#000_70%)]"
+        />
+        <div
+          className="absolute inset-0 animate-loader-twinkle [animation-delay:-1.8s] motion-reduce:animate-none
+            [[data-theme=light]_&]:hidden [background-size:410px_410px]
+            [background-image:radial-gradient(1px_1px_at_60px_300px,#fff_100%,transparent),radial-gradient(1.5px_1.5px_at_320px_140px,#9ad9ff_100%,transparent),radial-gradient(1px_1px_at_190px_40px,#fff_100%,transparent),radial-gradient(1px_1px_at_380px_380px,#fff_100%,transparent)]
+            [mask-image:radial-gradient(ellipse_at_center,transparent_18%,#000_70%)]"
+        />
+      </div>
 
       {/* The stage is the only thing in the overlay's flow, so the middle of
           the ring is the middle of the screen. Stacked in a column with the
@@ -116,12 +121,21 @@ export default function LoadingScreen({ reveal = "now", offset = 0, leaving = fa
             The outer box carries the scaled size so the row below it sits
             where it should — a transform does not change layout, and without
             this the stage would reserve its full 760×300 at every width and
-            push the wait off a phone screen. */}
+            push the wait off a phone screen.
+
+            On the way out the lockup lifts towards the viewer and softens as
+            the curtain fades, so the page underneath reads as arriving through
+            it rather than as a sheet being switched off. Done with the `scale`
+            property, which Tailwind's scale utility sets, rather than
+            `transform`, which the entry animation holds for as long as it is
+            applied and would otherwise outrank. */}
         <div
           aria-hidden="true"
-          className="animate-loader-in [--s:1] max-[980px]:[--s:0.76] max-[720px]:[--s:0.56]
-            max-[480px]:[--s:0.4] h-[calc(300px*var(--s))] w-[calc(760px*var(--s))]"
-          style={{ animationDelay: `${offset}ms` }}
+          className={`animate-loader-in [--s:1] max-[980px]:[--s:0.76] max-[720px]:[--s:0.56]
+            max-[480px]:[--s:0.4] h-[calc(300px*var(--s))] w-[calc(760px*var(--s))]
+            transition-[scale,filter] ease-in motion-reduce:transition-none
+            ${leaving ? "scale-[1.08] blur-[3px]" : ""}`}
+          style={{ transitionDuration: `${fade}ms` }}
         >
           <div
             className="relative h-[300px] w-[760px] origin-top-left [transform:scale(var(--s))]
@@ -186,8 +200,37 @@ export default function LoadingScreen({ reveal = "now", offset = 0, leaving = fa
                * apart and the rocket spins on the spot the whole way round. */}
               <div
                 className="absolute inset-0 animate-orbit-spin [transform-style:preserve-3d] motion-reduce:animate-none"
-                style={{ animationDelay: `${offset}ms` }}
               >
+                {/* The wake. A third of the ring lit behind the rocket and
+                    fading back along it, so the path the craft has just flown
+                    stays visible for a moment and the motion reads as flight
+                    rather than as a marker being moved.
+
+                    It rides this disc, so it turns with the rocket and costs no
+                    animation of its own, and it lies in the tilted plane, so
+                    the browser draws it behind the name along the far side of
+                    the ring and in front of it along the near side, the same as
+                    the rocket.
+
+                    A conic gradient cut to a thin band by a radial mask. The
+                    conic angle is measured clockwise from twelve, and the
+                    rocket is parked at three flying clockwise, so the wake has
+                    to end at 90deg and fade in from before it. Starting the
+                    sweep at -40deg puts the rocket at 130deg of it; the bright
+                    end stops a few degrees short of that, at the tail rather
+                    than the nose. Two copies: a crisp line on the ring, and a
+                    wider blurred one under it for the glow. */}
+                <div
+                  className="absolute inset-0 rounded-full blur-[6px]
+                    bg-[conic-gradient(from_-40deg,transparent_0deg,rgba(34,211,238,0.35)_123deg,transparent_124deg)]
+                    [mask-image:radial-gradient(closest-side,transparent_calc(100%-14px),#000_calc(100%-2px),transparent_calc(100%+8px))]"
+                />
+                <div
+                  className="absolute inset-0 rounded-full
+                    bg-[conic-gradient(from_-40deg,transparent_0deg,rgba(34,211,238,0.12)_60deg,rgba(154,217,255,0.9)_123deg,transparent_124deg)]
+                    [mask-image:radial-gradient(closest-side,transparent_calc(100%-4.5px),#000_calc(100%-2px),transparent_calc(100%+0.5px))]"
+                />
+
                 {/* Parked on the rim at three o'clock. The disc's rotation is
                     what moves it from here; it never moves itself. */}
                 <div className="absolute left-full top-1/2 [transform:translate(-50%,-50%)] [transform-style:preserve-3d]">
@@ -206,7 +249,6 @@ export default function LoadingScreen({ reveal = "now", offset = 0, leaving = fa
                   <span
                     className="block animate-orbit-face [transform:rotateX(calc(var(--tilt)*-1))]
                       motion-reduce:animate-none"
-                    style={{ animationDelay: `${offset}ms` }}
                   >
                     {/* Dressed as the aircraft in components/Members: the same
                         cyan, the same halo behind it, the same bob and the
@@ -254,7 +296,8 @@ export default function LoadingScreen({ reveal = "now", offset = 0, leaving = fa
                   pixels above the middle of the ring, which is not where the
                   rocket is going round. */}
               <div className="relative">
-                <span className="relative flex items-center font-display text-[54px] font-bold uppercase leading-none tracking-[0.02em] text-ink">
+                <span className="relative flex items-center font-display text-[54px] font-bold uppercase leading-none tracking-[0.02em] text-ink
+                  [text-shadow:0_0_32px_rgba(34,211,238,0.22)]">
                   {WORDMARK.split("").map((letter, i) => (
                     /* One keystroke each. The delay is the only thing that
                        differs between them, so the name types itself left to
@@ -264,7 +307,7 @@ export default function LoadingScreen({ reveal = "now", offset = 0, leaving = fa
                       key={i}
                       data-typed=""
                       className="inline-block animate-letter-in motion-reduce:animate-none"
-                      style={{ animationDelay: `${offset + i * LETTER_STAGGER}ms` }}
+                      style={{ animationDelay: `${i * LETTER_STAGGER}ms` }}
                     >
                       {letter === "O" ? (
                         /* The orbit ring around the O, the same mark the nav
@@ -321,7 +364,7 @@ export default function LoadingScreen({ reveal = "now", offset = 0, leaving = fa
                   className="absolute left-1/2 top-full mt-3 -translate-x-1/2 whitespace-nowrap
                     animate-loader-in font-mono text-[13px] uppercase tracking-[0.3em] text-ink/45
                     motion-reduce:animate-none"
-                  style={{ animationDelay: `${offset + SUBTITLE_DELAY}ms` }}
+                  style={{ animationDelay: `${SUBTITLE_DELAY}ms` }}
                 >
                   Aerospace Club · Jadavpur University
                 </span>
@@ -330,26 +373,33 @@ export default function LoadingScreen({ reveal = "now", offset = 0, leaving = fa
           </div>
         </div>
 
-        {/* The wait itself: a label that breathes and three dots that bounce a
-            beat apart. It says the same thing a sweeping bar would and says it
-            more plainly — a bar looks like progress being reported, and nothing
-            in here can honestly report any.
+        {/* The wait itself: a status line and three signal lights that blink a
+            beat apart, like a link being brought up. It says the same thing a
+            sweeping bar would and says it more plainly — a bar looks like
+            progress being reported, and nothing in here can honestly report
+            any.
 
             Taken out of the flow and pinned low, so that it reads as a caption
             to the screen rather than as the other half of a pair the stage has
             to share the middle with. */}
         <div
-          className="absolute inset-x-0 bottom-[14%] flex animate-loader-in flex-col items-center gap-4 px-6"
-          style={{ animationDelay: `${offset}ms` }}
+          className="absolute inset-x-0 bottom-[12%] flex animate-loader-in justify-center px-6"
         >
-          <p className="animate-pulse font-mono text-sm font-medium text-ink/45 motion-reduce:animate-none">
-            Loading...
-          </p>
-
-          <div className="flex gap-1">
-            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-aurora2 [animation-delay:0ms] motion-reduce:animate-none" />
-            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-aurora2 [animation-delay:150ms] motion-reduce:animate-none" />
-            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-aurora2 [animation-delay:300ms] motion-reduce:animate-none" />
+          <div
+            className="flex items-center gap-3 rounded-full border border-edge bg-panel/40 px-4 py-2
+              font-mono text-[11px] uppercase tracking-[0.3em] text-ink/55 backdrop-blur-sm"
+          >
+            <span className="flex gap-1.5">
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="h-1.5 w-1.5 animate-loader-signal rounded-full bg-aurora2
+                    shadow-[0_0_6px_rgba(34,211,238,0.7)] motion-reduce:animate-none"
+                  style={{ animationDelay: `${i * 180}ms` }}
+                />
+              ))}
+            </span>
+            Preparing for launch
           </div>
         </div>
       </>

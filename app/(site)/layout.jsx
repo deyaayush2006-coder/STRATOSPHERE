@@ -35,10 +35,8 @@ export default async function SiteLayout({ children }) {
   return (
     <div className="relative w-full min-h-screen bg-base overflow-x-clip">
       {/* Rendered on the server, so on a slow connection the curtain is in the
-          first painted frame rather than waiting for React. It keeps itself
-          hidden for the first fraction of a second and only appears if the
-          page is still not ready by then — a fast load never shows it at all.
-          It is mounted here rather than in the root layout because this is the
+          first painted frame rather than waiting for React, and covers the
+          page until it has finished loading. It is mounted here rather than in the root layout because this is the
           boundary that matters: the 404 page and the dashboard render outside
           this group and get no loading screen. */}
       <RouteLoader paths={paths} trees={trees} />

@@ -182,25 +182,12 @@
      one that admits it is only waiting. */
   --animate-loader-in: loaderIn 0.45s ease both;
 
-  /* The curtain deciding whether it is needed at all, and doing it in CSS
-     because JavaScript is not running yet when the question comes up.
-   *
-   * The loading screen is in the server-rendered HTML of every public page, so
-   * it is on screen in the first painted frame — long before React hydrates
-   * and can form an opinion. On a fast connection that is exactly wrong: the
-   * page is ready more or less immediately and the visitor gets a curtain
-   * flashed at them over a site that had already arrived.
-   *
-   * The delay is the whole mechanism. `both` holds the first frame, so for the
-   * first 400ms the overlay is hidden and inert, and a page that finishes
-   * inside that window is taken down by RouteLoader before this ever plays. It
-   * is only a page still assembling after 400ms — a slow connection, a cold
-   * cache — that sees the curtain fade in.
-   *
-   * visibility rather than opacity alone: a transparent overlay still swallows
-   * every click underneath it, which on a fast load is a third of a second of
-   * a page that looks finished and does nothing. */
-  --animate-curtain-in: curtainIn 0.35s ease-out 0.4s both;
+  /* The loading screen's sky: a slow breath in the bloom behind the ring, a
+     twinkle on the stars, and the signal lights on the status line. All
+     ambient, so all dropped under reduced motion in the markup. */
+  --animate-loader-bloom: loaderBloom 6s ease-in-out infinite;
+  --animate-loader-twinkle: loaderTwinkle 3.6s ease-in-out infinite;
+  --animate-loader-signal: loaderSignal 1.2s ease-in-out infinite;
 
   /* The rocket going round the wordmark on the loading screen. Two halves of
      one movement, which is why they share a period: change it in one place and
@@ -333,9 +320,21 @@
   to   { opacity: 1; transform: none; }
 }
 
-@keyframes curtainIn {
-  from { opacity: 0; visibility: hidden; }
-  to   { opacity: 1; visibility: visible; }
+/* Scale on the `scale` property, not `transform`: the bloom is centred with a
+   translate, and a transform here would throw that away. */
+@keyframes loaderBloom {
+  0%, 100% { opacity: 0.85; scale: 1; }
+  50%      { opacity: 1;    scale: 1.06; }
+}
+
+@keyframes loaderTwinkle {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+@keyframes loaderSignal {
+  0%, 100% { opacity: 0.25; }
+  40%      { opacity: 1; }
 }
 
 @keyframes blobFloat {
@@ -463,13 +462,10 @@
   /* The loading screen is up. Nothing behind a full-screen curtain is worth
      scrolling to, and a scrollbar next to it gives the game away.
    *
-   * components/RouteLoader sets the attribute and takes it off again, and it
-   * only sets it once the curtain is genuinely on screen — never during the
-   * grace period, where the page underneath is still the live one and locking
-   * it would be a third of a second of a site that does not scroll. That is
-   * also why this is no longer set before first paint: on a fast load the
-   * curtain never appears, and a lock put on in advance would take the
-   * scrollbar away and hand it straight back, which is a visible jump. */
+   * components/RouteLoader sets the attribute while the curtain is on screen
+   * and takes it off again when it has gone. On a click it is only set once
+   * the curtain is really raised, never during the grace period, where the
+   * page underneath is still the live one. */
   html[data-intro="pending"] {
     overflow: hidden;
   }
