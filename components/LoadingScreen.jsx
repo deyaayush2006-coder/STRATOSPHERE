@@ -123,6 +123,11 @@ export default function LoadingScreen({ leaving = false, fade = 500 }) {
             this the stage would reserve its full 760×300 at every width and
             push the wait off a phone screen.
 
+            Below 720px each step is the largest that still fits the 760px
+            stage across the narrowest screen in its band, so a phone gets as
+            much of the lockup as its width allows rather than one small size
+            for every handset.
+
             On the way out the lockup lifts towards the viewer and softens as
             the curtain fades, so the page underneath reads as arriving through
             it rather than as a sheet being switched off. Done with the `scale`
@@ -131,8 +136,9 @@ export default function LoadingScreen({ leaving = false, fade = 500 }) {
             applied and would otherwise outrank. */}
         <div
           aria-hidden="true"
-          className={`animate-loader-in [--s:1] max-[980px]:[--s:0.76] max-[720px]:[--s:0.56]
-            max-[480px]:[--s:0.4] h-[calc(300px*var(--s))] w-[calc(760px*var(--s))]
+          className={`animate-loader-in [--s:1] max-[980px]:[--s:0.76] max-[720px]:[--s:0.6]
+            max-[455px]:[--s:0.55] max-[417px]:[--s:0.5] max-[379px]:[--s:0.46] max-[349px]:[--s:0.42]
+            h-[calc(300px*var(--s))] w-[calc(760px*var(--s))]
             transition-[scale,filter] ease-in motion-reduce:transition-none
             ${leaving ? "scale-[1.08] blur-[3px]" : ""}`}
           style={{ transitionDuration: `${fade}ms` }}
@@ -358,11 +364,17 @@ export default function LoadingScreen({ leaving = false, fade = 500 }) {
 
                     Paced with the letters, because it is timed off them: on
                     the wall clock it would turn up under a name the frame
-                    clock has only half typed. */}
+                    clock has only half typed.
+
+                    On a phone it is sized against the scale rather than with
+                    it: scaled down with the stage it came out at 5–7px. Divided
+                    by --s it lands at 10px on screen, with the tracking pulled
+                    in so the line still fits a 320px screen. */}
                 <span
                   data-typed=""
                   className="absolute left-1/2 top-full mt-3 -translate-x-1/2 whitespace-nowrap
                     animate-loader-in font-mono text-[13px] uppercase tracking-[0.3em] text-ink/45
+                    max-[720px]:text-[calc(10px/var(--s))] max-[720px]:tracking-[0.18em]
                     motion-reduce:animate-none"
                   style={{ animationDelay: `${SUBTITLE_DELAY}ms` }}
                 >
