@@ -15,9 +15,9 @@ import { mediaUrl } from "@/lib/media-url";
  * behind.
  *
  * Every photo fills the band edge to edge, cropped to fit rather than boxed
- * in with bars. Its top edge is pinned to the top of the band: the crop comes
- * off the bottom and sides, and the slow zoom grows from the top edge down
- * rather than out from the middle.
+ * in with bars. The crop sits on the right edge and a quarter of the way down
+ * the photo, so more comes off the bottom than the top, and the slow zoom
+ * grows from the band's top edge down rather than out from the middle.
  *
  * Only the photo on screen and the one after it are ever in the document. The
  * rest join as the run reaches them, so the page opens on one photograph
@@ -129,11 +129,14 @@ export default function Hero({ slides = [] }) {
   );
   const moving = photos.length > 1;
 
+  /* The nav above is sticky top-4, so at rest it is drawn 1rem below where it
+     sits in the flow. The 1rem in the margin makes up for that, leaving a 2px
+     gap under its border. */
   return (
     <header
       ref={bandRef}
       id="overview"
-      className="relative isolate grid overflow-hidden scroll-mt-28 mt-[calc(1rem+10px)] min-h-[calc(100svh-10.25rem)]"
+      className="relative isolate grid overflow-hidden scroll-mt-1 mt-[calc(1rem+2px)] min-h-[calc(100svh-7.25rem+8px)]"
     >
       {photos.map((src, i) =>
         i > reach ? null : (
@@ -161,7 +164,7 @@ export default function Hero({ slides = [] }) {
             // stall the run for good.
             onLoad={() => markReady(i)}
             onError={() => markReady(i)}
-            className={`object-cover object-top origin-top motion-reduce:animate-none ${
+            className={`object-cover object-[100%_25%] origin-top motion-reduce:animate-none ${
               i === index
                 ? "-z-10 opacity-100 transition-opacity duration-[1500ms] ease-in-out"
                 : `-z-20 ${i === prev ? "opacity-100" : "opacity-0"}`
@@ -180,7 +183,7 @@ export default function Hero({ slides = [] }) {
         aria-hidden="true"
       />
       <div className="col-start-1 row-start-1 flex flex-col justify-end px-6 pb-14 md:px-10 md:pb-20">
-        <div className="hero-title flex flex-col border-l-[4px] border-x-[#0D4C72] dark:border-x-[#309ece] w-[330px] md:w-[500px] text-left pr-2 absolute top-[40vh] left-[5%] font-semibold font-Josefin gap-y-4">
+        <div className="hero-title flex flex-col border-l-[4px] border-x-[#0D4C72] dark:border-x-[#309ece] w-[330px] md:w-[500px] text-left pr-2 absolute top-[calc(40vh+3px)] left-[5%] font-semibold font-Josefin gap-y-4">
           <div className="pl-[15px] text-4xl md:text-5xl text-black dark:text-white">
             <span className="font-display text-[35px] sm:text-[47px] hover:text-aurora2 font-bold uppercase leading-none tracking-[0.01em] text-ink">
               Strat
