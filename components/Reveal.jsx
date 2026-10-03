@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Fades children up the first time they scroll into view.
 export default function Reveal({ as: Tag = "div", className = "", children, ...rest }) {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);

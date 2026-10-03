@@ -4,14 +4,6 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { mediaUrl } from "@/lib/media-url";
 
-/* Drawings, renders and screenshots off the CAD.
- *
- * A grid of thumbnails that open full size. The thumbnails are deliberately
- * small requests — a CAD render is a large flat image and there is no reason
- * to send the full one until somebody asks for it, which is the whole reason
- * the viewer below exists rather than just linking the files.
- */
-
 function Tile({ shot, onOpen, index }) {
   const [failed, setFailed] = useState(false);
   const src = mediaUrl(shot.src);
@@ -31,9 +23,6 @@ function Tile({ shot, onOpen, index }) {
           width={800}
           height={600}
           onError={() => setFailed(true)}
-          /* Two up on a phone, three on a desktop inside a 6xl column — so the
-             largest a thumbnail is ever painted is about 380px, and that is
-             what gets requested rather than the 4000px render behind it. */
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 380px"
           className="h-full w-full aspect-[4/3] object-cover transition duration-300 group-hover:scale-[1.03]"
         />
@@ -41,14 +30,12 @@ function Tile({ shot, onOpen, index }) {
       </button>
 
       {shot.caption && (
-        <figcaption className="text-xs text-ink/50 mt-2 leading-snug">{shot.caption}</figcaption>
+        <figcaption className="font-sans text-sm text-ink/55 mt-2 leading-snug">{shot.caption}</figcaption>
       )}
     </figure>
   );
 }
 
-/* Full size, over the page. Same shape as the committee dialog on the members
-   section: a flat scrim, one panel, escape and a click outside both close it. */
 function Lightbox({ shots, index, onClose, onStep }) {
   const closeRef = useRef(null);
   const shot = shots[index];
@@ -62,8 +49,6 @@ function Lightbox({ shots, index, onClose, onStep }) {
       if (e.key === "ArrowLeft") onStep(-1);
     };
 
-    /* Hold the page still underneath and pay back the scrollbar width, or
-       everything behind the overlay shifts sideways as it opens. */
     const gap = window.innerWidth - document.documentElement.clientWidth;
     const { overflow, paddingRight } = document.body.style;
     document.body.style.overflow = "hidden";
@@ -123,7 +108,7 @@ function Lightbox({ shots, index, onClose, onStep }) {
         )}
         <p className="text-sm text-ink/60 text-center m-0 max-w-xl">
           {shot.caption}
-          <span className="block font-mono text-[10px] uppercase tracking-[0.18em] text-ink/30 mt-1">
+          <span className="block font-sans text-xs text-ink/40 mt-1">
             {index + 1} / {shots.length}
           </span>
         </p>
@@ -146,7 +131,6 @@ export default function CadGallery({ shots = [], title = "CAD & drawings" }) {
 
   const usable = shots.filter((s) => s?.src);
 
-  // Wraps at both ends, so arrowing through never dead-ends on the last one.
   const step = useCallback(
     (by) => setOpen((i) => (i == null ? i : (i + by + usable.length) % usable.length)),
     [usable.length]
@@ -156,7 +140,7 @@ export default function CadGallery({ shots = [], title = "CAD & drawings" }) {
 
   return (
     <section className="mt-12">
-      <span className="mono-label">{title}</span>
+      <span className="font-sans text-xs font-medium tracking-wide text-aurora2">{title}</span>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
         {usable.map((shot, i) => (

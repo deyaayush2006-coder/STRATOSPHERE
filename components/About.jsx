@@ -1,17 +1,16 @@
 import Reveal from "./Reveal";
 import CountUp from "./CountUp";
 
-export default function About({ about = {} }) {
+export default function About({ about = {}, socials = [] }) {
   const { body = [], pillars = [], facts = [] } = about;
 
   return (
     <section id="about" className="px-6 py-24 md:py-28 scroll-mt-28 max-w-6xl mx-auto">
       <Reveal className="grid md:grid-cols-2 gap-8 md:gap-16 items-start">
         <h2 className="font-bold text-5xl md:text-6xl lg:text-7xl text-ink tracking-[0.06em] leading-[0.95]">
-          About Us
+          ABOUT US
         </h2>
 
-        {/* -mt-1 lines the first paragraph up with the heading cap */}
         <div className="md:-mt-1">
           <p className="text-ink text-lg leading-relaxed mb-5">{about.lead}</p>
 
@@ -20,6 +19,7 @@ export default function About({ about = {} }) {
               {paragraph}
             </p>
           ))}
+
         </div>
       </Reveal>
       <Reveal className="mt-16 md:mt-20 grid md:grid-cols-2 gap-12 md:gap-0">
@@ -28,7 +28,7 @@ export default function About({ about = {} }) {
             key={pillar.title}
             className={i === 0 ? "md:pr-12" : "md:border-l md:border-ink/40 md:pl-12"}
           >
-            <h3 className="font-serif italic text-2xl md:text-3xl text-ink tracking-[0.04em]">
+            <h3 className="font-semibold text-2xl md:text-3xl text-ink tracking-[-0.01em]">
               {pillar.title}
             </h3>
             <p className="text-ink/70 mt-4 leading-relaxed">{pillar.body}</p>
@@ -40,13 +40,10 @@ export default function About({ about = {} }) {
         <dl className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-6">
           {facts.map((fact) => (
             <div key={fact.label} className="text-center">
-              {/* Counts up the first time the row is scrolled to. The server
-                  still renders the finished figure, so the number is right
-                  before any of that runs. */}
               <dd className="m-0">
                 <CountUp
                   value={fact.value}
-                  className="block text-4xl md:text-5xl font-semibold text-ink tracking-[-0.02em]"
+                  className="block text-6xl md:text-5xl font-semibold text-ink tracking-[-0.02em]"
                 />
               </dd>
               <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink/45 mt-3">

@@ -1,15 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Badge, Button, FIELD, IconButton, Label, Notice, Spinner } from "./ui";
 import { slugify } from "./schema";
 import { formatBytes, getCached, loadMedia, mediaUrl, subscribe, uploadMedia } from "./media";
-
-/* Renders one field of any type from schema.js, plus the list/object wrappers
-   that hold them. Nothing here knows what an "event" or a "member" is — the
-   shape comes entirely from the schema, so a new section needs no new code. */
-
-// ---------------------------------------------------------------- scalars
 
 function TextInput({ field, value, onChange }) {
   return (
@@ -23,10 +17,6 @@ function TextInput({ field, value, onChange }) {
   );
 }
 
-/* Kept as a string in the draft rather than coerced on every keystroke:
-   parsing as you type makes an empty box turn into 0 and a half-typed "1" into
-   a number the moment you reach for the second digit. The reader normalises
-   what it gets, so the box only has to hold what the committee typed. */
 function NumberInput({ field, value, onChange }) {
   return (
     <input
@@ -42,11 +32,6 @@ function NumberInput({ field, value, onChange }) {
   );
 }
 
-/* A wall-clock field over an ISO string.
-   datetime-local speaks the browser's local time and nothing else, so the two
-   helpers either side are the whole point: what is stored stays unambiguous
-   UTC, and what is typed stays the time the committee is actually looking at
-   on the clock in front of them. */
 const pad = (n) => String(n).padStart(2, "0");
 
 function toLocalInput(iso) {
@@ -61,7 +46,7 @@ function toLocalInput(iso) {
 
 function fromLocalInput(local) {
   if (!local) return "";
-  const at = new Date(local); // no offset in the string, so this reads as local
+  const at = new Date(local);
   return Number.isNaN(at.getTime()) ? "" : at.toISOString();
 }
 
@@ -124,8 +109,6 @@ function CheckboxInput({ field, value, onChange }) {
   );
 }
 
-// ------------------------------------------------------------ media picker
-
 function MediaPicker({ onPick, onClose }) {
   const [items, setItems] = useState(() => getCached() || []);
   const [status, setStatus] = useState(getCached() ? "ready" : "loading");
@@ -143,7 +126,6 @@ function MediaPicker({ onPick, onClose }) {
       });
   }, []);
 
-  // Escape closes, the way every other dialog on the web does.
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -160,7 +142,7 @@ function MediaPicker({ onPick, onClose }) {
       let last = null;
       for (const file of files) last = await uploadMedia(file);
       setStatus("ready");
-      if (last) onPick(last.url); // picking the last upload is almost always what was meant
+      if (last) onPick(last.url);
     } catch (err) {
       setError(err.message);
       setStatus("ready");
@@ -204,7 +186,7 @@ function MediaPicker({ onPick, onClose }) {
           hidden
           onChange={(e) => {
             handleFiles(e.target.files);
-            e.target.value = ""; // so re-picking the same file fires again
+            e.target.value = "";
           }}
         />
 
@@ -272,8 +254,6 @@ function ImageInput({ value, onChange }) {
       </div>
 
       <div className="min-w-0 flex-1">
-        {/* The path stays editable: existing content points at files in
-            public/images, which were never uploaded through this panel. */}
         <input
           type="text"
           className={FIELD}
@@ -303,8 +283,6 @@ function ImageInput({ value, onChange }) {
     </div>
   );
 }
-
-// ------------------------------------------------------------ simple lists
 
 function StringList({ field, value, onChange }) {
   const rows = Array.isArray(value) ? value : [];
@@ -371,12 +349,6 @@ function PairList({ field, value, onChange }) {
   );
 }
 
-// --------------------------------------------------------------- item card
-
-/* One expandable row. Collapsed it is a summary line with the reorder and
-   delete controls; expanded it is the item's whole form. Editing 16 committee
-   members in a flat wall of inputs is unusable, and this keeps the page short
-   enough to find things in. */
 export function ItemCard({ spec, item, index, count, onChange, onMove, onRemove, onDuplicate, defaultOpen }) {
   const [open, setOpen] = useState(Boolean(defaultOpen));
 
@@ -438,15 +410,6 @@ export function ItemCard({ spec, item, index, count, onChange, onMove, onRemove,
   );
 }
 
-/* A copy is a new row, not a second reference to an existing one.
- *
- * Every item that came from the database carries `_id`, its row uuid, and a
- * plain clone copies that along with everything else. Both cards then point at
- * the same row, and the save sends it twice in one batch — which Postgres
- * refuses outright ("ON CONFLICT DO UPDATE command cannot affect row a second
- * time"), so the whole section fails to save. Nested items carry their own
- * `_id` too, hence the recursion: duplicating a project has to free its parts,
- * and duplicating a committee year has to free its members. */
 function withoutIds(value) {
   if (Array.isArray(value)) return value.map(withoutIds);
   if (value && typeof value === "object") {
@@ -459,11 +422,8 @@ function withoutIds(value) {
   return value;
 }
 
-/* Slugs and years are unique in the database, so a copy cannot keep the
-   original's. Suffixed rather than blanked: it stays recognisable next to the
-   row it came from, and reads as a placeholder to correct before saving. */
 function freeKey(base, taken) {
-  if (!base) return base; // blank is filled in on the way to the database
+  if (!base) return base;
   for (let n = 1; ; n += 1) {
     const candidate = n === 1 ? `${base}-copy` : `${base}-copy-${n}`;
     if (!taken.has(candidate)) return candidate;
@@ -486,7 +446,7 @@ export function ListInput({ field, value, onChange }) {
 
   const add = () => {
     onChange([...items, field.blank()]);
-    setOpenIndex(items.length); // open the row that was just created
+    setOpenIndex(items.length);
   };
 
   const duplicate = (idx) => {
@@ -499,7 +459,7 @@ export function ListInput({ field, value, onChange }) {
     }
 
     onChange([...items.slice(0, idx + 1), copy, ...items.slice(idx + 1)]);
-    setOpenIndex(idx + 1); // open the copy, which needs editing before it is saved
+    setOpenIndex(idx + 1);
   };
 
   return (
@@ -524,8 +484,6 @@ export function ListInput({ field, value, onChange }) {
   );
 }
 
-// ------------------------------------------------------------- dispatchers
-
 const INPUTS = {
   text: TextInput,
   number: NumberInput,
@@ -542,7 +500,6 @@ const INPUTS = {
 export function Field({ field, value, onChange }) {
   const Input = INPUTS[field.type] || TextInput;
 
-  // The checkbox carries its own label, so it does not get a second one.
   if (field.type === "checkbox") {
     return <Input field={field} value={value} onChange={onChange} />;
   }
@@ -557,9 +514,6 @@ export function Field({ field, value, onChange }) {
   );
 }
 
-/* Renders every field of one object and hands back the whole updated object.
-   Also keeps slug fields in step with the title they are derived from, up
-   until someone types their own slug — after that it is left alone. */
 export function ObjectFields({ fields, value, onChange }) {
   const item = value ?? {};
 
@@ -579,7 +533,6 @@ export function ObjectFields({ fields, value, onChange }) {
   return (
     <div className="space-y-4">
       {fields.map((field) => {
-        // Nested lists get room to breathe and a rule to sit under.
         const nested = field.type === "list" || field.type === "pairList" || field.type === "stringList";
 
         return (

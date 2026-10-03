@@ -5,26 +5,11 @@ import SectionHeader from "./SectionHeader";
 import FeedArchive from "./FeedArchive";
 import { formatPosted, machineDate, splitFeed } from "@/lib/feed";
 
-/* The results list, kept the same way the announcements feed is kept.
- *
- * Every achievement stays on record with the moment it happened. How many of
- * the most recent ones reach the page is set in the dashboard, and the rest
- * fold into the archive underneath rather than being lost.
- *
- * No featured entry here, unlike announcements. A pinned card needs somewhere
- * to be featured, and this section is a list rather than a set of cards — so
- * the idea is switched off at the split rather than half-built.
- */
-
-// The committee writes "January 2025" or just "2025"; the timestamp is what
-// actually orders the list. The label leads because it is what they meant.
 function When({ achievement, archived = false }) {
   const exact = formatPosted(achievement.postedAt);
   const machine = machineDate(achievement.postedAt);
   const tone = archived ? "text-ink/45" : "text-aurora2";
 
-  /* Down in the archive the free-text label stops being enough to place an
-     entry against the others, so the full timestamp takes over from it. */
   const shown = archived ? exact || achievement.year : achievement.year || exact;
 
   if (!machine) {
@@ -84,7 +69,6 @@ export default function Achievements({ achievements = [], achievementSettings })
     <section id="achievements" className="px-6 py-24 md:py-28 scroll-mt-28 max-w-6xl mx-auto">
       <SectionHeader
         title="Achievements"
-        blurb="Competitions entered, events run, aircraft finished — and what came of each."
       />
 
       {recent.length > 0 ? (

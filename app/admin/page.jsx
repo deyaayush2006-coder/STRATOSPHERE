@@ -4,7 +4,6 @@ import { readContent } from "@/lib/content";
 import Dashboard from "@/components/control-tower/Dashboard";
 import LoginScreen from "@/components/control-tower/LoginScreen";
 
-/* Reads the session cookie, so it can never be cached or prerendered. */
 export const dynamic = "force-dynamic";
 
 function SetupNotice() {
@@ -31,14 +30,9 @@ function SetupNotice() {
 export default async function AdminPage() {
   if (!isSupabaseConfigured) return <SetupNotice />;
 
-  /* A session cookie is not proof of anything on its own — it may belong to an
-     account an admin has since suspended. getStaff checks the profile too. */
   const staff = await getStaff();
   if (!staff) return <LoginScreen />;
 
-  /* Loaded here rather than in an effect so the editor opens on real content
-     instead of a spinner. Reading as the signed-in member means drafts are
-     included, which is the whole point of the draft switch. */
   const content = await readContent(await createClient());
 
   return <Dashboard user={staff} initialContent={content} />;

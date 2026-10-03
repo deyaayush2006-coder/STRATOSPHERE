@@ -1,10 +1,3 @@
-/* The club glider, drawn once and used twice: as ambient traffic in the sky
-   behind the page, and as the craft that lifts each committee into view in the
-   members section.
-
-   Points right at rest, so anything flying another heading rotates it. Solid
-   fill rather than a stroke: SkyTraffic renders these as small as 17px, where a
-   1px outline turns to mush. */
 export default function Plane({ size = 24, className = "" }) {
   return (
     <svg

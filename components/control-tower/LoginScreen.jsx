@@ -5,10 +5,6 @@ import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { Button, FIELD, Label, Notice, Spinner } from "./ui";
 
-/* Sign-in and the dashboard live at the same URL, the way they did before the
-   move to Next. It keeps the panel to a single route, which matters because
-   NEXT_PUBLIC_ADMIN_PATH renames that route — a redirect to a second one would
-   have to know the secret name, and would leak it in the address bar. */
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -27,15 +23,11 @@ export default function LoginScreen() {
     });
 
     if (signInError) {
-      /* Supabase says "Invalid login credentials" whether it was the address
-         or the password, which is the right answer to give a stranger. */
       setError(signInError.message);
       setBusy(false);
       return;
     }
 
-    /* The session cookie is set now, so re-run the server component that
-       decides between this screen and the dashboard. */
     router.refresh();
   }
 

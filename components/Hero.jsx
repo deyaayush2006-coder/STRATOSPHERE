@@ -4,35 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { mediaUrl } from "@/lib/media-url";
 
-/* The band at the top of the front page, and the photographs that run behind
- * its title.
- *
- * The run is the club's own photos (heroSlides, in lib/defaults), and not the
- * site backdrop: that campus shot stays behind the other pages only. The first
- * slide is the one a reader who has asked for less motion ever sees. Each is
- * held for HOLD, then the next fades in over it across FADE while the one
- * underneath stays put, so the crossfade never dips through to the page
- * behind.
- *
- * Every photo fills the band edge to edge, cropped to fit rather than boxed
- * in with bars. The crop sits on the right edge and a quarter of the way down
- * the photo, so more comes off the bottom than the top, and the slow zoom
- * grows from the band's top edge down rather than out from the middle.
- *
- * Only the photo on screen and the one after it are ever in the document. The
- * rest join as the run reaches them, so the page opens on one photograph
- * rather than the whole set.
- */
-const HOLD = 6500;
-const FADE = 1500; // the duration-[1500ms] on the photos below
+const HOLD = 3500;
+const FADE = 1000;
 
-/* Which photo is up, which one it is covering, and how far into the list the
-   document has been filled.
- *
- * The run only moves while someone can see it and wants it to: never under
- * reduced motion, not in a background tab, not once the band has scrolled
- * away, and not after the pause button. It also never fades in a photo that
- * has not finished arriving — a hold that runs out first waits for it. */
 function useSlideshow(count, ref) {
   const [index, setIndex] = useState(0);
   const [prev, setPrev] = useState(-1);
@@ -69,14 +43,10 @@ function useSlideshow(count, ref) {
     };
   }, [ref, count]);
 
-  // The next photo joins the document while this one holds.
   useEffect(() => {
     if (live) setReach((r) => Math.max(r, next));
   }, [live, next]);
 
-  /* Remembered as the photo whose hold ran out, not as a flag: by the time
-     the next one is up, a stale "done" would belong to the wrong photo and
-     skip it straight past. */
   useEffect(() => {
     if (!live) return undefined;
     const timer = setTimeout(() => setHeldFor(index), HOLD);
@@ -89,7 +59,6 @@ function useSlideshow(count, ref) {
     setIndex(next);
   }, [live, heldFor, index, next, nextReady]);
 
-  // Once the new photo has covered it, the old one can drop out of sight.
   useEffect(() => {
     if (prev < 0) return undefined;
     const timer = setTimeout(() => setPrev(-1), FADE);
@@ -101,23 +70,9 @@ function useSlideshow(count, ref) {
   return { index, prev, reach, live, paused, setPaused, markReady };
 }
 
-const PauseIcon = () => (
-  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
-    <rect x="6" y="5" width="4" height="14" rx="1" />
-    <rect x="14" y="5" width="4" height="14" rx="1" />
-  </svg>
-);
-
-const PlayIcon = () => (
-  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
-    <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" />
-  </svg>
-);
-
 export default function Hero({ slides = [] }) {
   const bandRef = useRef(null);
 
-  // Each photo once, even if the list repeats one.
   const photos = slides
     .map((slide) => slide?.src)
     .filter((src, i, all) => src && all.indexOf(src) === i)
@@ -129,9 +84,6 @@ export default function Hero({ slides = [] }) {
   );
   const moving = photos.length > 1;
 
-  /* The nav above is sticky top-4, so at rest it is drawn 1rem below where it
-     sits in the flow. The 1rem in the margin makes up for that, leaving a 2px
-     gap under its border. */
   return (
     <header
       ref={bandRef}
@@ -140,33 +92,18 @@ export default function Hero({ slides = [] }) {
     >
       {photos.map((src, i) =>
         i > reach ? null : (
-          /* alt="" because the photos are the band's backdrop: the title over
-             them is the content, and a screen reader would otherwise read out
-             every photo in the stack.
-           *
-           * Only the incoming photo carries the transition. The one it covers
-           * is already opaque, and the rest have to vanish at once — a slow
-           * fade-out on a photo from two turns ago would show it again over
-           * the one underneath. */
           <Image
             key={src}
             src={src}
             alt=""
             fill
             priority={i === 0}
-            /* Upright, the band is taller than it is wide, so cover draws a
-               landscape photo by its height: a 16:9 one comes out around
-               140vh wide. 100vw would fetch a file a third of that and
-               stretch it. */
             sizes="(orientation: portrait) 140vh, 100vw"
-            // next/image only calls onLoad once the photo is decoded, so ready
-            // means ready to paint. A broken file counts as well, or it would
-            // stall the run for good.
             onLoad={() => markReady(i)}
             onError={() => markReady(i)}
             className={`object-cover object-[100%_25%] origin-top motion-reduce:animate-none ${
               i === index
-                ? "-z-10 opacity-100 transition-opacity duration-[1500ms] ease-in-out"
+                ? "-z-10 opacity-100 transition-opacity duration-[1000ms] ease-in-out"
                 : `-z-20 ${i === prev ? "opacity-100" : "opacity-0"}`
             } ${moving && (i === index || i === prev) ? (i % 2 ? "animate-hero-pull" : "animate-hero-push") : ""} ${
               live ? "" : "[animation-play-state:paused]"
@@ -183,8 +120,8 @@ export default function Hero({ slides = [] }) {
         aria-hidden="true"
       />
       <div className="col-start-1 row-start-1 flex flex-col justify-end px-6 pb-14 md:px-10 md:pb-20">
-        <div className="hero-title flex flex-col border-l-[4px] border-x-[#0D4C72] dark:border-x-[#309ece] w-[330px] md:w-[500px] text-left pr-2 absolute top-[calc(40vh+3px)] left-[5%] font-semibold font-Josefin gap-y-4">
-          <div className="pl-[15px] text-4xl md:text-5xl text-black dark:text-white">
+        <div className="flex flex-col border-l-[4px] border-l-[#309ece] [[data-theme=light]_&]:border-l-[#0D4C72] w-[330px] md:w-[500px] text-left pr-2 absolute top-[calc(40vh+3px)] left-[5%] font-semibold gap-y-4">
+          <div className="pl-[15px] text-4xl md:text-5xl">
             <span className="font-display text-[35px] sm:text-[47px] hover:text-aurora2 font-bold uppercase leading-none tracking-[0.01em] text-ink">
               Strat
               <span className="relative inline-block">
@@ -195,12 +132,12 @@ export default function Hero({ slides = [] }) {
               sphere
             </span>
           </div>
-          <div className="pl-[15px] text-4xl md:text-5xl text-[#0D4C72] dark:text-[#38BDF8]">
-            <span className=" inline-block w-fit max-w-full hidden sm:block min-w-0 leading-[1.15]">
-              <span className="hover:text-aurora2 block truncate text-[27px] font-bold uppercase tracking-[0.03em] text-ink">
+          <div className="pl-[15px] text-4xl md:text-5xl">
+            <span className="inline-block w-fit max-w-full min-w-0 leading-[1.15]">
+              <span className="hover:text-aurora2 block truncate text-[18px] sm:text-[27px] font-bold uppercase tracking-[0.03em] text-ink">
                 Aerospace Club
               </span>
-              <span className="block truncate text-[27px] hover:text-aurora2 text-ink/85">
+              <span className="block truncate text-[18px] sm:text-[27px] hover:text-aurora2 text-ink/85">
                 Jadavpur University
               </span>
             </span>
@@ -208,20 +145,6 @@ export default function Hero({ slides = [] }) {
         </div>
       </div>
 
-      {/* Anything that moves on its own for longer than a few seconds needs a
-          way to stop it. Hidden under reduced motion, where nothing moves. */}
-      {moving && (
-        <button
-          type="button"
-          onClick={() => setPaused((p) => !p)}
-          aria-label={paused ? "Play the photos" : "Pause the photos"}
-          className="absolute bottom-5 right-5 md:bottom-8 md:right-10 grid h-9 w-9 place-items-center rounded-full
-            ring-1 ring-ink/20 text-ink/60 transition duration-150 hover:text-aurora2 hover:ring-aurora2/40
-            focus-visible:outline-2 focus-visible:outline-aurora2 focus-visible:outline-offset-4 motion-reduce:hidden"
-        >
-          {paused ? <PlayIcon /> : <PauseIcon />}
-        </button>
-      )}
     </header>
   );
 }

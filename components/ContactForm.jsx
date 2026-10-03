@@ -1,20 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { sendMessage } from "@/lib/send-message";
 
-// Web3Forms delivers submissions to the club inbox. Set
-// NEXT_PUBLIC_WEB3FORMS_KEY in .env.local and in the Vercel project settings —
-// without it the form has no key to send and every submission fails.
-const ENDPOINT = "https://api.web3forms.com/submit";
-const ACCESS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_KEY;
+const LABEL = "block text-sm text-ink/70 mb-2";
 
-// Fixed colours, not theme tokens: a light control on a dark panel, which must not invert.
 const FIELD =
-  "w-full px-4 py-3.5 rounded-xl border-2 border-[#0c1a2a] bg-white/60 text-[#14202e] " +
-  "placeholder:text-[#14202e]/65 outline-none focus:border-aurora2 transition-colors";
+  "w-full px-3.5 py-2.5 rounded-lg border border-ink/10 bg-ink/[0.04] text-ink text-sm " +
+  "placeholder:text-ink/35 outline-none transition " +
+  "hover:border-ink/20 focus:border-aurora2/70 focus:ring-2 focus:ring-aurora2/20";
 
-export default function ContactForm() {
-  const [status, setStatus] = useState("idle"); // idle | sending | sent | error
+const BUTTON =
+  "inline-flex shrink-0 whitespace-nowrap items-center justify-center gap-2 px-6 py-2.5 rounded-full font-semibold text-sm " +
+  "bg-aurora2 text-[#04121a] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition";
+
+export default function ContactForm({ email = "" }) {
+  const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
 
   async function handleSubmit(e) {
@@ -23,101 +24,105 @@ export default function ContactForm() {
 
     const form = e.currentTarget;
     const data = new FormData(form);
+    data.set("page", window.location.pathname);
 
     setStatus("sending");
     setError("");
 
     try {
-      const res = await fetch(ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          access_key: ACCESS_KEY,
-          subject: data.get("subject") || "New message from the Stratosphere site",
-          name: data.get("name") || "",
-          email: data.get("email") || "",
-          message: data.get("message") || "",
-          botcheck: data.get("website") ? true : "", // honeypot
-          page: typeof window !== "undefined" ? window.location.pathname : "",
-        }),
-      });
-
-      const payload = await res.json().catch(() => ({}));
-
-      if (!res.ok || !payload.success) {
-        setError(payload.message || "Could not send that. Please try again.");
+      const result = await sendMessage(data);
+      if (!result?.ok) {
+        setError(result?.error || "Could not send that. Please try again.");
         setStatus("error");
         return;
       }
-
       form.reset();
       setStatus("sent");
     } catch {
-      /* network-level failure: the API is down or unreachable */
-      setError("Could not reach the server. Please try again later.");
+      setError(`Could not reach the server. You can email us at ${email}.`);
       setStatus("error");
     }
   }
 
   if (status === "sent") {
     return (
-      <div className="p-8 rounded-xl border-2 border-[#0c1a2a] bg-[#e0d8d8] text-center">
-        <p className="text-[#14202e] font-bold text-lg">Thanks — we have got it.</p>
-        <p className="text-sm text-[#14202e]/70 mt-2">
-          The committee reads everything that comes through here.
+      <div className="py-12" role="status">
+        <span className="grid h-11 w-11 place-items-center rounded-full bg-aurora2/15 text-aurora2" aria-hidden="true">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          </svg>
+        </span>
+        <p className="text-ink font-semibold text-xl mt-5">Message sent</p>
+        <p className="text-sm text-ink/60 mt-2 max-w-sm leading-relaxed">
+          Thanks for writing in. Someone from the committee will reply to the email you gave us.
         </p>
         <button
           type="button"
           onClick={() => setStatus("idle")}
-          className="text-sm font-semibold text-[#183445] underline underline-offset-4 mt-5"
+          className="text-sm font-semibold text-aurora2 hover:brightness-110 mt-6 transition"
         >
-          Send another →
+          Send another message →
         </button>
       </div>
     );
   }
 
   return (
-    <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
-      <div className="flex flex-col sm:flex-row gap-5">
-        <input
-          name="name"
-          type="text"
-          placeholder="Your Name"
-          aria-label="Your name"
-          maxLength={120}
-          className={`${FIELD} sm:w-1/2`}
-        />
-        <input
-          name="email"
-          type="email"
-          placeholder="Your Email"
-          aria-label="Your email"
-          maxLength={254}
-          className={`${FIELD} sm:w-1/2`}
-        />
+    <form onSubmit={handleSubmit} noValidate>
+      <div className="grid sm:grid-cols-2 gap-x-4 gap-y-5">
+        <div>
+          <label htmlFor="cf-name" className={LABEL}>Full name</label>
+          <input
+            id="cf-name"
+            name="name"
+            type="text"
+            autoComplete="name"
+            placeholder="Your name"
+            maxLength={120}
+            className={FIELD}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="cf-email" className={LABEL}>Email</label>
+          <input
+            id="cf-email"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+            placeholder="you@example.com"
+            maxLength={254}
+            className={FIELD}
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label htmlFor="cf-subject" className={LABEL}>Subject</label>
+          <input
+            id="cf-subject"
+            name="subject"
+            type="text"
+            placeholder="What is this about?"
+            maxLength={200}
+            className={FIELD}
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label htmlFor="cf-message" className={LABEL}>Message</label>
+          <textarea
+            id="cf-message"
+            name="message"
+            required
+            rows={5}
+            maxLength={4000}
+            placeholder="Tell us a little about what you have in mind…"
+            className={`${FIELD} resize-y`}
+          />
+        </div>
       </div>
 
-      <input
-        name="subject"
-        type="text"
-        placeholder="Subject"
-        aria-label="Subject"
-        maxLength={200}
-        className={FIELD}
-      />
-
-      <textarea
-        name="message"
-        required
-        rows={9}
-        maxLength={4000}
-        placeholder="Message"
-        aria-label="Your message"
-        className={`${FIELD} resize-y`}
-      />
-
-      {/* honeypot */}
       <input
         type="text"
         name="website"
@@ -127,21 +132,15 @@ export default function ContactForm() {
         className="absolute left-[-9999px] h-0 w-0 opacity-0"
       />
 
-      <div className="flex flex-col items-center gap-4">
-        <button
-          type="submit"
-          disabled={status === "sending"}
-          className="w-44 px-6 py-3 rounded-lg font-bold bg-[#e0d8d8] text-[#183445] hover:brightness-105 disabled:opacity-50 disabled:cursor-not-allowed transition drop-shadow-md"
-        >
-          {status === "sending" ? "Sending…" : "Submit"}
-        </button>
+      {status === "error" && (
+        <p role="alert" className="mt-5 text-sm text-aurora3">
+          {error}
+        </p>
+      )}
 
-        {status === "error" && (
-          <p role="alert" className="text-sm text-aurora3">
-            {error}
-          </p>
-        )}
-      </div>
+      <button type="submit" disabled={status === "sending"} className={`${BUTTON} mt-6 w-full sm:w-auto`}>
+        {status === "sending" ? "Sending…" : "Send message"}
+      </button>
     </form>
   );
 }

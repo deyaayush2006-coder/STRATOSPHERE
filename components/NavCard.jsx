@@ -9,21 +9,11 @@ export default function NavCard({ navLinks = [], site = {} }) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(null);
 
-  // w-fit so the hover only lights up the label, not the whole row
   const itemClass =
     "inline-block w-fit max-w-full text-left font-display text-lg font-semibold tracking-[-0.01em] py-2 text-ink/90 origin-left transition duration-150 ease-out hover:scale-[1.12] hover:text-aurora2";
 
-  /* The menu hangs under the card rather than inside it, so opening it lays a
-     pane over the hero instead of growing the card and pushing the page down.
-   *
-   * A sibling of the card, not a child: the card blurs what is behind it when
-   * open, and a blur nested in another blur only samples that one's contents,
-   * so the menu would have frosted the card and nothing of the hero. */
   return (
     <div className="sticky top-4 z-40 mx-4">
-      {/* Tapping anywhere off the menu closes it. Not a real control — the
-          Close button is that — so it stays out of the tab order and the
-          accessibility tree. */}
       {open && (
         <div
           aria-hidden="true"
@@ -38,12 +28,7 @@ export default function NavCard({ navLinks = [], site = {} }) {
       <div
         className={`relative flex items-center gap-4 px-5 py-3.5 rounded-2xl glass-matte ${open ? "is-matte" : ""}`}
       >
-        {/* A plain anchor, not next/link: every target is a hash on the home
-            page, and the browser handles those without a client-side nav. */}
         <a href="/#overview" className="flex flex-1 items-center gap-2.5 min-w-0">
-          {/* Asked for at the 36px it is drawn at, not at the 200px the source
-              happens to be. It is on every page and above the fold on all of
-              them, so it is fetched eagerly rather than lazily. */}
           <Image
             src={mediaUrl(site.logo) || "/1674144810258.jpg"}
             alt=""
@@ -55,7 +40,6 @@ export default function NavCard({ navLinks = [], site = {} }) {
 
           <span className="font-display text-[15px] sm:text-[17px] hover:text-aurora2 font-bold uppercase leading-none tracking-[0.01em] text-ink">
             Strat
-            {/* the orbit ring around the O */}
             <span className="relative inline-block">
               O
               <span

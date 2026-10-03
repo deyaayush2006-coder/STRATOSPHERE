@@ -1,5 +1,3 @@
-/* Section ids are rendered onto the matching components, so nav and
-   footer links cannot drift from the real content. */
 export const SECTIONS = {
   overview: "/#overview",
   announcements: "/#announcements",
@@ -25,34 +23,28 @@ export const NAV_LINKS = [
 ];
 
 export const ABOUT = {
-  lead: "Inspiring the next generation of engineers through innovation, collaboration, and cutting-edge technology.",
+  lead: "From gliders to drones, we reach for the unknown.",
   body: [
-    "The Aerospace Club at Jadavpur University is dedicated to fostering innovation, research, and practical learning in aerospace engineering and related fields.",
-    "Reaching for the stars through innovation, collaboration, and cutting-edge aerospace technology.",
+    "Stratosphere is the aerospace club of Jadavpur University, founded in the 2022–23 session by three students in the Mechanical Engineering department. We design and build RC planes, gliders and drones, run hands-on sessions on 3D printing and PCB design, and organise JalAstra and SkySprint at Srijan, the university's techno-management fest.",
+    "Next on the list is a CanSat: a working satellite the size of a soft-drink can.",
   ],
-  /* two columns; a third entry would need a different grid */
   pillars: [
     {
       title: "Our Mission",
-      body: "To inspire and educate the next generation of students through hands-on projects, research opportunities, and industry collaborations. We strive to bridge the gap between theoretical knowledge and practical application.",
+      body: "Give JU students a place to build things that fly, not just study them. Members learn design, fabrication, electronics and flight testing on the club's own aircraft, rockets and satellites, and take that work to competitions like NSSC at IIT Kharagpur.",
     },
     {
       title: "Our Vision",
-      body: "To become a leading aerospace research and development hub that contributes significantly to India's space program and aviation industry while nurturing innovative minds capable of solving tomorrow's aerospace challenges.",
+      body: "A design–build–fly programme that carries over from one batch to the next, where each committee hands on its designs, tools and lessons so every year starts further along than the last.",
     },
   ],
   facts: [
     { label: "Active Members", value: "60+" },
     { label: "Projects Completed", value: "5+" },
     { label: "Awards Won", value: "3+" },
-    { label: "Years of Excellence", value: "3" },
+    { label: "Years Active", value: "4" },
   ],
 };
-export const SITE_BACKDROP = "/images/hero/ju-campus.jpg";
-
-/* What the hero runs through after the backdrop, in this order, picked from
-   the club's Drive gallery. They sit behind the title as decoration, so alt is
-   a note on what each one shows rather than text the page reads out. */
 export const HERO_SLIDES = [
   {
     src: "/images/hero/glider-flight-test.jpg",
@@ -84,15 +76,11 @@ export const HERO_SLIDES = [
   },
 ];
 
-/* Taken from the club's existing site. */
 export const CONTACT = {
   email: "juaerospace.club@jadavpuruniversity.in",
   phone: "",
-  /* The opening column of the footer — who the club is, in a paragraph. Kept
-     separate from ABOUT.lead, which is a headline on the page rather than a
-     description of the organisation. */
   blurb:
-    "Stratosphere is the Aerospace Club of Jadavpur University — a student team that designs, builds and flies rockets, drones and satellites, and runs workshops and competitions across campus.",
+    "Stratosphere is the Aerospace Club of Jadavpur University — students who design and build gliders, RC planes, drones and rockets, and run workshops and competitions on campus.",
   address: [
     "Aerospace Club, Mechanical Department",
     "Jadavpur University",
@@ -103,15 +91,6 @@ export const CONTACT = {
     ["Saturday", "10:00 AM - 2:00 PM"],
     ["Sunday", "Closed"],
   ],
-  /* The Follow Us column. It stays off the footer while this is empty — a
-     wrong handle in a footer is worse than no handle at all — and the
-     dashboard can edit it under Contact & hours.
-   *
-   * The Instagram address is the profile itself rather than the share link it
-   * was given as: the ?igsi= on the end is a tracking id identifying whoever
-   * copied it, and it is not needed to reach the account. The Facebook one is
-   * a /share/ link, which is a redirect rather than the page's own address —
-   * it works, but swap it for the real page URL when someone has it to hand. */
   socials: [
     { platform: "instagram", url: "https://www.instagram.com/aerospace_club_ju", label: "" },
     { platform: "linkedin", url: "https://www.linkedin.com/company/aerospace-club-ju/", label: "" },
@@ -119,10 +98,16 @@ export const CONTACT = {
   ],
 };
 
-/* Showcase clips, first entry is the featured one. Paths point at public/.
-   Empty hides the section rather than showing dead players.
-   { title, meta, src: "/videos/flight-01.mp4", poster: "/images/thumbnails/flight-01.jpg" } */
 export const SHOWCASE_CLIPS = [];
+
+export const SPONSORS = [
+  { name: "SOLIDWORKS", logo: "/images/sponsors/solidworks-logo.svg", url: "https://www.solidworks.com", plate: true },
+  { name: "Ansys", logo: "/images/sponsors/ansys-logo.svg", url: "https://www.ansys.com", plate: true },
+  { name: "Marcopolo Products", logo: "/images/sponsors/marcopolo-logo.png", url: "https://marcopolo.co.in", plate: true },
+  { name: "JU Alumni Association, Hyderabad Chapter (JUAAH)", logo: "/images/sponsors/juaah-logo.jpg", url: "https://jualumnihyd.in", plate: true },
+  { name: "JU Mechanical Engineering Alumni Association (JUMEAA)", logo: "/images/sponsors/jumeaa-logo.png", url: "https://jumeaa.org", plate: true },
+  { name: "JUCEAA", logo: "", url: "", plate: false },
+];
 
 export const MEMBERS = [
   { name: "Naman Ray", role: "Club President", dept: "Mechanical Engineering", image: "/images/team/naman-ray.jpg", linkedin: "https://www.linkedin.com/in/namanray" },
@@ -143,61 +128,56 @@ export const MEMBERS = [
   { name: "Sagnik Tripathy", role: "Membership Lead", dept: "Chemical Engineering", image: "/images/team/sagnik-tripathy.jpg", linkedin: "" },
 ];
 
-
-/* One entry per academic year, oldest first — array order is screen order,
-   so a new year goes on the end. Past years have no portraits, so `image`
-   is left off and Avatar falls back to initials. */
 const COMMITTEE_2022_23 = [
-  { name: "Tridibesh Chattoraj", role: "Founder", email: "tridibeshchattoraj@gmail.com" },
-  { name: "Soutrik Nag", role: "Founder", email: "soutriknag16@gmail.com" },
-  { name: "Arnab Adhikary", role: "Founder", email: "arnabadk16@gmail.com" },
+  { name: "Tridibesh Chattoraj", role: "Founder" },
+  { name: "Soutrik Nag", role: "Founder" },
+  { name: "Arnab Adhikary", role: "Founder" },
 ];
 
 const COMMITTEE_2023_24 = [
-  { name: "Bratish Sarkar", role: "President", email: "bejume24@gmail.com" },
-  { name: "Aranya Subhra Naskar", role: "Secretary", email: "aranyasubhra118@gmail.com" },
-  { name: "Himopravo Chowdhury", role: "Technical Lead", email: "himopravo9@gmail.com" },
-  { name: "Swapnil Mahapatra", role: "Management Lead", email: "mhpneel2002@gmail.com" },
-  { name: "Koustav Das", role: "WC Member", email: "das.koustav5432@gmail.com" },
-  { name: "Dvij Dewan", role: "WC Member", email: "dvij.dewan@tegaindustries.com" },
+  { name: "Bratish Sarkar", role: "President" },
+  { name: "Aranya Subhra Naskar", role: "Secretary" },
+  { name: "Himopravo Chowdhury", role: "Technical Lead" },
+  { name: "Swapnil Mahapatra", role: "Management Lead" },
+  { name: "Koustav Das", role: "WC Member" },
+  { name: "Dvij Dewan", role: "WC Member" },
   { name: "Mrinmay Tarafdar", role: "WC Member" },
-  { name: "Navoneel Karmakar", role: "WC Member", email: "navoneelk@gmail.com" },
-  { name: "Srija Mondal", role: "WC Member", email: "srija.mondal282@gmail.com" },
-  { name: "Aditya Mandal", role: "WC Member", email: "adimandal005@gmail.com" },
+  { name: "Navoneel Karmakar", role: "WC Member" },
+  { name: "Srija Mondal", role: "WC Member" },
+  { name: "Aditya Mandal", role: "WC Member" },
 ];
 
 const COMMITTEE_2024_25 = [
-  { name: "Himopravo Chowdhury", role: "President", email: "himopravo9@gmail.com" },
-  { name: "Amrita Dasgupta", role: "Vice President", email: "amritadasgupta04@gmail.com" },
-  { name: "Srija Mondal", role: "Convenor", email: "srija.mondal282@gmail.com" },
-  { name: "Navoneel Karmakar", role: "Technical Lead", email: "navoneelk@gmail.com" },
-  { name: "Koustav Das", role: "Management Lead", email: "das.koustav5432@gmail.com" },
-  { name: "Aditya Mandal", role: "Tools & Equipment Manager", email: "adimandal005@gmail.com" },
+  { name: "Himopravo Chowdhury", role: "President" },
+  { name: "Amrita Dasgupta", role: "Vice President" },
+  { name: "Srija Mondal", role: "Convenor" },
+  { name: "Navoneel Karmakar", role: "Technical Lead" },
+  { name: "Koustav Das", role: "Management Lead" },
+  { name: "Aditya Mandal", role: "Tools & Equipment Manager" },
   { name: "Soumyadeep Mandal", role: "Technical Advisor" },
-  { name: "Suman Sowmondal", role: "OC Member", email: "sumansowmondal26@gmail.com" },
-  { name: "Debadrita Hazra", role: "OC Member", email: "debadritahazra007@gmail.com" },
+  { name: "Suman Sowmondal", role: "OC Member" },
+  { name: "Debadrita Hazra", role: "OC Member" },
   { name: "Soumyojit Biswas", role: "OC Member" },
   { name: "Samriddha Chakraborty", role: "OC Member" },
-  { name: "Arijit Bose", role: "OC Member", email: "arijitbose205@gmail.com" },
+  { name: "Arijit Bose", role: "OC Member" },
 ];
 
 const COMMITTEE_2025_26 = [
-  { name: "Navoneel Karmakar", role: "President", email: "navoneelk@gmail.com" },
-  { name: "Koustav Das", role: "Vice President", email: "das.koustav5432@gmail.com" },
-  { name: "Aditya Mandal", role: "Convenor", email: "adimandal005@gmail.com" },
-  { name: "Sayan Laha", role: "Technical Lead (Circuital)", email: "sayanlaha47@gmail.com" },
+  { name: "Navoneel Karmakar", role: "President" },
+  { name: "Koustav Das", role: "Vice President" },
+  { name: "Aditya Mandal", role: "Convenor" },
+  { name: "Sayan Laha", role: "Technical Lead (Circuital)" },
   { name: "Prothoma Dutta", role: "Technical Lead (Structural)" },
-  { name: "Debadrita Hazra", role: "Management Lead", email: "debadritahazra007@gmail.com" },
+  { name: "Debadrita Hazra", role: "Management Lead" },
   { name: "Naman Ray", role: "Sponsorship Lead" },
   { name: "Soumyojit Biswas", role: "OC Member (Tools Management)" },
   { name: "Soham Sharma Sarkar", role: "OC Member (Tools Management)" },
   { name: "Samriddha Chakraborty", role: "OC Member (Event Management)" },
   { name: "Avipso Sinha", role: "OC Member (Event Management)" },
-  { name: "Kaulik Das", role: "OC Member (Social Media Handle)", email: "kaulikdas2017@gmail.com" },
+  { name: "Kaulik Das", role: "OC Member (Social Media Handle)" },
   { name: "Shayan Charan", role: "OC Member (Social Media Handle)" },
 ];
 
-/* Oldest first — the section starts here and works forward. */
 export const MEMBER_COHORTS = [
   { year: "2022–23", tag: "Founded", blurb: "Three founders started the club in the Mechanical Department.", members: COMMITTEE_2022_23 },
   { year: "2023–24", tag: "First committee", blurb: "The first full working committee took shape.", members: COMMITTEE_2023_24 },
@@ -206,76 +186,69 @@ export const MEMBER_COHORTS = [
   { year: "2026–27", tag: "Current", current: true, blurb: "Sixteen students from Mechanical, Electrical and Chemical Engineering run the club today.", members: MEMBERS },
 ];
 
-/* How much of the results list the home page shows. Same rule as the
- * announcements feed: nothing is deleted when the number comes down, the rest
- * fold into the archive underneath. Four rather than three, so the list still
- * reaches back past the current season on a fresh install.
- * Set in the dashboard under "Achievement display". */
 export const ACHIEVEMENT_SETTINGS = {
   visibleCount: 4,
   showArchive: true,
   archiveLabel: "Earlier achievements",
 };
 
-/* `postedAt` is the real moment and the sort key; `year` is the label the row
-   shows, which is often just "2025". */
 export const ACHIEVEMENTS = [
   {
     year: "January 2025",
     tag: "Competition",
     title: "NSSC Contingent Award 2025",
     postedAt: "2025-01-27T11:15:00.000Z",
-    body: "The club represented Jadavpur University at the National Students Space Challenge at IIT Kharagpur. The team won the Contingent Award for exceptional participation, teamwork, and innovation in aerospace competitions.",
+    body: "Represented Jadavpur University at the National Students' Space Challenge at IIT Kharagpur and won the Contingent Award for the team's showing across the competitions.",
   },
   {
     year: "2025",
     tag: "Research",
-    title: "Aircraft Design Projects (V-tail & H-tail)",
+    title: "V-tail and H-tail Aircraft Designs",
     postedAt: "2025-08-20T09:00:00.000Z",
-    body: "The team finished detailed aerodynamic and structural designs for both V-tail and H-tail aircraft configurations. These projects serve as stepping stones for participation in the National Aeromodelling Competition 2025-26, highlighting the commitment to research and design.",
+    body: "Completed aerodynamic and structural designs for two aircraft layouts, one with a V-tail and one with an H-tail, as groundwork for the club's entry to the National Aeromodelling Competition 2025–26.",
   },
   {
     year: "2025",
-    tag: "Competition",
-    title: "Technical Events: Jal Astra & Skysprint",
+    tag: "Event",
+    title: "JalAstra and SkySprint at Srijan 2025",
     postedAt: "2025-04-19T17:00:00.000Z",
-    body: "The club successfully organized two large-scale aeromodelling events. Both events attracted over 100 team registrations, providing hands-on learning experiences and promoting excitement for aerospace across campus.",
+    body: "Organised two competitions at Srijan 2025: JalAstra for water rockets and SkySprint for gliders. Both drew over a hundred team registrations.",
   },
   {
     year: "April 2025",
-    tag: "Recognition",
+    tag: "Outreach",
     title: "Seminar on Aerospace Engineering",
     postedAt: "2025-04-10T12:00:00.000Z",
-    body: "The club conducted a seminar for over 200+ undergraduate students.",
+    body: "Held a seminar on aerospace engineering for more than 200 undergraduates.",
   },
   {
     year: "2024",
-    tag: "Innovation",
-    title: "RC Plane 1.0, Design & Manufacturing",
+    tag: "Build",
+    title: "RC Plane 1.0",
     postedAt: "2024-11-15T10:00:00.000Z",
-    body: "The club successfully completed its first fully functional RC aircraft, built entirely in-house. The project included conceptual design, fuselage and wing construction, electronic installation, and test flights. It demonstrated the skills of the team in aeromodelling and systems integration.",
+    body: "The club's first fully working RC aircraft, built entirely in-house: concept design, fuselage and wing construction, electronics and test flights.",
   },
 ];
 
 export const EVENTS = [
   {
-    when: "upcoming",
-    date: "TBD",
-    time: "TBD",
+    when: "past",
+    date: "10–11 April 2026",
+    time: "10:00 AM - 5:00 PM",
     slug: "skysprint-2026",
     title: "SkySprint 2026",
-    location: "JU, Salt Lake Ground",
-    body: "An event that challenges participants to master the delicate balance of aerodynamics and structural engineering.",
+    location: "CAB Ground, JU",
+    body: "The glider-building competition at Srijan '26. Teams of two or three design and build hand-launched gliders from scratch, then fly them for distance, time in the air and a precise landing. Prize pool: ₹6,000.",
     image: "/images/events/skysprint-2026.jpg",
   },
   {
-    when: "upcoming",
-    date: "TBD",
-    time: "TBD",
+    when: "past",
+    date: "10–11 April 2026",
+    time: "10:00 AM - 5:00 PM",
     slug: "jalastra-2026",
     title: "JalAstra 2026",
-    location: "Football Ground, JU Campus",
-    body: "An exciting water rocket competition where teams design and build rockets using water bottles.",
+    location: "CAB Ground, JU",
+    body: "The water rocket competition at Srijan '26. Teams of two or three design and build a water rocket for maximum range and a precise landing, with a streamlined body, a well-shaped nose cone and enough stability to fly straight. Prize pool: ₹6,000.",
     image: "/images/events/jalastra-2026.jpg",
   },
   {
@@ -285,7 +258,7 @@ export const EVENTS = [
     slug: "windcraft-workshop",
     title: "Wind-Craft — A Motorised Glider Workshop",
     location: "Mechanical Engineering Department, JU",
-    body: "Master the mechanics of flight with a hands-on motorised glider building experience.",
+    body: "The club's first glider-making workshop. Participants cut depron, shaped each part, soldered the electronics and glued the airframe together at set angles, then left with a motorised glider they had built themselves.",
     image: "/images/events/windcraft-workshop.jpg",
   },
   {
@@ -295,7 +268,7 @@ export const EVENTS = [
     slug: "jalastra-2025",
     title: "JalAstra",
     location: "JU, Salt Lake Ground",
-    body: "An exciting water rocket competition where teams design and build rockets using water bottles, highlighting creativity, engineering skills, and aerodynamic design in this thrilling showcase of talent at Srijan 2025.",
+    body: "The water rocket competition at Srijan 2025. Teams designed, built and launched their own pressurised water rockets on the Salt Lake campus ground, and over a hundred teams registered.",
     image: "/images/events/jalastra-2025.jpg",
   },
   {
@@ -305,26 +278,16 @@ export const EVENTS = [
     slug: "skysprint-2025",
     title: "SkySprint",
     location: "Sports Ground",
-    body: "An exhilarating competitive event that challenges participants to master the delicate balance of aerodynamics and structural engineering. The core of the competition involves designing and fabricating custom gliders, often using lightweight materials like balsa wood, foam, or composites, to achieve peak flight performance.",
+    body: "The glider competition at Srijan 2025. Teams designed and built gliders from light materials such as balsa, foam and composites, then flew them for distance and time in the air. Over a hundred teams registered.",
     image: "/images/events/skysprint-2025.jpg",
   },
 ];
-/* How much of the feed the home page shows.
- *
- * Nothing is ever thrown away: every announcement stays in the table with the
- * moment it was posted. `visibleCount` only decides how many of the newest
- * ones are on the page, and the rest fold into the archive underneath.
- * The committee changes this in the dashboard under "Announcement display". */
 export const ANNOUNCEMENT_SETTINGS = {
   visibleCount: 3,
   showArchive: true,
   archiveLabel: "Earlier announcements",
 };
 
-/* `postedAt` is the real timestamp and the sort key; `date` is the free-text
-   label the card actually shows, which is often "Dates TBD" rather than a
-   date at all. Keeping them apart is what lets the archive stay in order
-   while the cards still read the way the committee wrote them. */
 export const ANNOUNCEMENTS = [
   {
     id: "windcraft-2026",
@@ -361,32 +324,31 @@ export const PROJECTS = [
     n: "01",
     title: "CanSat",
     status: "Ongoing",
-    timeline: "Jan 2025",
-    summary: "Managing a full mission life cycle, from Preliminary Design Review to post-flight data analysis.",
-    body: "The main task is to manage a mission life cycle, from the Preliminary Design Review (PDR) to post-flight data analysis, mirroring the rigorous standards of the global aerospace industry.",
+    timeline: "Since Jan 2025",
+    summary: "A satellite the size of a soft-drink can, taken through a full mission cycle: design review, build, launch and data analysis.",
+    body: "A CanSat has to do what a real satellite does (carry a payload, survive launch and descent, and send its data home) inside the volume of a soft-drink can. The team is running it as a full mission, from a Preliminary Design Review through build and testing to launch and post-flight data analysis. The payload and results will be posted here as the mission progresses.",
     image: "/images/projects/cansat.jpg",
-    /* each entry gets its own page at /projects/cansat/<slug> */
     parts: [],
   },
   {
     slug: "epsilon-model",
     n: "02",
-    title: "3D Printed Epsilon Model Development",
+    title: "3D-Printed Epsilon Model",
     status: "Ongoing",
-    timeline: "Feb 2026",
-    summary: "A high-fidelity scaled replica of the Epsilon launch vehicle, built by additive manufacturing.",
-    body: "Project focuses on developing a high-fidelity scaled replica of the Epsilon launch vehicle, utilizing additive manufacturing to achieve complex aerodynamic geometries and internal structural ribbing, integrating lightweight PLA or PETG materials.",
+    timeline: "Since Feb 2026",
+    summary: "A scale model of JAXA's Epsilon launch vehicle, 3D printed in PLA or PETG.",
+    body: "Epsilon is the Japanese space agency's solid-fuel launch vehicle. The team is reproducing it as a detailed scale model through 3D printing, which handles the rocket's complex outer shape and lets each section carry internal ribbing for stiffness. Parts are printed in lightweight PLA or PETG.",
     image: "/images/projects/epsilon-model.jpg",
     parts: [],
   },
   {
     slug: "f22-raptor",
     n: "03",
-    title: "F22 Raptor RC Model",
+    title: "F-22 Raptor RC Model",
     status: "Ongoing",
-    timeline: "Jan 2026",
-    summary: "A 3D-printed airframe on a high-thrust EDF system, mimicking fifth-generation stealth geometry.",
-    body: "A lightweight, 3D-printed airframe and a high-thrust EDF (Electric Ducted Fan) system. By utilizing thin-wall printing techniques and carbon-fiber reinforcements, the model mimics the stealth geometry and aerodynamic stability of the fifth-generation fighter for both high-speed passes and low-speed high-alpha flight.",
+    timeline: "Since Jan 2026",
+    summary: "A flying RC model of the F-22, with a 3D-printed airframe and an electric ducted fan.",
+    body: "The airframe is 3D printed with thin walls to save weight and reinforced with carbon fibre, and thrust comes from an electric ducted fan (EDF). The goal is a model that keeps the F-22's stealth shape and stays stable at both ends of its flight envelope: fast passes and slow, high angle-of-attack flight.",
     image: "/images/projects/f22-raptor.jpg",
     parts: [],
   },

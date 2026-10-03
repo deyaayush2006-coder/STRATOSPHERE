@@ -9,10 +9,6 @@ import Telemetry from "@/components/Telemetry";
 import Thesis from "@/components/Thesis";
 import Cover from "@/components/Cover";
 
-/* One route for both /projects/<slug> and /projects/<slug>/<part>. An optional
-   catch-all rather than two files, because the second segment only ever picks
-   which part is open — the page around it is identical. */
-
 async function findProject(slug) {
   const { projects } = await getContent();
   return projects.find((p) => p.slug === slug);
@@ -28,14 +24,14 @@ export async function generateMetadata({ params }) {
   const project = await findProject(slug);
   if (!project) return {};
 
+  const title = `${project.title} — Stratosphere`;
+  const images = [project.image ? mediaUrl(project.image) : "/og-image.jpg"];
+
   return {
-    title: `${project.title} — Stratosphere`,
+    title,
     description: project.summary,
-    openGraph: {
-      title: `${project.title} — Stratosphere`,
-      description: project.summary,
-      images: project.image ? [mediaUrl(project.image)] : undefined,
-    },
+    openGraph: { title, description: project.summary, images },
+    twitter: { card: "summary_large_image", title, description: project.summary, images },
   };
 }
 
@@ -48,9 +44,6 @@ export default async function ProjectDetail({ params }) {
   const partSlug = part?.[0];
   const active = parts.find((p) => p.slug === partSlug) ?? parts[0];
 
-  /* The trail. The part is only on it when the URL actually names one —
-     landing on /projects/cansat opens the first part, but the reader did not
-     navigate to it and a crumb claiming they did would be a dead level. */
   const trail = [
     { label: "Home", href: "/" },
     { label: "Projects", href: "/#projects" },
@@ -59,18 +52,16 @@ export default async function ProjectDetail({ params }) {
   ];
 
   return (
-    /* pt-28 rather than pt-32: the hero band that used to sit above this is
-       gone, so the page starts under the nav card and nothing else. */
     <main className="px-6 pt-28 pb-20 max-w-6xl mx-auto">
       <Breadcrumbs trail={trail} className="mb-6" />
 
       <header className="mb-12">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="font-mono text-sm text-ink/35">{project.n}</span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-aurora2">
+          <span className="font-sans text-sm tabular-nums text-ink/40">{project.n}</span>
+          <span className="font-sans text-xs font-medium tracking-wide text-aurora2">
             {project.status}
           </span>
-          <span className="font-mono text-[11px] text-ink/35">{project.timeline}</span>
+          <span className="font-sans text-sm text-ink/45">{project.timeline}</span>
         </div>
 
         <h1 className="text-4xl md:text-5xl text-ink font-semibold mt-4 tracking-[-0.03em] leading-[1.05]">
@@ -80,7 +71,6 @@ export default async function ProjectDetail({ params }) {
       </header>
 
       {parts.length === 0 ? (
-        // no parts written yet, so just the overview
         <article className="glass rounded-3xl overflow-hidden">
           {project.image && (
             <Cover
@@ -91,13 +81,12 @@ export default async function ProjectDetail({ params }) {
             />
           )}
           <div className="p-8 md:p-10">
-            <span className="mono-label">Overview</span>
+            <span className="font-sans text-xs font-medium tracking-wide text-aurora2">Overview</span>
             <p className="text-ink/65 mt-4 leading-relaxed max-w-2xl">{project.body}</p>
           </div>
         </article>
       ) : (
         <div className="grid md:grid-cols-[16rem_1fr] gap-8 items-start">
-          {/* part index */}
           <nav aria-label="Project parts" className="glass rounded-2xl p-3 md:sticky md:top-28">
             <ul className="flex md:flex-col gap-1 overflow-x-auto">
               {parts.map((p) => {
@@ -126,7 +115,6 @@ export default async function ProjectDetail({ params }) {
             </ul>
           </nav>
 
-          {/* the open part */}
           <div className="min-w-0">
             <article className="glass rounded-3xl overflow-hidden">
               <Cover
@@ -137,7 +125,7 @@ export default async function ProjectDetail({ params }) {
               />
 
               <div className="p-8 md:p-10">
-                <span className="mono-label">{project.title}</span>
+                <span className="font-sans text-xs font-medium tracking-wide text-aurora2">{project.title}</span>
                 <h2 className="text-2xl md:text-3xl text-ink font-semibold mt-3 tracking-[-0.02em]">
                   {active.name}
                 </h2>
@@ -151,22 +139,21 @@ export default async function ProjectDetail({ params }) {
                 <dl className="grid sm:grid-cols-3 gap-6 mt-9 pt-8 border-t border-ink/10">
                   {(active.specs ?? []).map(([label, value]) => (
                     <div key={label} className="flex flex-col gap-1.5">
-                      <dt className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/35">
+                      <dt className="font-sans text-xs font-medium tracking-wide text-ink/45">
                         {label}
                       </dt>
-                      <dd className="font-mono text-base text-ink m-0">{value}</dd>
+                      <dd className="font-sans text-base font-medium text-ink m-0">{value}</dd>
                     </div>
                   ))}
                 </dl>
               </div>
             </article>
 
-            {/* Anything this particular part carries of its own. Both hide
-                themselves when there is nothing set, so a part with only prose
-                on it looks exactly as it did before any of this existed. */}
             {active.model && (
               <div className="mt-8">
-                <span className="mono-label">{active.name} — 3D model</span>
+                <span className="font-sans text-xs font-medium tracking-wide text-aurora2">
+                  {active.name} · 3D model
+                </span>
                 <ModelViewer
                   src={active.model}
                   caption={active.modelCaption}
@@ -180,14 +167,9 @@ export default async function ProjectDetail({ params }) {
         </div>
       )}
 
-      {/* The project as a whole, under whichever part is open. These are the
-          long-form additions: the model you can turn over, the drawings behind
-          it, the write-up, and the flight data. Each one is its own component
-          and each returns null when the dashboard has nothing in it, so a
-          project that uses none of them renders the page above and stops. */}
       {project.model && (
         <section className="mt-12">
-          <span className="mono-label">3D model</span>
+          <span className="font-sans text-xs font-medium tracking-wide text-aurora2">3D model</span>
           <ModelViewer src={project.model} caption={project.modelCaption} className="mt-5" />
         </section>
       )}
@@ -196,9 +178,6 @@ export default async function ProjectDetail({ params }) {
 
       <Thesis sections={project.thesis ?? []} />
 
-      {/* Flattened rather than one telemetry object, because the dashboard
-          edits the same shape the page renders and its forms are a flat list
-          of fields per item. The assembling happens here, once. */}
       <Telemetry
         telemetry={{
           csv: project.telemetryCsv,

@@ -15,17 +15,6 @@ import {
   projectsToRows,
 } from "@/lib/mappers";
 
-/* Everything the dashboard writes goes through here.
- *
- * These run on the server as the signed-in committee member, so the row level
- * security policies in the migration are the authorisation — application code
- * does not re-decide who may edit what. The one exception is account
- * management at the bottom, which needs the service role and therefore checks
- * the caller itself.
- */
-
-// A filter that matches every row. PostgREST refuses an unfiltered delete, and
-// this is the least surprising way to say "all of them".
 const EVERY_ROW = "00000000-0000-0000-0000-000000000000";
 
 const COLLECTIONS = {
@@ -56,9 +45,6 @@ const fail = (error, what) => {
   if (error) throw new Error(`${what}: ${error.message}`);
 };
 
-/* The first value that appears twice, or undefined if they are all distinct.
-   Blanks are skipped: an unsaved row has no id yet, and an empty natural key
-   is filled in further down. */
 const firstRepeat = (values) => {
   const seen = new Set();
   for (const v of values) {
@@ -71,26 +57,11 @@ const firstRepeat = (values) => {
 
 const withoutId = ({ id, ...rest }) => rest;
 
-/* A write naming a column the database does not have.
- *
- * This is the gap between deploying a feature and applying its migration, and
- * it is a gap that really happens: the code ships, the SQL is run later, and
- * in between every save of that section fails outright. A whole section of the
- * dashboard going read-only is a far worse outcome than one new field not
- * being stored yet, so the column is dropped and the write goes through.
- *
- * It is loud in the server log on purpose. Silently discarding a field the
- * committee has just filled in is only acceptable while somebody is on their
- * way to run the migration, so the log says which one.
- */
 const MISSING_COLUMN = /Could not find the '([^']+)' column/i;
 
 async function writeRows(run, rows, table) {
   let payload = rows;
 
-  /* Bounded, and the bound is not arbitrary: each pass can only remove a
-     column, so it cannot loop longer than the row is wide. A handful covers
-     any realistic drift without spinning on an error it cannot fix. */
   for (let attempt = 0; attempt < 6; attempt += 1) {
     const { data, error } = await run(payload);
     if (!error) return { data };
@@ -108,31 +79,15 @@ async function writeRows(run, rows, table) {
   return await run(payload);
 }
 
-/* Replaces a whole collection in one call.
- *
- * The dashboard edits a section as a single draft and saves it in one go — a
- * half-finished event should not be live while someone is still typing the
- * date into it — so this takes the finished array and makes the table match.
- *
- * The order below is the safety property. Deletes go first and only ever
- * remove rows the editor actually dropped; if any later step fails, the rows
- * that survived keep their previous values. Nothing is lost that the committee
- * did not ask to lose, which is the failure mode worth designing for.
- */
 async function replaceCollection(supabase, key, items) {
   const cfg = COLLECTIONS[key];
   const list = Array.isArray(items) ? items : [];
-  // rows[i] is list[i]; the pairing is what lets children find their parent.
   const rows = cfg.toRows(list);
 
   const existing = rows.filter((r) => r.id);
   const fresh = rows.filter((r) => !r.id).map(withoutId);
   const keptIds = existing.map((r) => r.id);
 
-  /* Both of these are one click away in the editor, and Postgres reports them
-     as constraint errors no committee member can act on — so they are caught
-     here, by name, before a single row is written. Nothing has been touched at
-     this point, so the section is left exactly as it was. */
   if (firstRepeat(keptIds)) {
     throw new Error(
       `Two ${key} entries are pointing at the same saved row, so nothing was saved. ` +
@@ -149,14 +104,12 @@ async function replaceCollection(supabase, key, items) {
     }
   }
 
-  // 1 — drop the rows the editor removed. Children cascade.
   let del = supabase.from(cfg.table).delete();
   del = keptIds.length
     ? del.not("id", "in", `(${keptIds.join(",")})`)
     : del.neq("id", EVERY_ROW);
   fail((await del).error, `Could not remove deleted ${key}`);
 
-  // 2 — update the rows that were already there.
   if (existing.length) {
     const { error } = await writeRows(
       (batch) => supabase.from(cfg.table).upsert(batch),
@@ -166,8 +119,6 @@ async function replaceCollection(supabase, key, items) {
     fail(error, `Could not save ${key}`);
   }
 
-  /* 3 — insert the new ones. Separate from the upsert because PostgREST needs
-     every object in a batch to carry the same keys, and a new row has no id. */
   let inserted = [];
   if (fresh.length) {
     const { data, error } = await writeRows(
@@ -184,9 +135,6 @@ async function replaceCollection(supabase, key, items) {
   }
 }
 
-/* Project parts and committee members. Their parent may have been created a
-   moment ago, so the new parents are matched back to the items they came from
-   by their natural key — the slug or the year, which is unique by schema. */
 async function replaceChildren(supabase, cfg, list, rows, inserted) {
   const { child } = cfg;
 
@@ -205,7 +153,6 @@ async function replaceChildren(supabase, cfg, list, rows, inserted) {
 
   const keptIds = childRows.filter((r) => r.id).map((r) => r.id);
 
-  // Same one-click mistake as above, a level down — a duplicated part or member.
   if (firstRepeat(keptIds)) {
     throw new Error(
       `Two ${child.key} are pointing at the same saved row, so nothing was saved. ` +
@@ -213,8 +160,6 @@ async function replaceChildren(supabase, cfg, list, rows, inserted) {
     );
   }
 
-  /* Scoped to these parents only. A child of a parent that was deleted in step
-     1 is already gone by cascade, and must not be matched here. */
   let del = supabase.from(child.table).delete().in(child.fk, parentIds);
   if (keptIds.length) del = del.not("id", "in", `(${keptIds.join(",")})`);
   fail((await del).error, `Could not remove deleted ${child.key}`);
@@ -240,19 +185,8 @@ async function replaceChildren(supabase, cfg, list, rows, inserted) {
   }
 }
 
-/* The public pages are cached; a save has to say so or the committee sits
-   looking at the old home page wondering whether it worked. */
 function refreshSite() {
   revalidatePath("/", "layout");
-}
-
-// ------------------------------------------------------------------ content
-
-/* Everything the editor opens on, drafts included — the dashboard reads as the
-   signed-in user, so unpublished rows come back here but not on the site. */
-export async function loadContent() {
-  await requireStaff();
-  return readContent(await createClient());
 }
 
 export async function saveSection(key, value) {
@@ -272,9 +206,6 @@ export async function saveSection(key, value) {
 
   refreshSite();
 
-  /* Hand back what is now in the database rather than echoing the draft. New
-     rows have real ids after this, and the editor needs them or the next save
-     would insert duplicates instead of updating what it just created. */
   const content = await readContent(supabase);
   return content[key];
 }
@@ -284,8 +215,6 @@ export async function resetSection(key) {
   const supabase = await createClient();
 
   if (JSON_SECTIONS.includes(key)) {
-    // Deleting the row is the reset: with nothing stored, the reader falls
-    // back to the bundled default all by itself.
     fail((await supabase.from("sections").delete().eq("key", key)).error, `Could not reset ${key}`);
   } else if (COLLECTIONS[key]) {
     await replaceCollection(supabase, key, DEFAULT_CONTENT[key]);
@@ -299,10 +228,6 @@ export async function resetSection(key) {
   return content[key];
 }
 
-// ----------------------------------------------------------------- accounts
-
-/* The service role bypasses row level security entirely, so unlike everything
-   above, these have to check the caller themselves. */
 async function requireAdmin() {
   const staff = await requireStaff();
   if (staff.role !== "admin") {
@@ -333,10 +258,6 @@ export async function createUser({ name, email, password, role }) {
 
   const admin = createAdminClient();
 
-  /* email_confirm skips the verification mail: the account is being made by an
-     admin who already knows the person, and there is no public sign-up for a
-     confirmation link to protect. The profile row is created by the trigger in
-     the migration, which reads the name and role out of this metadata. */
   const { error } = await admin.auth.admin.createUser({
     email,
     password,
@@ -352,8 +273,6 @@ export async function updateUser(id, patch) {
   const me = await requireAdmin();
   const supabase = await createClient();
 
-  /* Locking yourself out is a one-click mistake with no way back short of the
-     Supabase dashboard, so the two changes that would do it are refused. */
   if (id === me.id && patch.is_active === false) {
     throw new Error("You cannot suspend your own account.");
   }
@@ -389,14 +308,11 @@ export async function deleteUser(id) {
   if (id === me.id) throw new Error("You cannot delete your own account.");
 
   const admin = createAdminClient();
-  // The profile row goes with it: it is ON DELETE CASCADE from auth.users.
   fail((await admin.auth.admin.deleteUser(id)).error, "Could not delete the account");
 
   return listUsers();
 }
 
-/* Changing your own password needs no elevated client — Supabase Auth checks
-   the session, and the session is the proof. */
 export async function changeOwnPassword(password) {
   await requireStaff();
   if (!password || password.length < 8) {

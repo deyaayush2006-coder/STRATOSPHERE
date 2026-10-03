@@ -2,12 +2,6 @@
 
 import React from "react";
 
-/* Dashboard primitives.
-   Fixed dark colours rather than the site's ink/base tokens: this is a tool,
-   not a page, and it should look the same whichever theme the public site is
-   left on. Styling stays in the markup — nothing here touches index.css. */
-
-export const CARD = "rounded-xl border border-white/10 bg-white/[0.03]";
 export const FIELD =
   "w-full rounded-lg border border-white/12 bg-[#0d1219] px-3 py-2 text-sm text-slate-100 " +
   "placeholder:text-slate-500 outline-none transition-colors focus:border-cyan-400/70 " +
@@ -32,7 +26,6 @@ export function Button({ variant = "outline", className = "", type = "button", .
   );
 }
 
-/* Square icon button for the row controls (move, duplicate, delete). */
 export function IconButton({ label, className = "", ...props }) {
   return (
     <button
@@ -102,8 +95,6 @@ export function Spinner({ className = "h-4 w-4" }) {
   );
 }
 
-/* Two-step delete. A single click on a destructive control in a content tool
-   is how a committee loses a year of announcements. */
 export function ConfirmButton({ onConfirm, children, confirmLabel = "Really delete?", ...props }) {
   const [armed, setArmed] = React.useState(false);
 

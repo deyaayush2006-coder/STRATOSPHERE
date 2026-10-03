@@ -5,21 +5,6 @@ import SectionHeader from "./SectionHeader";
 import FeedArchive from "./FeedArchive";
 import { formatPosted, machineDate, splitFeed } from "@/lib/feed";
 
-/* The updates feed, and the club's own record of them.
- *
- * Two different things are on the page here. The top of the section is the
- * feed: the pinned card and however many recent announcements the committee
- * has asked for in the dashboard. Underneath it is the archive, which holds
- * everything older — nothing is deleted when the visible count comes down, it
- * just folds away, and each entry keeps the moment it was posted.
- *
- * The splitting and the fold are shared with Achievements, which works the
- * same way. What is left here is only what an announcement looks like.
- */
-
-// The free-text label is what the committee wrote; the timestamp is the truth.
-// Showing both would read as a contradiction whenever the label says "Dates
-// TBD", so the label leads and the timestamp is the quiet second line.
 function Stamp({ announcement, className = "" }) {
   const exact = formatPosted(announcement.postedAt);
   const machine = machineDate(announcement.postedAt);
@@ -44,7 +29,7 @@ function Stamp({ announcement, className = "" }) {
 function Tag({ children, className = "" }) {
   if (!children) return null;
   return (
-    <span className={`font-mono text-[10px] uppercase tracking-[0.18em] text-aurora2 ${className}`}>
+    <span className={`font-mono text-[14px] font-bold uppercase text-aurora2 ${className}`}>
       {children}
     </span>
   );
@@ -65,9 +50,6 @@ function FeedRow({ announcement }) {
   );
 }
 
-/* An archived announcement shows the full timestamp rather than the label.
-   By the time something is down here, "April 2026" has stopped being enough to
-   place it against the others. */
 function ArchiveRow({ announcement }) {
   const exact = formatPosted(announcement.postedAt);
   const machine = machineDate(announcement.postedAt);
@@ -111,7 +93,6 @@ export default function Announcements({ announcements = [], announcementSettings
     <section id="announcements" className="px-6 py-24 md:py-28 scroll-mt-28 max-w-6xl mx-auto">
       <SectionHeader
         title="Announcements"
-        blurb="Every club update in one place — the detail that does not fit in a caption, kept as an archive rather than a feed."
       />
 
       {pinned && (
@@ -159,8 +140,6 @@ export default function Announcements({ announcements = [], announcementSettings
         {(a) => <ArchiveRow key={a.id || a.title} announcement={a} />}
       </FeedArchive>
 
-      {/* The archive switched off, but older announcements exist. Say so
-          rather than letting them disappear without explanation. */}
       {!showArchive && hiddenCount > 0 && (
         <p className="mt-5 text-sm text-ink/40">
           {hiddenCount} older {hiddenCount === 1 ? "announcement is" : "announcements are"} kept on

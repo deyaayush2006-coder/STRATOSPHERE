@@ -2,28 +2,6 @@
 
 import { Children, useCallback, useEffect, useRef, useState } from "react";
 
-/* A row of cards that becomes a scroller once there are too many to lay out.
- *
- * Up to `threshold` cards it is an ordinary grid, which is the right answer for
- * three: a grid shows all of them at once and needs no controls. Past that the
- * same cards become a horizontal rail with a button at each end, rather than a
- * grid that grows a fourth row nobody scrolls to.
- *
- * Three things make the rail behave:
- *
- *   The buttons are only rendered when the content actually overflows. Four
- *   cards on a wide screen may well fit, and a pair of dead arrows over a row
- *   that cannot move is worse than no arrows.
- *
- *   Scrolling moves by exactly one card, measured off the first two children
- *   rather than assumed, so it lands on a card edge at any width and the snap
- *   has nothing to fight.
- *
- *   The rail is focusable and labelled. The cards inside Events are not links,
- *   so without this there is no way to reach the rest of the row from a
- *   keyboard at all.
- */
-
 const Arrow = ({ back = false }) => (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
     <path
@@ -70,7 +48,6 @@ export default function CardRail({
     if (!el) return;
     const max = el.scrollWidth - el.clientWidth;
     setEdges({
-      // a pixel of slack, because fractional widths never land exactly on zero
       start: el.scrollLeft <= 1,
       end: el.scrollLeft >= max - 1,
       overflowing: max > 1,
@@ -85,8 +62,6 @@ export default function CardRail({
     measure();
     el.addEventListener("scroll", measure, { passive: true });
 
-    // The row reflows when the window does, and a resize can take it from
-    // overflowing to fitting, which is what decides whether the buttons exist.
     const obs = new ResizeObserver(measure);
     obs.observe(el);
 
@@ -100,9 +75,6 @@ export default function CardRail({
     const el = scrollerRef.current;
     if (!el) return;
 
-    /* One card, measured rather than assumed: the gap is the distance between
-       the first two cards' left edges, which already includes whatever gap the
-       flex row is using. One card is the fallback when there is only one. */
     const cards = el.children;
     const width =
       cards.length > 1
@@ -154,9 +126,6 @@ export default function CardRail({
         </div>
       )}
 
-      {/* The scrollbar is hidden because the buttons are the control and a
-          native bar under a glass card reads as a stray line. Swiping and
-          arrow keys both still work, which is what it was there for. */}
       <div
         ref={scrollerRef}
         tabIndex={0}
@@ -169,10 +138,6 @@ export default function CardRail({
         {items.map((item, i) => (
           <div
             key={item.key ?? i}
-            /* basis, not width: these are flex children, and a hard width
-               would be overridden by flex-basis: auto on the first reflow.
-               Just under a third on a wide screen, so the fourth card shows an
-               edge — which is the only honest signal that the row continues. */
             className="snap-start shrink-0 basis-[86%] sm:basis-[48%] lg:basis-[31.5%]"
           >
             {item}

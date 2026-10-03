@@ -4,10 +4,6 @@ import { useEffect, useState } from "react";
 import { Badge, Button, ConfirmButton, FIELD, Label, Notice, Spinner } from "./ui";
 import { createUser, deleteUser, listUsers, updateUser } from "@/app/admin/actions";
 
-/* Who can sign in, and at what level. Admin-only — the tab is not rendered for
-   an editor, and every action below re-checks on the server, because a hidden
-   tab is a UI convenience and not a permission. */
-
 const ROLE_OPTIONS = [
   { value: "editor", label: "Editor — can change content and upload images" },
   { value: "admin", label: "Admin — the above, plus managing accounts" },
@@ -126,8 +122,6 @@ function UserRow({ user, isSelf, onChanged, onError }) {
         {!user.is_active && <Badge tone="amber">Suspended</Badge>}
       </div>
 
-      {/* Nothing here is available for your own row: an admin who demotes or
-          suspends themselves has no way back short of the Supabase console. */}
       {!isSelf && (
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/[0.07] pt-3">
           <select

@@ -56,8 +56,8 @@ From **Supabase → Project Settings → API**, copy in:
 | `SUPABASE_SERVICE_ROLE_KEY` | `service_role` `secret` key |
 
 Then set `ADMIN_EMAIL` and `ADMIN_PASSWORD` to the first committee account you
-want, and `NEXT_PUBLIC_WEB3FORMS_KEY` to a free key from
-[web3forms.com](https://web3forms.com) so the contact form can deliver.
+want. The contact form saves messages to the `contact_messages` table through
+the `service_role` key, so it needs no key of its own.
 
 The `anon` key is meant to be public — it ends up in the browser bundle, and row
 level security is what decides what it can read. The `service_role` key is not:
@@ -118,7 +118,7 @@ committees (with their members) — get real tables. Each row has its own
 `published` flag and `sort_order`, so a half-written event can sit as a draft
 and the running order can change without rewriting anything.
 
-**Page copy** — the backdrop and logo, the About block, contact details, the nav
+**Page copy** — the hero photos and logo, the About block, contact details, the nav
 and footer links, the showcase clips — lives in `sections` as one `jsonb`
 document per key. A column per field would mean a database migration every time
 a paragraph moves.

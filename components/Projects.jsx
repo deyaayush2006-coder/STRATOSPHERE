@@ -13,10 +13,6 @@ function Cover({ project }) {
   if (!project.image || failed) return null;
 
   return (
-    /* The intrinsic size is the 16:9 the class crops to, which is all
-       next/image needs to hold the box before the file lands. `sizes` is the
-       widest a card is ever painted: these sit in a horizontal rail, roughly
-       full width on a phone and a third of a 6xl column above that. */
     <Image
       src={mediaUrl(project.image)}
       alt=""
@@ -30,11 +26,6 @@ function Cover({ project }) {
   );
 }
 
-/* One card. Deliberately not wrapped in a reveal of its own any more: inside a
-   rail, a card scrolled off to the right is clipped by its container and so
-   never counts as on screen, which left it sitting at zero opacity until
-   somebody happened to scroll it into view. The whole row reveals together
-   instead, from outside the scroller. */
 function ProjectCard({ project }) {
   return (
     <article className="group relative h-full glass rounded-2xl overflow-hidden hover:border-aurora2/30 hover:-translate-y-1 transition duration-200">
@@ -43,8 +34,6 @@ function ProjectCard({ project }) {
         aria-hidden="true"
       />
 
-      {/* The whole card is the link. The write-up at /projects/<slug> has no
-          other way in — nothing else on the site points at it. */}
       <Link href={`/projects/${project.slug}`} className="block h-full">
         <Cover project={project} />
 
@@ -75,7 +64,6 @@ export default function Projects({ projects = [] }) {
     <section id="projects" className="px-6 py-24 md:py-28 scroll-mt-28 max-w-6xl mx-auto">
       <SectionHeader
         title="Projects"
-        blurb="What is on the bench right now: a CanSat mission, a 3D-printed launch vehicle, and an EDF fighter model."
       />
 
       <Reveal>

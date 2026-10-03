@@ -1,19 +1,5 @@
-/* What the dashboard shows, field by field.
- *
- * Every form in the panel is generated from this file — there is no bespoke
- * form per section. Adding a field to a card on the site means adding one line
- * here, not writing another editor. Keys must match `backend/config/sections.js`.
- *
- * Field types are rendered by fields.jsx:
- *   text | textarea | select | checkbox | image | stringList | pairList | list
- */
-
 const SLUG_HINT = "Used in the page URL. Lowercase, dashes, no spaces.";
 
-/* The posted time, on one line of a list row.
-   Fixed locale and fixed zone because this renders on the server first and
-   then hydrates — letting either end pick its own would make the two disagree.
-   Asia/Kolkata is the clock the committee is working to. */
 const POSTED = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Kolkata",
   day: "numeric",
@@ -479,7 +465,7 @@ export const SECTIONS = [
           { name: "dept", label: "Department", type: "text" },
           { name: "image", label: "Photo", type: "image", hint: "Left empty, the card shows their initials" },
           { name: "linkedin", label: "LinkedIn URL", type: "text" },
-          { name: "email", label: "Email", type: "text", hint: "Shown only when there is no LinkedIn link" },
+          { name: "email", label: "Email", type: "text", hint: "For the committee only. It is not shown on the site." },
         ],
       },
     ],
@@ -660,11 +646,11 @@ export const SECTIONS = [
 
   {
     key: "site",
-    label: "Backdrop, hero & logo",
+    label: "Hero & logo",
     icon: "🖼️",
     kind: "object",
     blurb:
-      "What sits behind everything: the hero slideshow on the front page, the backdrop reel, the still behind it, and the nav logo.",
+      "The hero slideshow on the front page, and the nav logo.",
     fields: [
       {
         name: "heroSlides",
@@ -688,18 +674,6 @@ export const SECTIONS = [
           },
         ],
       },
-      {
-        name: "heroVideo",
-        label: "Backdrop video",
-        type: "text",
-        hint: "Plays behind the whole site at low opacity. A path under public/ (e.g. /vid.mp4) or a full URL. Video is not uploaded through this panel — leave it empty to use the still on its own.",
-      },
-      {
-        name: "backdrop",
-        label: "Backdrop still",
-        type: "image",
-        hint: "The video's poster while it loads, and what shows instead of it for anyone who has asked for less motion.",
-      },
       { name: "logo", label: "Nav logo", type: "image" },
     ],
   },
@@ -720,6 +694,30 @@ export const SECTIONS = [
       { name: "meta", label: "Eyebrow", type: "text", hint: "The small label above the caption" },
       { name: "src", label: "Video path", type: "text", hint: "e.g. /videos/flight-01.mp4 — put the file in public/" },
       { name: "poster", label: "Poster frame", type: "image" },
+    ],
+  },
+
+  {
+    key: "sponsors",
+    label: "Sponsors",
+    icon: "🤝",
+    kind: "list",
+    itemName: "sponsor",
+    blurb:
+      "The logo strip above the footer, on every page. Leave it empty and that spot asks visitors to become a sponsor instead.",
+    title: (s) => s.name,
+    subtitle: (s) => s.url,
+    blank: () => ({ name: "", logo: "", url: "", plate: false }),
+    fields: [
+      { name: "name", label: "Sponsor name", type: "text", required: true },
+      { name: "logo", label: "Logo", type: "image", hint: "A PNG or SVG with a transparent background works best." },
+      { name: "url", label: "Link", type: "text", hint: "Their website or Instagram page. Optional." },
+      {
+        name: "plate",
+        label: "Put the logo on a white background",
+        type: "checkbox",
+        hint: "Turn this on for dark logos that would disappear against the dark site.",
+      },
     ],
   },
 
@@ -770,12 +768,4 @@ export const SECTIONS = [
   },
 ];
 
-export const sectionByKey = Object.fromEntries(SECTIONS.map((s) => [s.key, s]));
-
-/* Title to URL slug. Anything that is not a letter or digit becomes a dash.
- *
- * Re-exported rather than defined here: the content layer needs the same rule
- * to fall back on for a row written before its table had a slug column, and
- * two copies of it would be two copies that can drift. fields.jsx imports it
- * from this file, so that side is unchanged. */
 export { slugify } from "@/lib/slug";

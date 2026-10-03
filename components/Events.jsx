@@ -19,14 +19,8 @@ function EventCard({ event }) {
         aria-hidden="true"
       />
 
-      {/* The whole card is the link, the way a project card is. The page at
-          /events/<slug> has no other way in — nothing else on the site points
-          at it. */}
       <Link href={`/events/${event.slug}`} className="flex grow flex-col">
         {event.image && !failed && (
-          /* Event posters are the heaviest images the home page carries — they
-             come off a phone or a poster tool at full resolution and are painted
-             into a card about 380px wide. */
           <Image
             src={mediaUrl(event.image)}
             alt=""
@@ -74,7 +68,6 @@ export default function Events({ events = [] }) {
     <section id="events" className="px-6 py-24 md:py-28 scroll-mt-28 max-w-6xl mx-auto">
       <SectionHeader
         title="Events"
-        blurb="Workshops, competitions and build sessions — what is coming up, and what we have already run."
       />
 
       {upcoming.length > 0 && (

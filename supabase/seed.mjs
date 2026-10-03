@@ -1,16 +1,3 @@
-/* Fills a fresh Supabase project with the site as it ships, and creates the
- * first admin account.
- *
- *   npm run seed            fill anything that is still empty
- *   npm run seed -- --force wipe the content tables first and re-fill them
- *
- * Run it once, after applying supabase/migrations/0001_init.sql. It reads the
- * same lib/defaults.js the site falls back to, so the seed and the bundled
- * content can never drift apart.
- *
- * Uses the service role key, which bypasses row level security — that is why
- * it is a script you run from a terminal and not anything the site can reach.
- */
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
@@ -26,7 +13,7 @@ import {
 } from "../lib/mappers.js";
 
 dotenv.config({ path: ".env.local" });
-dotenv.config(); // .env, for anyone who keeps it there instead
+dotenv.config();
 
 const FORCE = process.argv.includes("--force");
 
@@ -58,9 +45,6 @@ async function countRows(table) {
   return count ?? 0;
 }
 
-/* Every table is skipped when it already holds something, so re-running the
-   seed can never overwrite a committee's real edits by accident. --force is
-   the deliberate way to start over. */
 async function seedTable(table, rows, label) {
   const existing = await countRows(table);
 
@@ -89,9 +73,6 @@ async function seedContent() {
   await seedTable("events", eventsToRows(DEFAULT_CONTENT.events), "events");
   await seedTable("achievements", achievementsToRows(DEFAULT_CONTENT.achievements), "achievements");
 
-  /* Parents first, then their children against the ids that came back. Matched
-     on the natural key rather than on array position, because an insert makes
-     no promise about the order it returns rows in. */
   const projects = await seedTable("projects", projectsToRows(DEFAULT_CONTENT.projects), "projects");
   if (projects) {
     const idBySlug = new Map(projects.map((p) => [p.slug, p.id]));
@@ -133,9 +114,6 @@ async function seedContent() {
   }
 }
 
-/* The first account has to come from outside the app: the dashboard can create
-   accounts, but only once someone can sign in to it. Every account after this
-   one is made from the Accounts tab, not from here. */
 async function seedAdmin() {
   const email = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;
@@ -165,9 +143,6 @@ async function seedAdmin() {
   });
   check(error, "Could not create the admin account");
 
-  /* The trigger in the migration writes the profile from that metadata. Assert
-     it landed as an admin — a silent editor-level first account would lock the
-     Accounts tab for good. */
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")

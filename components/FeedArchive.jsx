@@ -3,17 +3,6 @@
 import { useState } from "react";
 import Reveal from "./Reveal";
 
-/* The fold under a dated list, holding everything the visible count pushed off
- * the page.
- *
- * Announcements and achievements both have one and they behave identically, so
- * the behaviour is here and only the row markup differs — which is what the
- * render function is for. Nothing in here knows what it is listing.
- *
- * The list stays mounted and is hidden with the `hidden` attribute rather than
- * being unmounted, so the archive is in the page source for anything reading
- * it without running scripts.
- */
 export default function FeedArchive({
   id,
   label,

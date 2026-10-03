@@ -10,8 +10,6 @@ import SectionEditor from "./SectionEditor";
 import MediaLibrary from "./MediaLibrary";
 import UsersPanel from "./UsersPanel";
 
-// --------------------------------------------------------------- own account
-
 function AccountPanel({ user, onSignOut }) {
   const [newPassword, setNext] = useState("");
   const [busy, setBusy] = useState(false);
@@ -48,8 +46,6 @@ function AccountPanel({ user, onSignOut }) {
 
       <form onSubmit={submit} className="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-5">
         <h2 className="text-sm font-semibold text-white">Change password</h2>
-        {/* No "current password" field: Supabase Auth is changing the password
-            of the session making the request, and the session is the proof. */}
         <div>
           <Label required hint="At least 8 characters">
             New password
@@ -84,8 +80,6 @@ function AccountPanel({ user, onSignOut }) {
   );
 }
 
-// ----------------------------------------------------------------- dashboard
-
 export default function Dashboard({ user, initialContent }) {
   const router = useRouter();
   const [content, setContent] = useState(initialContent);
@@ -93,10 +87,6 @@ export default function Dashboard({ user, initialContent }) {
   const [tab, setTab] = useState(SECTIONS[0].key);
   const [navOpen, setNavOpen] = useState(false);
 
-  /* The action returns what is actually in the database now, not an echo of
-     the draft. That matters: rows created by this save come back with their
-     real ids, and without them the next save would insert duplicates instead
-     of updating what it had just created. */
   const save = useCallback(async (key, value) => {
     const saved = await saveSection(key, value);
     setContent((c) => ({ ...c, [key]: saved }));
@@ -148,7 +138,6 @@ export default function Dashboard({ user, initialContent }) {
 
   return (
     <div className="min-h-screen bg-[#080b12] text-slate-200">
-      {/* Sidebar — fixed on desktop, a drawer under the header on mobile. */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-64 shrink-0 overflow-y-auto border-r border-white/10 bg-[#0b0f16] px-3 py-5
           md:translate-x-0 transition-transform ${navOpen ? "translate-x-0" : "-translate-x-full"}`}

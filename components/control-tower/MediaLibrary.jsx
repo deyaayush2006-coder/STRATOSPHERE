@@ -1,12 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, IconButton, Notice, Spinner } from "./ui";
 import { deleteMedia, formatBytes, getCached, loadMedia, mediaUrl, subscribe, uploadMedia } from "./media";
 
-/* The full-page view of everything uploaded. The same store backs the picker
-   inside the image fields, so anything uploaded here is immediately available
-   there and vice versa. */
 export default function MediaLibrary() {
   const [items, setItems] = useState(() => getCached() || []);
   const [status, setStatus] = useState(getCached() ? "ready" : "loading");

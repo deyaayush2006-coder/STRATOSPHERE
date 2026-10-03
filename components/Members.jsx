@@ -6,35 +6,6 @@ import SectionHeader from "./SectionHeader";
 import Plane from "./Plane";
 import { mediaUrl } from "@/lib/media-url";
 
-/* The Team, as a route rather than a list.
- *
- * One flight path runs down the middle of the section. The years are the only
- * labels on it, and the aircraft flies from one to the next as the page
- * scrolls, finishing at Present at the foot of the line. Nobody's name is on
- * the page until a year is asked for: clicking one opens that committee.
- *
- * Three ideas hold the geometry together:
- *
- *   The stations are placed first, by fraction, and the curve is drawn through
- *   them. That is the opposite of the obvious way round, and it is what puts a
- *   year exactly on the line rather than near it — at every width, with no
- *   second measurement to keep in step.
- *
- *   Nothing lives inside the track. Its height comes from the number of
- *   committees and nothing else, so opening a committee cannot reshape the
- *   path it was opened from. That is why the names arrive in a dialog over the
- *   section instead of a panel inside it.
- *
- *   The viewBox is measured in real pixels rather than normalised. It costs a
- *   ResizeObserver, and it buys a curve that is never stretched, a stroke that
- *   is never oval, and a heading for the aircraft that is simply the tangent —
- *   no aspect correction anywhere.
- */
-
-/* Where things sit, as fractions of the track.
-   x alternates so the line has to bend to reach each year. y runs the stations
-   down the upper three quarters and leaves the rest as the run-in to Present,
-   which is the one point on the line that is dead centre. */
 const LEFT_X = 0.24;
 const RIGHT_X = 0.76;
 const FIRST_Y = 0.07;
@@ -45,19 +16,10 @@ const stationX = (i) => (i % 2 === 0 ? LEFT_X : RIGHT_X);
 const stationY = (i, n) =>
   n > 1 ? FIRST_Y + (i / (n - 1)) * (LAST_Y - FIRST_Y) : (FIRST_Y + LAST_Y) / 2;
 
-/* How much of the viewport height the aircraft flies at. */
-const FOCUS = 0.45;
+const FOCUS = 0.58;
 
-// Near enough to the end of the line to call it landed.
 const ARRIVED_AT = 0.965;
 
-/* The contrail, as layers behind the aircraft.
-   Every layer is the same curve with a different length of it showing, and
-   `span` is that length as a multiple of the distance between two years. They
-   stack into one streak: a hot short core at the nose, a longer dimmer body
-   behind it, and a wide soft bloom around both. A single stroke cannot fade
-   along its own length, and four that can be told apart is cheaper than the
-   gradient that could. */
 const CONTRAIL = [
   { span: 0.32, width: 13, opacity: 0.1 },
   { span: 0.72, width: 3, opacity: 0.16 },
@@ -68,22 +30,13 @@ const CONTRAIL = [
 const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
 const round = (v) => Math.round(v * 100) / 100;
 
-/* "2022–23" reads as "2022" at this size, and reads better.
-   Anything without a four-digit year in it is left exactly as written. */
 const shortYear = (year) => String(year ?? "").match(/\d{4}/)?.[0] ?? String(year ?? "");
 
-/* The line, drawn through the years and down into Present.
- *
- * Every bend is a cubic with vertical handles, which is what makes the joins
- * smooth instead of cornered, and keeps y increasing the whole way down — the
- * property the station search below depends on.
- *
- * It enters on the side the *second* year is on, so the first bend has the
- * same swing as every bend after it, and finishes at the centre, because that
- * is where the aircraft has to end up. */
+const routeStart = ({ w }, n) => [n > 1 ? stationX(1) * w : w / 2, 0];
+
 function buildPath({ w, h }, n) {
   const points = [
-    [n > 1 ? stationX(1) * w : w / 2, 0],
+    routeStart({ w }, n),
     ...Array.from({ length: n }, (_, i) => [stationX(i) * w, stationY(i, n) * h]),
     [w / 2, END_Y * h],
   ];
@@ -92,7 +45,6 @@ function buildPath({ w, h }, n) {
   for (let i = 1; i < points.length; i += 1) {
     const [x0, y0] = points[i - 1];
     const [x1, y1] = points[i];
-    // past the midpoint on both sides, which rounds the lobe out
     const k = (y1 - y0) * 0.55;
     d +=
       ` C ${round(x0)} ${round(y0 + k)},` +
@@ -102,9 +54,6 @@ function buildPath({ w, h }, n) {
   return d;
 }
 
-/* How far along the line a year is.
-   Binary search on y, which is only valid because the curve above never turns
-   back upwards. Twenty-two halvings put it well inside a pixel. */
 function lengthAtY(path, total, targetY) {
   let lo = 0;
   let hi = total;
@@ -116,9 +65,6 @@ function lengthAtY(path, total, targetY) {
   return (lo + hi) / 2;
 }
 
-// --------------------------------------------------------------- member card
-
-// Drive throttles hotlinked portraits, so fall back to initials.
 function Avatar({ member }) {
   const [failed, setFailed] = useState(false);
 
@@ -138,10 +84,6 @@ function Avatar({ member }) {
   }
 
   return (
-    /* 48px square, asked for at exactly that size. A committee page can carry
-       sixty of these, and the originals are full-resolution portraits — served
-       raw that is the heaviest thing on the section by an order of magnitude,
-       so the width and height here are what the optimiser resizes to. */
     <Image
       src={mediaUrl(member.image)}
       alt=""
@@ -183,14 +125,6 @@ function MemberCard({ member }) {
             LinkedIn ↗
           </a>
         )}
-        {!member.linkedin && member.email && (
-          <a
-            href={`mailto:${member.email}`}
-            className="block text-[11px] text-ink/50 hover:text-ink transition-colors mt-1.5 truncate"
-          >
-            {member.email}
-          </a>
-        )}
       </div>
     </div>
   );
@@ -213,9 +147,6 @@ function CohortHeading({ cohort, className = "" }) {
           {cohort.tag}
         </span>
       )}
-      <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink/35">
-        {cohort.members?.length ?? 0} members
-      </span>
       {cohort.blurb && <p className="text-sm text-ink/50 basis-full">{cohort.blurb}</p>}
     </div>
   );
@@ -234,10 +165,6 @@ function CohortGrid({ cohort, stagger = true }) {
         <div
           key={`${m.name}-${m.role}`}
           className={stagger ? "h-full animate-card-in" : "h-full"}
-          /* Capped hard, and short. The stagger is there to stop sixteen cards
-             landing as one slab, not to be watched: the last one is in place
-             about a third of a second after the click, which is the point at
-             which a list stops feeling like it is still loading. */
           style={stagger ? { animationDelay: `${Math.min(i, 8) * 18}ms` } : undefined}
         >
           <MemberCard member={m} />
@@ -247,14 +174,6 @@ function CohortGrid({ cohort, stagger = true }) {
   );
 }
 
-// ------------------------------------------------------------------- dialog
-
-/* The committee, over the section rather than inside it.
- *
- * A panel in the flow would have to push the line around to make room, and the
- * line is the thing being clicked — so the names come over the top instead and
- * the route underneath never moves.
- */
 function CommitteeDialog({ cohort, onClose }) {
   const closeRef = useRef(null);
   const panelRef = useRef(null);
@@ -267,9 +186,6 @@ function CommitteeDialog({ cohort, onClose }) {
         onClose();
         return;
       }
-      /* Keep Tab inside the dialog. Without this the next Tab lands on the
-         year buttons behind it, which are still there and still look focusable
-         to anyone driving this from the keyboard. */
       if (e.key !== "Tab") return;
       const focusable = panelRef.current?.querySelectorAll(
         'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -286,8 +202,6 @@ function CommitteeDialog({ cohort, onClose }) {
       }
     };
 
-    /* Hold the page still underneath, and pay back the width the scrollbar was
-       taking, or everything behind the dialog jumps sideways as it opens. */
     const gap = window.innerWidth - document.documentElement.clientWidth;
     const { overflow, paddingRight } = document.body.style;
     document.body.style.overflow = "hidden";
@@ -302,12 +216,6 @@ function CommitteeDialog({ cohort, onClose }) {
   }, [onClose]);
 
   return (
-    /* A flat scrim and an opaque panel, and not one backdrop-filter between
-       them. This opened as a blurred veil under a glass panel, which stacked
-       three of them — the veil's, and the two the glass classes each bring —
-       so every click paid for three full-screen backdrop passes before the
-       dialog appeared. That was the lag. The panel is solid now, which needs
-       no blur behind it to be readable anyway. */
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-base/85 p-0 sm:p-6 animate-veil-in"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
@@ -343,10 +251,6 @@ function CommitteeDialog({ cohort, onClose }) {
   );
 }
 
-// ------------------------------------------------------------------ station
-
-/* A year on the route. Only the year — no marker, no ring, nothing else on the
-   line. The type is the target, so it is set at display size. */
 function Station({ cohort, index, count, active, onOpen, buttonRef }) {
   return (
     <button
@@ -356,12 +260,6 @@ function Station({ cohort, index, count, active, onOpen, buttonRef }) {
       aria-haspopup="dialog"
       title={`See the ${cohort.year} committee`}
       style={{ left: `${stationX(index) * 100}%`, top: `${stationY(index, count) * 100}%` }}
-      /* Centred across the line but hung below it, rather than centred on it.
-         Sitting on the point put the year in exactly the place the aircraft
-         arrives, and the two cancelled each other out: a cyan aircraft over
-         cyan digits inside one shared glow, at the single moment the arrival
-         is meant to be legible. Below the point, the line threads over the top
-         of the year and the aircraft lands in clear air. */
       className="group absolute -translate-x-1/2 translate-y-2 leading-none outline-none"
     >
       <span
@@ -378,16 +276,10 @@ function Station({ cohort, index, count, active, onOpen, buttonRef }) {
   );
 }
 
-// ------------------------------------------------------------------ section
-
 export default function Members({ memberCohorts = [] }) {
   const cohorts = memberCohorts;
   const count = cohorts.length;
 
-  /* Which committee "Present" means.
-     The dashboard's Current tick is the answer when a committee has it; the
-     last entry is the fallback, because the list is kept oldest-first and a
-     year nobody has ticked yet is still the one at the bottom of it. */
   const presentIndex = useMemo(() => {
     const flagged = cohorts.findIndex((c) => c.current);
     return flagged >= 0 ? flagged : count - 1;
@@ -402,20 +294,16 @@ export default function Members({ memberCohorts = [] }) {
   const presentRef = useRef(null);
   const openedFrom = useRef(null);
 
-  // Path lengths, kept off state: they change every scroll frame and must not
-  // re-render anything when they do.
   const totalRef = useRef(0);
   const stopsRef = useRef([]);
 
   const [size, setSize] = useState(null);
   const [active, setActive] = useState(0);
   const [arrived, setArrived] = useState(false);
+  const [launched, setLaunched] = useState(false);
   const [flying, setFlying] = useState(false);
   const [open, setOpen] = useState(null);
 
-  /* The flight is decoration over a control that works without it. Anyone who
-     has asked for less motion gets the line drawn, the aircraft parked at
-     Present, and the years doing the whole job. */
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: no-preference)");
     const sync = () => setFlying(mq.matches);
@@ -424,9 +312,6 @@ export default function Members({ memberCohorts = [] }) {
     return () => mq.removeEventListener("change", sync);
   }, []);
 
-  /* Real pixels, so nothing in the drawing is ever stretched. The track's
-     height is set in CSS from the number of committees and its width by the
-     column, so this fires on resize and on nothing else. */
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return undefined;
@@ -446,25 +331,8 @@ export default function Members({ memberCohorts = [] }) {
   }, []);
 
   const d = size && count > 0 ? buildPath(size, count) : "";
+  const start = size && count > 0 ? routeStart(size, count) : null;
 
-  /* Put the aircraft, and its contrail, at a point along the line.
-   *
-   * The aircraft is one transform, so a scroll frame touches nothing the
-   * browser has to lay out again. The heading is the tangent, read off two
-   * nearby samples — no aspect correction needed, because the viewBox is in
-   * pixels.
-   *
-   * The contrail is the same curve, shown through a moving window. Each layer
-   * carries a dash exactly its own length followed by a gap the length of the
-   * whole path, so only one dash can ever be on screen; sliding the offset to
-   * `span - at` puts the far end of that dash at the aircraft. The layers are
-   * different lengths, so together they read as a streak that is brightest at
-   * the nose and gone a few hundred pixels back.
-   *
-   * This replaced a version that revealed the line from the very start, which
-   * left a bright ribbon lying across every year it had already passed. What
-   * it looked like was a route being highlighted; what it should look like is
-   * something flying. */
   const place = useCallback(
     (at) => {
       const path = pathRef.current;
@@ -482,9 +350,6 @@ export default function Members({ memberCohorts = [] }) {
           `translate3d(${here.x}px, ${here.y}px, 0) translate(-50%, -50%) rotate(${heading}deg)`;
       }
 
-      /* Measured against the distance between two years, not against the whole
-         path. Tie it to the whole and the trail grows every time a committee
-         is added, until it is draped over several bends at once. */
       const leg = total / (count + 1);
       for (let i = 0; i < CONTRAIL.length; i += 1) {
         const el = trailRefs.current[i];
@@ -497,7 +362,6 @@ export default function Members({ memberCohorts = [] }) {
     [count]
   );
 
-  // Measure once per shape: the aircraft and its contrail both run off this.
   useEffect(() => {
     const path = pathRef.current;
     if (!path || !d) return;
@@ -505,20 +369,13 @@ export default function Members({ memberCohorts = [] }) {
     const total = path.getTotalLength();
     totalRef.current = total;
 
-    /* Where each year falls *along the line*, which is not where it falls down
-       the track: the curve zig-zags, so it is half again as long as the box is
-       tall. The aircraft is positioned by length, so the years it is compared
-       against have to be measured the same way or it lights up the wrong one
-       between every bend. */
     stopsRef.current = Array.from({ length: count }, (_, i) =>
       total > 0 ? lengthAtY(path, total, stationY(i, count) * size.h) / total : 0
     );
 
-    // At the start of the line, where the trail has nothing behind it yet.
     place(0);
   }, [d, count, size, place]);
 
-  // The scroll flight itself.
   useEffect(() => {
     if (!flying || !d || count === 0) return undefined;
 
@@ -533,25 +390,23 @@ export default function Members({ memberCohorts = [] }) {
       const rect = el.getBoundingClientRect();
       if (rect.height <= 0) return;
 
-      /* Zero when the top of the track reaches the flight line, one when the
-         bottom does. Everything below is a function of this one number. */
       const focus = window.innerHeight * FOCUS;
       const progress = clamp((focus - rect.top) / rect.height, 0, 1);
 
       place(total * progress);
+
+      setLaunched((prev) => {
+        const now = progress > 0;
+        return prev === now ? prev : now;
+      });
 
       setArrived((prev) => {
         const now = progress >= ARRIVED_AT;
         return prev === now ? prev : now;
       });
 
-      /* Past this point the scroll position is being read as a year, and it is
-         only entitled to be one while the track still crosses the flight line.
-         Off the line the reading is pinned at one end whatever the visitor
-         does. */
       if (rect.top > focus || rect.bottom < focus) return;
 
-      // whichever year the aircraft is nearest to right now
       const stops = stopsRef.current;
       let nearest = 0;
       let best = Infinity;
@@ -580,9 +435,6 @@ export default function Members({ memberCohorts = [] }) {
     };
   }, [flying, d, count, place]);
 
-  /* Parked. With the flight switched off there is no scroll reading to place
-     the aircraft, so it sits at the end of the line with the route already
-     drawn — the state the animation would have left it in anyway. */
   useEffect(() => {
     if (flying || !d) return;
     const total = totalRef.current;
@@ -592,17 +444,11 @@ export default function Members({ memberCohorts = [] }) {
     setArrived(true);
   }, [flying, d, place]);
 
-  /* `node` is passed by anything that is not a year on the line — Present at
-     the foot of the route opens the same committee from its own button, and
-     focus has to come back to whichever of the two was actually clicked. */
   const openYear = useCallback((index, node) => {
     openedFrom.current = node ?? stationRefs.current[index] ?? null;
     setOpen(index);
   }, []);
 
-  /* Put the reader back on the control they opened, rather than at the top of
-     the document, which is where focus goes when the dialog it was in
-     disappears. */
   const closeYear = useCallback(() => {
     setOpen(null);
     openedFrom.current?.focus();
@@ -615,14 +461,9 @@ export default function Members({ memberCohorts = [] }) {
       <div className="max-w-6xl mx-auto">
         <SectionHeader
           title="The Team"
-          blurb="Every committee since the club was founded, flown as one route. Keep scrolling and the aircraft works its way down the years to the present. Click onto any year to see who was running the club that season."
         />
       </div>
 
-      {/* The route. Centred and given the width of the section, because it is
-          the section now — nothing sits beside it. Its height is a function of
-          the number of committees and nothing else, so opening a committee can
-          never reshape the line it was opened from. */}
       <div
         ref={trackRef}
         style={{ "--rows": count + 1 }}
@@ -646,7 +487,6 @@ export default function Members({ memberCohorts = [] }) {
               </linearGradient>
             </defs>
 
-            {/* the route as planned: the whole way, faint */}
             <path
               ref={pathRef}
               d={d}
@@ -657,14 +497,6 @@ export default function Members({ memberCohorts = [] }) {
               strokeDasharray="1 8"
             />
 
-            {/* The contrail: the same curve, each layer showing a different
-                short length of it, all of them ending at the aircraft.
-                Their dashes are set per layer rather than inherited from a
-                group, because the whole effect is that the lengths differ.
-
-                No drop-shadow anywhere in here. A filter over geometry that
-                changes every frame has to be re-blurred every frame, and the
-                bloom is a wide faint stroke instead, which is free. */}
             {CONTRAIL.map((layer, i) => (
               <path
                 key={layer.span}
@@ -695,12 +527,6 @@ export default function Members({ memberCohorts = [] }) {
           />
         ))}
 
-        {/* Where the line ends. The aircraft flies into this and goes out as it
-            lands, so the last thing the route does is hand the word over.
-
-            It is a station like any other year, not a label: Present is the
-            committee people actually come here to look up, and it was the one
-            word on the route that could not be opened. */}
         <div
           style={{ left: "50%", top: `${END_Y * 100}%` }}
           className="absolute -translate-x-1/2 -translate-y-1/2 text-center"
@@ -726,41 +552,33 @@ export default function Members({ memberCohorts = [] }) {
           </button>
         </div>
 
-        {/* The aircraft. Placed by transform alone, from the line itself, so it
-            rides the curve rather than approximating it. Opacity is left to
-            the class, which is why the transform above can be set on its own
-            every frame without the two fighting.
-
-            It is decoration over the years, never in front of them: the wrapper
-            takes no pointer events, so a year stays clickable at the moment the
-            aircraft is passing over it. The halo below is wider than the plane
-            itself and would otherwise swallow a click from some way off. */}
         <div
           ref={craftRef}
           aria-hidden="true"
           className={`absolute left-0 top-0 z-10 w-fit text-aurora2 pointer-events-none will-change-transform
-            transition-opacity duration-300 ${arrived ? "opacity-0" : "opacity-100"}`}
+            ${launched && !arrived ? "opacity-100" : "opacity-0"}`}
         >
-          <span className="absolute -inset-7 rounded-full bg-aurora2/20 blur-2xl" />
-          {/* The class is what sets the size; the attribute is only the value
-              a browser would use before the stylesheet lands. Sized down a
-              little on a phone, where the track is a third of the width and
-              the years it flies between are half the size. */}
-          <Plane
-            size={68}
-            className="relative w-14 h-14 sm:w-[4.25rem] sm:h-[4.25rem] animate-craft-bob drop-shadow-[0_0_16px_rgba(34,211,238,0.7)]"
-          />
+          <span className="relative block">
+            <span className="absolute -inset-7 rounded-full bg-aurora2/20 blur-2xl" />
+            <Plane
+              size={68}
+              className="relative w-14 h-14 sm:w-[4.25rem] sm:h-[4.25rem] animate-craft-bob drop-shadow-[0_0_16px_rgba(34,211,238,0.7)]"
+            />
+          </span>
         </div>
+
+        {start && (
+          <div
+            aria-hidden="true"
+            style={{ left: start[0], top: start[1] }}
+            className="absolute z-20 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          >
+            <span className="absolute inset-0 rounded-full bg-aurora2/30 animate-ping motion-reduce:animate-none" />
+            <span className="relative block h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-aurora2 shadow-[0_0_28px_rgba(34,211,238,0.8)]" />
+          </div>
+        )}
       </div>
 
-      {/* The committee running the club now, on the page.
-       *
-       * The route deliberately keeps every name behind a click, and for the
-       * archive that is right — nobody arrives wanting the 2023 committee by
-       * default. The present one is the exception: it is who the club *is*,
-       * and it was the one list a visitor had to know to go looking for. So it
-       * sits open under the line the aircraft has just landed on, and the
-       * dialog stays the way into every other year. */}
       {present && (
         <div className="max-w-6xl mx-auto mt-4 md:mt-8">
           <CohortHeading cohort={present} className="mb-6 justify-center text-center" />
@@ -772,15 +590,8 @@ export default function Members({ memberCohorts = [] }) {
         <CommitteeDialog cohort={cohorts[open]} onClose={closeYear} />
       )}
 
-      {/* Every committee, in the page for anything that is not running the
-          flight — a search engine, a reader, a browser with scripts off. The
-          dialog is the same content for everyone else, and it needs a click
-          that cannot happen here. */}
       <noscript>
         <div className="max-w-6xl mx-auto mt-16 space-y-14">
-          {/* The present committee is skipped: it is on the page above for
-              everyone, scripts or no scripts, and listing it again here would
-              show it twice to exactly the readers this block is for. */}
           {cohorts.map((c, i) =>
             i === presentIndex ? null : (
               <div key={c.year}>

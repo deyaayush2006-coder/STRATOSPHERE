@@ -1,29 +1,18 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button, ConfirmButton, Notice, Spinner } from "./ui";
 import { ListInput, ObjectFields } from "./fields";
 
-/* Edits one section of the site.
- *
- * The whole section is held as a draft and written in one PUT, rather than
- * saving each keystroke: a half-finished event should not be live on the home
- * page while someone is still typing the date into it.
- */
 export default function SectionEditor({ section, value, onSave, onReset }) {
   const [draft, setDraft] = useState(value);
-  const [status, setStatus] = useState("idle"); // idle | saving | saved
+  const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
 
-  // A section reloaded from the server replaces the draft.
   useEffect(() => {
     setDraft(value);
   }, [value]);
 
-  /* Status is deliberately not reset here. A successful save pushes the new
-     value back down as `value`, so resetting on every `value` change wiped
-     "Saved" the instant it was set and the bar just vanished — leaving no way
-     to tell a save from a discard. */
   useEffect(() => {
     setStatus("idle");
     setError("");
@@ -31,8 +20,6 @@ export default function SectionEditor({ section, value, onSave, onReset }) {
 
   const dirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(value), [draft, value]);
 
-  /* Closing the tab mid-edit is the one way to lose work here, so take the
-     browser's confirmation prompt while there are unsaved changes. */
   useEffect(() => {
     if (!dirty) return undefined;
     const warn = (e) => {
@@ -102,8 +89,6 @@ export default function SectionEditor({ section, value, onSave, onReset }) {
           <ObjectFields
             fields={section.fields}
             value={draft}
-            /* Merge rather than replace: `site` carries a couple of keys the
-               editor does not show, and a replace would silently drop them. */
             onChange={(next) => setDraft({ ...draft, ...next })}
           />
         </div>
@@ -119,7 +104,6 @@ export default function SectionEditor({ section, value, onSave, onReset }) {
         </p>
       </div>
 
-      {/* Sticky bar, only while there is something to save. */}
       {(dirty || status !== "idle") && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0b0f16]/95 backdrop-blur md:left-64">
           <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-3.5">

@@ -2,14 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-// The first paint is set by the inline script in app/layout.jsx; this owns
-// the toggle after that.
 const STORAGE_KEY = "stratosphere-theme";
 
 export default function ThemeToggle({ className = "" }) {
-  /* Starts dark on the server and on the first client render, then corrects
-     itself in the effect below. Reading the DOM during render would disagree
-     with the server-rendered HTML and trip a hydration mismatch. */
   const [theme, setTheme] = useState("dark");
   const [mounted, setMounted] = useState(false);
 
@@ -24,7 +19,6 @@ export default function ThemeToggle({ className = "" }) {
     try {
       localStorage.setItem(STORAGE_KEY, theme);
     } catch {
-      // storage blocked: the toggle still works, it just is not remembered
     }
   }, [theme, mounted]);
 
@@ -39,12 +33,10 @@ export default function ThemeToggle({ className = "" }) {
       className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border border-ink/15 text-ink/70 hover:text-aurora2 hover:border-aurora2/40 transition-colors ${className}`}
     >
       {theme === "dark" ? (
-        /* moon */
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
           <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" strokeLinejoin="round" />
         </svg>
       ) : (
-        /* sun */
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
           <circle cx="12" cy="12" r="4" />
           <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" strokeLinecap="round" />
