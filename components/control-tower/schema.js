@@ -660,11 +660,34 @@ export const SECTIONS = [
 
   {
     key: "site",
-    label: "Backdrop & logo",
+    label: "Backdrop, hero & logo",
     icon: "🖼️",
     kind: "object",
-    blurb: "What sits behind everything: the backdrop reel, the still behind it, and the nav logo.",
+    blurb:
+      "What sits behind everything: the hero slideshow on the front page, the backdrop reel, the still behind it, and the nav logo.",
     fields: [
+      {
+        name: "heroSlides",
+        label: "Hero slideshow",
+        type: "list",
+        itemName: "photo",
+        hint:
+          "The photos behind the title at the top of the front page, shown in this order — the first one is what the page opens on. " +
+          "Each is cropped to fill the band, losing more of its bottom than its top and, on narrow screens, its left side — keep the subject up and to the right. " +
+          "Leave the list empty and the band shows no photo at all.",
+        title: (s) => s.alt || s.src,
+        compact: true,
+        blank: () => ({ src: "", alt: "" }),
+        fields: [
+          { name: "src", label: "Image", type: "image", required: true },
+          {
+            name: "alt",
+            label: "Note",
+            type: "text",
+            hint: "What the photo shows, for your own reference. The page treats these as decoration and does not read it out.",
+          },
+        ],
+      },
       {
         name: "heroVideo",
         label: "Backdrop video",
