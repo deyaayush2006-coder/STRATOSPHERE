@@ -4,7 +4,6 @@ import Reveal from "./Reveal";
 import SectionHeader from "./SectionHeader";
 import FeedArchive from "./FeedArchive";
 import { formatPosted, machineDate, splitFeed } from "@/lib/feed";
-import Label from "./Label";
 
 function When({ achievement, archived = false }) {
   const exact = formatPosted(achievement.postedAt);
@@ -33,7 +32,11 @@ function Row({ achievement, archived = false }) {
     >
       <div className="flex flex-col gap-1.5">
         <When achievement={achievement} archived={archived} />
-        <Label muted>{achievement.tag}</Label>
+        {achievement.tag && (
+          <span className={`font-mono text-[11px] ${archived ? "text-ink/35" : "text-ink/40"}`}>
+            {achievement.tag}
+          </span>
+        )}
       </div>
       <div>
         <h3

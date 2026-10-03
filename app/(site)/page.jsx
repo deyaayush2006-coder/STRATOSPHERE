@@ -6,6 +6,7 @@ import Members from "@/components/Members";
 import Achievements from "@/components/Achievements";
 import Events from "@/components/Events";
 import Projects from "@/components/Projects";
+import Sponsors from "@/components/Sponsors";
 import { getContent } from "@/lib/content";
 import { mediaUrl } from "@/lib/media-url";
 import { SITE_URL } from "@/lib/site-url";
@@ -61,6 +62,7 @@ export default async function Home() {
       />
       <Events events={content.events} />
       <Projects projects={content.projects} />
+      <Sponsors sponsors={content.sponsors} email={content.contact?.email} />
     </main>
   );
 }

@@ -567,7 +567,7 @@ export default function Members({ memberCohorts = [] }) {
             className="absolute z-20 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
           >
             <span className="absolute inset-0 rounded-full bg-aurora2/30 animate-ping motion-reduce:animate-none" />
-            <span className="relative block h-[30px] w-[30px] rounded-full bg-aurora2 shadow-[0_0_16px_rgba(34,211,238,0.8)]" />
+            <span className="relative block h-[20px] w-[20px] rounded-full bg-aurora2 shadow-[0_0_12px_rgba(34,211,238,0.8)]" />
           </div>
         )}
       </div>
