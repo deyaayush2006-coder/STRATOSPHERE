@@ -32,7 +32,7 @@ export default function FeedArchive({
           </span>
         </span>
 
-        <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.18em] text-aurora2 border border-aurora2/30 rounded-full px-3 py-1.5">
+        <span className="shrink-0 text-sm font-medium text-aurora2">
           {open ? "Hide" : "Show"}
         </span>
       </button>

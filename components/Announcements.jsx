@@ -4,6 +4,7 @@ import Reveal from "./Reveal";
 import SectionHeader from "./SectionHeader";
 import FeedArchive from "./FeedArchive";
 import { formatPosted, machineDate, splitFeed } from "@/lib/feed";
+import Label from "./Label";
 
 function Stamp({ announcement, className = "" }) {
   const exact = formatPosted(announcement.postedAt);
@@ -26,21 +27,12 @@ function Stamp({ announcement, className = "" }) {
   );
 }
 
-function Tag({ children, className = "" }) {
-  if (!children) return null;
-  return (
-    <span className={`font-mono text-[14px] font-bold uppercase text-aurora2 ${className}`}>
-      {children}
-    </span>
-  );
-}
-
 function FeedRow({ announcement }) {
   return (
     <li className="grid md:grid-cols-[9rem_1fr] gap-2 md:gap-8 py-6 items-baseline">
       <div className="flex flex-col gap-1.5">
         <Stamp announcement={announcement} />
-        <Tag>{announcement.tag}</Tag>
+        <Label dot>{announcement.tag}</Label>
       </div>
       <div>
         <h3 className="text-ink text-lg font-semibold tracking-[-0.01em]">{announcement.title}</h3>
@@ -70,7 +62,7 @@ function ArchiveRow({ announcement }) {
         ) : (
           <span className="font-mono text-[11px] text-ink/45">{announcement.date}</span>
         )}
-        <Tag className="text-aurora2/70">{announcement.tag}</Tag>
+        <Label dot muted>{announcement.tag}</Label>
       </div>
       <div>
         <h3 className="text-ink/80 text-base font-semibold tracking-[-0.01em]">
@@ -102,9 +94,7 @@ export default function Announcements({ announcements = [], announcementSettings
             aria-hidden="true"
           />
           <div className="flex flex-wrap items-center gap-3">
-            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-aurora2 border border-aurora2/30 rounded-full px-3 py-1">
-              {pinned.tag}
-            </span>
+            <Label dot>{pinned.tag}</Label>
             <Stamp announcement={pinned} />
           </div>
           <h3 className="text-ink text-2xl md:text-3xl font-semibold mt-5 tracking-[-0.02em] leading-tight">

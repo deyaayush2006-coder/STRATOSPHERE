@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SectionHeader from "./SectionHeader";
 import Plane from "./Plane";
 import { mediaUrl } from "@/lib/media-url";
+import Label from "./Label";
 
 const LEFT_X = 0.24;
 const RIGHT_X = 0.76;
@@ -132,20 +133,12 @@ function MemberCard({ member }) {
 
 function CohortHeading({ cohort, className = "" }) {
   return (
-    <div className={`flex flex-wrap items-baseline gap-x-4 gap-y-2 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${className}`}>
       <h3 className="text-2xl md:text-3xl text-ink font-semibold tracking-[-0.02em]">
         {cohort.year}
       </h3>
       {cohort.tag && (
-        <span
-          className={`font-mono text-[10px] uppercase tracking-[0.16em] px-2.5 py-1 rounded-full ring-1 ${
-            cohort.current
-              ? "text-aurora2 ring-aurora2/40 bg-aurora2/10"
-              : "text-ink/45 ring-ink/15"
-          }`}
-        >
-          {cohort.tag}
-        </span>
+        <Label dot muted={!cohort.current}>{cohort.tag}</Label>
       )}
       {cohort.blurb && <p className="text-sm text-ink/50 basis-full">{cohort.blurb}</p>}
     </div>
@@ -574,7 +567,7 @@ export default function Members({ memberCohorts = [] }) {
             className="absolute z-20 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
           >
             <span className="absolute inset-0 rounded-full bg-aurora2/30 animate-ping motion-reduce:animate-none" />
-            <span className="relative block h-[30px] w-[30px] rounded-full bg-aurora2 shadow-[0_0_18px_rgba(34,211,238,0.8)]" />
+            <span className="relative block h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-aurora2 shadow-[0_0_28px_rgba(34,211,238,0.8)]" />
           </div>
         )}
       </div>

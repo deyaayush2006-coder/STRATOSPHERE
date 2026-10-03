@@ -36,7 +36,7 @@ export default function ModelViewer({ src, caption, className = "" }) {
       </div>
 
       {!failed && (
-        <span className="pointer-events-none absolute left-4 bottom-4 rounded-full bg-base/70 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink/55 backdrop-blur-sm">
+        <span className="pointer-events-none absolute left-4 bottom-4 text-xs text-ink/60 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
           Drag to rotate · scroll to zoom
         </span>
       )}

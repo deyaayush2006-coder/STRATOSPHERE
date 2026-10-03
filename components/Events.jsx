@@ -7,6 +7,7 @@ import Reveal from "./Reveal";
 import CardRail from "./CardRail";
 import SectionHeader from "./SectionHeader";
 import { mediaUrl } from "@/lib/media-url";
+import Label from "./Label";
 
 function EventCard({ event }) {
   const [failed, setFailed] = useState(false);
@@ -35,15 +36,7 @@ function EventCard({ event }) {
 
         <div className="p-7">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span
-              className={`font-mono text-[10px] uppercase tracking-[0.18em] rounded-full px-3 py-1 border ${
-                upcoming
-                  ? "text-aurora2 border-aurora2/30"
-                  : "text-ink/40 border-ink/15"
-              }`}
-            >
-              {event.date}
-            </span>
+            <Label dot muted={!upcoming}>{event.date}</Label>
             {event.time !== "TBD" && (
               <span className="font-mono text-[11px] text-ink/35">{event.time}</span>
             )}

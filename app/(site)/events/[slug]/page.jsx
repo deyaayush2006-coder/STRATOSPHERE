@@ -6,6 +6,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import CadGallery from "@/components/CadGallery";
 import Cover from "@/components/Cover";
 import Thesis from "@/components/Thesis";
+import Label from "@/components/Label";
 
 async function findEvent(slug) {
   const { events } = await getContent();
@@ -61,13 +62,7 @@ export default async function EventDetail({ params }) {
 
       <header className="mb-10">
         <div className="flex flex-wrap items-center gap-3">
-          <span
-            className={`font-sans text-xs font-medium tracking-wide rounded-full px-3 py-1 border ${
-              upcoming ? "text-aurora2 border-aurora2/30" : "text-ink/40 border-ink/15"
-            }`}
-          >
-            {upcoming ? "Upcoming" : "Past"}
-          </span>
+          <Label dot muted={!upcoming}>{upcoming ? "Upcoming" : "Past"}</Label>
           {known(event.date) && (
             <span className="font-sans text-sm text-ink/45">{event.date}</span>
           )}

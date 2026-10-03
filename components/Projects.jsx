@@ -7,6 +7,7 @@ import Reveal from "./Reveal";
 import SectionHeader from "./SectionHeader";
 import CardRail from "./CardRail";
 import { mediaUrl } from "@/lib/media-url";
+import Label from "./Label";
 
 function Cover({ project }) {
   const [failed, setFailed] = useState(false);
@@ -39,9 +40,7 @@ function ProjectCard({ project }) {
 
         <div className="p-7">
           <div className="flex items-baseline justify-between gap-3">
-            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-aurora2">
-              {project.status}
-            </span>
+            <Label dot>{project.status}</Label>
           </div>
 
           <h3 className="text-ink text-[17px] font-semibold mt-3 tracking-[-0.01em] leading-snug">
@@ -50,7 +49,7 @@ function ProjectCard({ project }) {
           <p className="font-mono text-[11px] text-ink/40 mt-2">{project.timeline}</p>
           <p className="text-sm text-ink/55 mt-3 leading-relaxed">{project.summary}</p>
 
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-aurora2 mt-5 block">
+          <span className="text-sm font-medium text-aurora2 mt-5 block">
             {project.parts?.length > 0 ? `${project.parts.length} parts →` : "Read more →"}
           </span>
         </div>
