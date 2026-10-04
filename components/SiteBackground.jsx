@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import SoftAurora from "./SoftAurora";
 
 function useScrollDepth(pinned) {
   const ref = useRef(null);
@@ -51,6 +52,19 @@ export default function SiteBackground({ plain = false }) {
 
       <div ref={depthRef} className={`absolute inset-0 ${plain || onDetail ? "" : "opacity-0"}`}>
         <div className="absolute inset-0 bg-[radial-gradient(130%_95%_at_50%_-15%,#0b2b5e_0%,#071733_34%,#040a18_66%,#03060d_100%)] [[data-theme=light]_&]:hidden" />
+        <div className="absolute inset-0 [[data-theme=light]_&]:hidden">
+          <SoftAurora
+            speed={0.25}
+            scale={1.2}
+            brightness={0.6}
+            color1="#3987e5"
+            color2="#22d3ee"
+            bandHeight={0.62}
+            bandSpread={1}
+            layerOffset={1.5}
+            colorSpeed={0.4}
+          />
+        </div>
         <div className="absolute inset-0 hidden opacity-80 bg-[radial-gradient(130%_95%_at_50%_-15%,#b3cbea_0%,#c9daf0_40%,#dfe8f4_100%)] [[data-theme=light]_&]:block" />
       </div>
 

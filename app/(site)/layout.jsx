@@ -2,6 +2,7 @@ import NavCard from "@/components/NavCard";
 import Footer from "@/components/Footer";
 import RouteLoader from "@/components/RouteLoader";
 import SiteBackground from "@/components/SiteBackground";
+import ClickSpark from "@/components/ClickSpark";
 import { getContent } from "@/lib/content";
 import { INTRO_SEEN_SCRIPT } from "@/lib/intro";
 import { typeWhenSeen } from "@/lib/typing-clock";
@@ -29,6 +30,7 @@ export default async function SiteLayout({ children }) {
       />
 
       <SiteBackground />
+      <ClickSpark />
       <div className="relative z-10">
         <NavCard navLinks={content.navLinks} site={content.site} />
         {children}

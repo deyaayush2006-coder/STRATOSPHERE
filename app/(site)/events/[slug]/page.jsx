@@ -5,6 +5,7 @@ import { mediaUrl } from "@/lib/media-url";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CadGallery from "@/components/CadGallery";
 import Cover from "@/components/Cover";
+import SplitHeading from "@/components/SplitHeading";
 import Thesis from "@/components/Thesis";
 import Label from "@/components/Label";
 
@@ -71,9 +72,9 @@ export default async function EventDetail({ params }) {
           )}
         </div>
 
-        <h1 className="text-4xl md:text-5xl text-ink font-semibold mt-4 tracking-[-0.03em] leading-[1.05]">
+        <SplitHeading className="text-4xl md:text-5xl text-ink font-semibold mt-4 tracking-[-0.03em] leading-[1.05]">
           {event.title}
-        </h1>
+        </SplitHeading>
 
         {event.location && (
           <p className="font-sans text-sm text-ink/45 mt-3">{event.location}</p>
@@ -87,6 +88,7 @@ export default async function EventDetail({ params }) {
       <div className="grid md:grid-cols-[1fr_17rem] gap-8 items-start">
         <div className="min-w-0">
           <Cover
+            reveal
             src={mediaUrl(event.image)}
             alt={event.title}
             priority

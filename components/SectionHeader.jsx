@@ -1,10 +1,11 @@
 import Reveal from "./Reveal";
+import DecryptedText from "./DecryptedText";
 
 export default function SectionHeader({ title, blurb, className = "" }) {
   return (
     <Reveal className={`mb-14 text-center ${className}`}>
       <h2 className="uppercase font-bold text-3xl md:text-4xl lg:text-5xl text-ink tracking-[0.05em] leading-[1.05] w-fit max-w-full mx-auto">
-        {title}
+        {typeof title === "string" ? <DecryptedText text={title} /> : title}
       </h2>
 
       {blurb && (

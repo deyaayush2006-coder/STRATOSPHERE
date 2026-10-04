@@ -1,6 +1,7 @@
 "use client";
 
 import Reveal from "./Reveal";
+import StaggerReveal from "./StaggerReveal";
 import SectionHeader from "./SectionHeader";
 import FeedArchive from "./FeedArchive";
 import { formatPosted, machineDate, splitFeed } from "@/lib/feed";
@@ -105,13 +106,13 @@ export default function Announcements({ announcements = [], announcementSettings
       )}
 
       {recent.length > 0 && (
-        <Reveal className="glass rounded-3xl px-6 md:px-10 py-2">
+        <StaggerReveal items="li" className="glass rounded-3xl px-6 md:px-10 py-2">
           <ul className="divide-y divide-ink/10">
             {recent.map((a) => (
               <FeedRow key={a.id || a.title} announcement={a} />
             ))}
           </ul>
-        </Reveal>
+        </StaggerReveal>
       )}
 
       {recent.length === 0 && !pinned && (

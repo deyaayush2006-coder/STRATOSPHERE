@@ -18,3 +18,7 @@ npm-debug.log*
 
 .vercel
 .env*
+.mcp.json
+components.json
+.playwright-mcp
+.claude

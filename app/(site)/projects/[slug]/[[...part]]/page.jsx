@@ -8,6 +8,7 @@ import ModelViewer from "@/components/ModelViewer";
 import Telemetry from "@/components/Telemetry";
 import Thesis from "@/components/Thesis";
 import Cover from "@/components/Cover";
+import SplitHeading from "@/components/SplitHeading";
 
 async function findProject(slug) {
   const { projects } = await getContent();
@@ -64,9 +65,9 @@ export default async function ProjectDetail({ params }) {
           <span className="font-sans text-sm text-ink/45">{project.timeline}</span>
         </div>
 
-        <h1 className="text-4xl md:text-5xl text-ink font-semibold mt-4 tracking-[-0.03em] leading-[1.05]">
+        <SplitHeading className="text-4xl md:text-5xl text-ink font-semibold mt-4 tracking-[-0.03em] leading-[1.05]">
           {project.title}
-        </h1>
+        </SplitHeading>
         <p className="text-ink/65 mt-5 max-w-2xl leading-relaxed">{project.summary}</p>
       </header>
 
@@ -74,6 +75,7 @@ export default async function ProjectDetail({ params }) {
         <article className="glass rounded-3xl overflow-hidden">
           {project.image && (
             <Cover
+              reveal
               src={mediaUrl(project.image)}
               alt={project.title}
               priority
@@ -118,6 +120,7 @@ export default async function ProjectDetail({ params }) {
           <div className="min-w-0">
             <article className="glass rounded-3xl overflow-hidden">
               <Cover
+                reveal
                 src={mediaUrl(active.image)}
                 alt={`${active.name} — ${project.title}`}
                 priority

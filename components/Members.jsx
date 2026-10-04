@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SectionHeader from "./SectionHeader";
 import Plane from "./Plane";
 import { mediaUrl } from "@/lib/media-url";
+import { gsap, useGSAP } from "@/lib/gsap";
 import Label from "./Label";
 
 const LEFT_X = 0.24;
@@ -53,6 +54,28 @@ function buildPath({ w, h }, n) {
       ` ${round(x1)} ${round(y1)}`;
   }
   return d;
+}
+
+// The route is sampled once per layout, so following it while scrolling is an
+// array lookup rather than a getPointAtLength() call per frame.
+const SAMPLE_STEP = 4;
+
+function samplePath(path, total) {
+  const count = Math.max(2, Math.ceil(total / SAMPLE_STEP) + 1);
+  return Array.from({ length: count }, (_, i) => {
+    const p = path.getPointAtLength(Math.min((i * total) / (count - 1), total));
+    return { x: p.x, y: p.y };
+  });
+}
+
+function pointAt(samples, total, at) {
+  if (samples.length < 2 || total <= 0) return { x: 0, y: 0 };
+  const pos = (clamp(at, 0, total) / total) * (samples.length - 1);
+  const i = Math.min(Math.floor(pos), samples.length - 2);
+  const t = pos - i;
+  const a = samples[i];
+  const b = samples[i + 1];
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
 }
 
 function lengthAtY(path, total, targetY) {
@@ -288,6 +311,7 @@ export default function Members({ memberCohorts = [] }) {
   const openedFrom = useRef(null);
 
   const totalRef = useRef(0);
+  const samplesRef = useRef([]);
   const stopsRef = useRef([]);
 
   const [size, setSize] = useState(null);
@@ -334,9 +358,9 @@ export default function Members({ memberCohorts = [] }) {
 
       const craft = craftRef.current;
       if (craft) {
-        const here = path.getPointAtLength(at);
-        const back = path.getPointAtLength(Math.max(at - 6, 0));
-        const ahead = path.getPointAtLength(Math.min(at + 6, total));
+        const here = pointAt(samplesRef.current, total, at);
+        const back = pointAt(samplesRef.current, total, Math.max(at - 6, 0));
+        const ahead = pointAt(samplesRef.current, total, Math.min(at + 6, total));
         const heading = (Math.atan2(ahead.y - back.y, ahead.x - back.x) * 180) / Math.PI;
 
         craft.style.transform =
@@ -361,6 +385,7 @@ export default function Members({ memberCohorts = [] }) {
 
     const total = path.getTotalLength();
     totalRef.current = total;
+    samplesRef.current = samplePath(path, total);
 
     stopsRef.current = Array.from({ length: count }, (_, i) =>
       total > 0 ? lengthAtY(path, total, stationY(i, count) * size.h) / total : 0
@@ -369,64 +394,62 @@ export default function Members({ memberCohorts = [] }) {
     place(0);
   }, [d, count, size, place]);
 
-  useEffect(() => {
-    if (!flying || !d || count === 0) return undefined;
-
-    let frame = 0;
-
-    const read = () => {
-      frame = 0;
+  // GSAP ScrollTrigger maps the track passing the focus line to 0..1, and the
+  // scrub lets the plane ease after the scroll instead of snapping to it.
+  useGSAP(
+    () => {
       const el = trackRef.current;
-      const total = totalRef.current;
-      if (!el || total <= 0) return;
+      if (!flying || !d || count === 0 || !el) return;
 
-      const rect = el.getBoundingClientRect();
-      if (rect.height <= 0) return;
+      const flight = { progress: 0 };
 
-      const focus = window.innerHeight * FOCUS;
-      const progress = clamp((focus - rect.top) / rect.height, 0, 1);
+      const read = () => {
+        const total = totalRef.current;
+        if (total <= 0) return;
+        const progress = flight.progress;
 
-      place(total * progress);
+        place(total * progress);
 
-      setLaunched((prev) => {
-        const now = progress > 0;
-        return prev === now ? prev : now;
-      });
+        setLaunched((prev) => {
+          const now = progress > 0;
+          return prev === now ? prev : now;
+        });
 
-      setArrived((prev) => {
-        const now = progress >= ARRIVED_AT;
-        return prev === now ? prev : now;
-      });
+        setArrived((prev) => {
+          const now = progress >= ARRIVED_AT;
+          return prev === now ? prev : now;
+        });
 
-      if (rect.top > focus || rect.bottom < focus) return;
+        if (progress <= 0 || progress >= 1) return;
 
-      const stops = stopsRef.current;
-      let nearest = 0;
-      let best = Infinity;
-      for (let i = 0; i < stops.length; i += 1) {
-        const gap = Math.abs(stops[i] - progress);
-        if (gap < best) {
-          best = gap;
-          nearest = i;
+        const stops = stopsRef.current;
+        let nearest = 0;
+        let best = Infinity;
+        for (let i = 0; i < stops.length; i += 1) {
+          const gap = Math.abs(stops[i] - progress);
+          if (gap < best) {
+            best = gap;
+            nearest = i;
+          }
         }
-      }
-      setActive((prev) => (prev === nearest ? prev : nearest));
-    };
+        setActive((prev) => (prev === nearest ? prev : nearest));
+      };
 
-    const onScroll = () => {
-      if (frame) return;
-      frame = requestAnimationFrame(read);
-    };
-
-    read();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (frame) cancelAnimationFrame(frame);
-    };
-  }, [flying, d, count, place]);
+      gsap.to(flight, {
+        progress: 1,
+        ease: "none",
+        onUpdate: read,
+        scrollTrigger: {
+          trigger: el,
+          start: `top ${FOCUS * 100}%`,
+          end: `bottom ${FOCUS * 100}%`,
+          scrub: 0.6,
+        },
+      });
+      read();
+    },
+    { dependencies: [flying, d, count, place], revertOnUpdate: true }
+  );
 
   useEffect(() => {
     if (flying || !d) return;

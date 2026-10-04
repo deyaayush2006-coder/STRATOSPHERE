@@ -1,5 +1,6 @@
 import FooterContact, { FooterAddressColumn } from "./FooterContact";
 import SocialIcon, { socialLabel } from "./SocialIcon";
+import Magnet from "./Magnet";
 
 export default function Footer({ contact = {}, footerCols = [], compact = false }) {
   const { address = [], hours = [], email = "", socials = [] } = contact;
@@ -63,18 +64,20 @@ export default function Footer({ contact = {}, footerCols = [], compact = false 
                   const name = s.label || socialLabel(s.platform);
                   return (
                     <li key={s.url}>
-                      <a
-                        href={s.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={name}
-                        title={name}
-                        className="grid h-11 w-11 place-items-center rounded-full border border-ink/20 text-ink/70 transition
-                          hover:border-aurora2/50 hover:text-aurora2 focus-visible:outline focus-visible:outline-2
-                          focus-visible:outline-offset-2 focus-visible:outline-aurora2"
-                      >
-                        <SocialIcon platform={s.platform} className="h-[18px] w-[18px]" />
-                      </a>
+                      <Magnet padding={18}>
+                        <a
+                          href={s.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={name}
+                          title={name}
+                          className="grid h-11 w-11 place-items-center rounded-full border border-ink/20 text-ink/70 transition
+                            hover:border-aurora2/50 hover:text-aurora2 focus-visible:outline focus-visible:outline-2
+                            focus-visible:outline-offset-2 focus-visible:outline-aurora2"
+                        >
+                          <SocialIcon platform={s.platform} className="h-[18px] w-[18px]" />
+                        </a>
+                      </Magnet>
                     </li>
                   );
                 })}

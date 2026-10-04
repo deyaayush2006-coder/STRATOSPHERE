@@ -1,5 +1,6 @@
 import Reveal from "./Reveal";
 import CountUp from "./CountUp";
+import ScrollReveal from "./ScrollReveal";
 
 export default function About({ about = {}, socials = [] }) {
   const { body = [], pillars = [], facts = [] } = about;
@@ -12,12 +13,12 @@ export default function About({ about = {}, socials = [] }) {
         </h2>
 
         <div className="md:-mt-1">
-          <p className="text-ink text-lg leading-relaxed mb-5">{about.lead}</p>
+          <ScrollReveal className="text-ink text-lg leading-relaxed mb-5">{about.lead}</ScrollReveal>
 
           {body.map((paragraph, i) => (
-            <p key={i} className="text-ink/70 mb-5 last:mb-0 leading-relaxed">
+            <ScrollReveal key={i} className="text-ink/70 mb-5 last:mb-0 leading-relaxed">
               {paragraph}
-            </p>
+            </ScrollReveal>
           ))}
 
         </div>
