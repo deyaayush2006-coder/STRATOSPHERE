@@ -45,36 +45,8 @@ export const ABOUT = {
     { label: "Years Active", value: "4" },
   ],
 };
-export const HERO_SLIDES = [
-  {
-    src: "/images/hero/glider-flight-test.jpg",
-    alt: "Three members walking out across the field with their gliders for a test flight",
-  },
-  {
-    src: "/images/hero/drone-bench.jpg",
-    alt: "Two quadcopter frames, motors and parts laid out on the workbench",
-  },
-  {
-    src: "/images/hero/water-rocket-launch.jpg",
-    alt: "A water rocket streaking off its launcher as a crowd of members looks on",
-  },
-  {
-    src: "/images/hero/drone-build.jpg",
-    alt: "Members assembling drone kits together at a workshop table",
-  },
-  {
-    src: "/images/hero/drone-flight-dusk.jpg",
-    alt: "A drone flying over a crowd on the field at dusk",
-  },
-  {
-    src: "/images/hero/best-contingent.jpg",
-    alt: "Trophies, medals and the Best Contingent certificate from the National Students' Space Challenge",
-  },
-  {
-    src: "/images/hero/windcraft-glider-team.jpg",
-    alt: "Four WindCraft participants holding up the glider they built",
-  },
-];
+// Aerial view of the Jadavpur University campus and surrounding Kolkata.
+export const HERO_PHOTO = "/images/hero/ju-campus.jpg";
 
 export const CONTACT = {
   email: "juaerospace.club@jadavpuruniversity.in",
@@ -99,6 +71,33 @@ export const CONTACT = {
 };
 
 export const SHOWCASE_CLIPS = [];
+
+// From the club's shared Drive folder. Captions describe what is in frame;
+// `event` is the Drive folder the photo came from.
+export const MEMORIES = [
+  { src: "/images/memories/water-rocket-liftoff.jpg", width: 828, height: 462, event: "Water rockets", caption: "Water rocket lift-off" },
+  { src: "/images/memories/srijan-2026-gliders.jpg", width: 1600, height: 1200, event: "Srijan 2026", caption: "Walking out with the gliders" },
+  { src: "/images/memories/robozonix-drone-build.jpg", width: 1600, height: 1200, event: "Robozonix", caption: "Wiring up a drone frame" },
+  { src: "/images/memories/kshitij-2026-team.jpg", width: 1200, height: 1600, event: "Kshitij 2026", caption: "Team photo" },
+  { src: "/images/memories/nssc-best-contingent.jpg", width: 1280, height: 960, event: "NSSC, IIT Kharagpur", caption: "Trophies, medals and the Best Contingent certificate" },
+  { src: "/images/memories/srijan-2026-launch-tower.jpg", width: 1200, height: 1600, event: "Srijan 2026", caption: "A glider leaves the launch tower" },
+  { src: "/images/memories/robozonix-evening-flight.jpg", width: 1600, height: 900, event: "Robozonix", caption: "Evening flight on the field" },
+  { src: "/images/memories/windcraft-2026-team.jpg", width: 1600, height: 1200, event: "WindCraft 2026", caption: "Gliders built at the workshop" },
+  { src: "/images/memories/kshitij-2026-wing.jpg", width: 1600, height: 1200, event: "Kshitij 2026", caption: "Wing work on the grass" },
+  { src: "/images/memories/robozonix-quad-frames.jpg", width: 1600, height: 1200, event: "Robozonix", caption: "Quadcopter frames on the bench" },
+  { src: "/images/memories/srijan-2026-launch-pad.jpg", width: 1600, height: 1200, event: "Srijan 2026", caption: "Setting a rocket on the launch pad" },
+  { src: "/images/memories/windcraft-2026-sighting.jpg", width: 1600, height: 1200, event: "WindCraft 2026", caption: "Sighting down a glider" },
+  { src: "/images/memories/kshitij-2026-station.jpg", width: 900, height: 1600, event: "Kshitij 2026", caption: "Bags packed at the station" },
+  { src: "/images/memories/robozonix-full-hall.jpg", width: 1600, height: 902, event: "Robozonix", caption: "A full hall" },
+  { src: "/images/memories/nssc-certificate.jpg", width: 1280, height: 960, event: "NSSC, IIT Kharagpur", caption: "With the trophy and certificate" },
+  { src: "/images/memories/windcraft-2026-glider.jpg", width: 1600, height: 1200, event: "WindCraft 2026", caption: "A finished glider" },
+  { src: "/images/memories/water-rocket-field.jpg", width: 1280, height: 720, event: "Water rockets", caption: "Lift-off on the field" },
+  { src: "/images/memories/windcraft-2026-participants.jpg", width: 1600, height: 1200, event: "WindCraft 2026", caption: "Participants with their gliders" },
+  { src: "/images/memories/water-rocket-model.jpg", width: 960, height: 1280, event: "Water rockets", caption: "A finished water rocket" },
+  { src: "/images/memories/robozonix-kit-assembly.jpg", width: 1600, height: 1200, event: "Robozonix", caption: "Kit assembly at the tables" },
+  { src: "/images/memories/windcraft-2026-floor.jpg", width: 1600, height: 1200, event: "WindCraft 2026", caption: "A glider on the workshop floor" },
+  { src: "/images/memories/water-rocket-pad.jpg", width: 1280, height: 960, event: "Water rockets", caption: "Rocket on the pad" },
+];
 
 export const SPONSORS = [
   { name: "SOLIDWORKS", logo: "/images/sponsors/solidworks-logo.svg", url: "https://www.solidworks.com", plate: true },

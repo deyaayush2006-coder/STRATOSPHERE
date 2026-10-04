@@ -7,6 +7,7 @@ import Achievements from "@/components/Achievements";
 import Events from "@/components/Events";
 import Projects from "@/components/Projects";
 import Sponsors from "@/components/Sponsors";
+import Memories from "@/components/Memories";
 import { getContent } from "@/lib/content";
 import { mediaUrl } from "@/lib/media-url";
 import { SITE_URL } from "@/lib/site-url";
@@ -48,7 +49,7 @@ export default async function Home() {
           __html: JSON.stringify(organisation(content)).replace(/</g, "\\u003c"),
         }}
       />
-      <Hero slides={content.site?.heroSlides} />
+      <Hero photo={content.site?.heroPhoto} />
       <Announcements
         announcements={content.announcements}
         announcementSettings={content.announcementSettings}
@@ -63,6 +64,7 @@ export default async function Home() {
       <Events events={content.events} />
       <Projects projects={content.projects} />
       <Sponsors sponsors={content.sponsors} email={content.contact?.email} />
+      <Memories memories={content.memories} />
     </main>
   );
 }

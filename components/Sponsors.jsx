@@ -50,7 +50,9 @@ function Card({ sponsor, hidden }) {
     <li
       aria-hidden={hidden || undefined}
       className="relative flex shrink-0 items-center justify-center h-48 w-72 sm:h-64 sm:w-96 md:h-80 md:w-[480px]
-        mx-6 sm:mx-10 p-6 sm:p-8 rounded-2xl border border-ink/10 bg-ink/[0.05] hover:bg-ink/[0.1] transition-colors"
+        mx-6 sm:mx-10 p-6 sm:p-8 rounded-2xl border border-ink/10 bg-ink/[0.05] hover:bg-ink/[0.1] transition-colors
+        [[data-theme=light]_&]:bg-white/60 [[data-theme=light]_&]:hover:bg-white/90
+        [[data-theme=light]_&]:shadow-[0_1px_2px_rgba(15,23,42,0.05),0_18px_40px_-28px_rgba(15,23,42,0.3)]"
     >
       {sponsor.url ? (
         <a

@@ -8,6 +8,11 @@
   --glass-edge: rgba(255, 255, 255, 0.10);
   --glass-hi: rgba(255, 255, 255, 0.10);
   --glass-lo: rgba(0, 0, 0, 0.30);
+  --glass-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.85);
+  --vignette: rgba(0, 0, 0, 0.55);
+  --scroll-track: #06060c;
+  --scroll-thumb: rgba(255, 255, 255, 0.14);
+  --scroll-thumb-hover: rgba(255, 255, 255, 0.24);
   --sky-core: #10569c;
   --sky-mid: rgba(13, 68, 138, 0.68);
   --sky-far: rgba(8, 40, 92, 0.45);
@@ -30,23 +35,31 @@
   --viz-axis: rgba(255, 255, 255, 0.35);
 }
 
+/* Daylight: near-white paper, white cards with soft cool shadows, and a deeper
+   cyan accent so accent text still reads on white. */
 :root[data-theme="light"] {
   --ink: #0b1220;
-  --surface: #eef2f8;
+  --surface: #f3f6fb;
   --surface-panel: #ffffff;
+  --color-aurora2: #0e7490;
 
-  --glass-top: rgba(255, 255, 255, 0.75);
-  --glass-bottom: rgba(255, 255, 255, 0.55);
-  --glass-edge: rgba(11, 18, 32, 0.10);
-  --glass-hi: rgba(255, 255, 255, 0.90);
-  --glass-lo: rgba(11, 18, 32, 0.06);
+  --glass-top: rgba(255, 255, 255, 0.94);
+  --glass-bottom: rgba(255, 255, 255, 0.8);
+  --glass-edge: rgba(15, 23, 42, 0.09);
+  --glass-hi: rgba(255, 255, 255, 1);
+  --glass-lo: rgba(15, 23, 42, 0.04);
+  --glass-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 18px 40px -26px rgba(15, 23, 42, 0.3);
+  --vignette: rgba(110, 140, 185, 0.12);
+  --scroll-track: #eef2f8;
+  --scroll-thumb: rgba(15, 23, 42, 0.18);
+  --scroll-thumb-hover: rgba(15, 23, 42, 0.3);
 
-  --sky-core: #9fc7f5;
-  --sky-mid: rgba(150, 190, 235, 0.55);
-  --sky-far: rgba(180, 208, 238, 0.40);
-  --sky-rise: rgba(168, 200, 235, 0.45);
-  --sky-corner: rgba(214, 206, 232, 0.40);
-  --sky-horizon: rgba(150, 190, 232, 0.35);
+  --sky-core: #c6dcf6;
+  --sky-mid: rgba(184, 210, 242, 0.5);
+  --sky-far: rgba(206, 224, 246, 0.35);
+  --sky-rise: rgba(198, 219, 244, 0.4);
+  --sky-corner: rgba(222, 216, 240, 0.4);
+  --sky-horizon: rgba(196, 218, 244, 0.35);
   --rule-ink: rgba(11, 18, 32, 0.22);
   --grid-ink: rgba(11, 18, 32, 0.05);
   --grid-ink-soft: rgba(11, 18, 32, 0.028);
@@ -84,8 +97,6 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --animate-fade-up: fadeUp 0.6s ease both;
   --animate-craft-bob: craftBob 2.8s ease-in-out infinite;
-  --animate-hero-push: heroPush 4.5s linear both;
-  --animate-hero-pull: heroPull 4.5s linear both;
   --animate-veil-in: veilIn 0.14s ease-out both;
   --animate-panel-in: panelIn 0.2s cubic-bezier(.2, .8, .2, 1) both;
   --animate-card-in: cardIn 0.22s ease-out both;
@@ -177,16 +188,6 @@
   50%      { transform: translateY(2px) rotate(3.5deg); }
 }
 
-@keyframes heroPush {
-  from { transform: scale(1); }
-  to   { transform: scale(1.08); }
-}
-
-@keyframes heroPull {
-  from { transform: scale(1.08); }
-  to   { transform: scale(1); }
-}
-
 @layer base {
   html[data-theme="light"] {
     color-scheme: light;
@@ -221,13 +222,13 @@
   }
 
   ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: #06060c; }
+  ::-webkit-scrollbar-track { background: var(--scroll-track); }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.14);
+    background: var(--scroll-thumb);
     border-radius: 999px;
-    border: 2px solid #06060c;
+    border: 2px solid var(--scroll-track);
   }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.24); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -270,16 +271,17 @@
   }
 
   .bg-vignette {
-    background: radial-gradient(120% 90% at 50% 10%, transparent 40%, rgba(0, 0, 0, 0.55));
+    background: radial-gradient(120% 90% at 50% 10%, transparent 40%, var(--vignette));
   }
   .glass {
-    @apply border border-white/10;
+    @apply border;
+    border-color: var(--glass-edge);
     background:
       linear-gradient(180deg, var(--glass-top) 0%, var(--glass-bottom) 100%);
     box-shadow:
       inset 0 1px 0 0 var(--glass-hi),
       inset 0 -1px 0 0 var(--glass-lo),
-      0 24px 60px -30px rgba(0, 0, 0, 0.85);
+      var(--glass-shadow);
   }
   .glass-matte {
     border: 1px solid transparent;
@@ -312,6 +314,17 @@
       inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
       inset 0 -1px 0 0 rgba(0, 0, 0, 0.35),
       0 32px 80px -32px rgba(0, 0, 0, 0.9);
+  }
+  :root[data-theme="light"] .glass-strong {
+    border-color: var(--glass-edge);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.84) 100%);
+    box-shadow: inset 0 1px 0 0 #fff, var(--glass-shadow);
+  }
+  :root[data-theme="light"] .glass-matte:hover,
+  :root[data-theme="light"] .glass-matte.is-matte {
+    border-color: var(--glass-edge);
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: var(--glass-shadow);
   }
   .rule-sweep {
     height: 1px;

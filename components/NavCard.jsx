@@ -77,6 +77,7 @@ export default function NavCard({ navLinks = [], site = {} }) {
         <div
           className="absolute inset-x-0 top-full mt-2 max-h-[calc(100svh-7rem)] overflow-y-auto rounded-2xl
             border border-white/10 bg-panel/25 px-5 py-4 shadow-[0_20px_50px_-30px_rgba(0,0,0,0.8)]
+            [[data-theme=light]_&]:border-ink/10 [[data-theme=light]_&]:bg-panel/85 [[data-theme=light]_&]:shadow-[0_20px_50px_-30px_rgba(15,23,42,0.35)]
             backdrop-blur-xl backdrop-saturate-150"
         >
           <ul className="space-y-1">

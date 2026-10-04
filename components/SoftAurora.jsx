@@ -194,8 +194,13 @@ export default function SoftAurora({
       draw(t);
     };
 
+    // RouteLoader marks <html data-intro="pending"> while its screen covers the
+    // page, so there is nothing to draw for until it lifts.
+    const root = document.documentElement;
+    const covered = () => root.dataset.intro === "pending";
+
     const start = () => {
-      if (still || frame || document.hidden || !onScreen) return;
+      if (still || frame || document.hidden || !onScreen || covered()) return;
       frame = requestAnimationFrame(loop);
     };
 
@@ -222,8 +227,11 @@ export default function SoftAurora({
       else stop();
     });
 
+    const intro = new MutationObserver(() => (covered() ? stop() : start()));
+
     resize();
     io.observe(container);
+    intro.observe(root, { attributes: true, attributeFilter: ["data-intro"] });
     window.addEventListener("resize", resize, { passive: true });
     document.addEventListener("visibilitychange", onVisibility);
     start();
@@ -231,6 +239,7 @@ export default function SoftAurora({
     return () => {
       stop();
       io.disconnect();
+      intro.disconnect();
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", onVisibility);
       gl.getExtension("WEBGL_lose_context")?.loseContext();

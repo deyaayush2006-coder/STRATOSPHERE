@@ -65,14 +65,14 @@ export default function SiteBackground({ plain = false }) {
             colorSpeed={0.4}
           />
         </div>
-        <div className="absolute inset-0 hidden opacity-80 bg-[radial-gradient(130%_95%_at_50%_-15%,#b3cbea_0%,#c9daf0_40%,#dfe8f4_100%)] [[data-theme=light]_&]:block" />
+        <div className="absolute inset-0 hidden bg-[radial-gradient(130%_95%_at_50%_-15%,#d6e5f8_0%,#e8f0fa_42%,#f3f6fb_100%)] [[data-theme=light]_&]:block" />
       </div>
 
       <div className="absolute inset-0 bg-blueprint mask-fade-edges opacity-60" />
 
       <div className="absolute inset-0 bg-vignette" />
 
-      <div className="absolute inset-0 bg-grain opacity-[0.06]" />
+      <div className="absolute inset-0 bg-grain opacity-[0.06] [[data-theme=light]_&]:opacity-[0.025]" />
 
       <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-base/70 to-transparent" />
     </div>

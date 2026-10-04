@@ -12,7 +12,7 @@ const FIELD =
 
 const BUTTON =
   "inline-flex shrink-0 whitespace-nowrap items-center justify-center gap-2 px-6 py-2.5 rounded-full font-semibold text-sm " +
-  "bg-aurora2 text-[#04121a] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition";
+  "bg-aurora2 text-[#04121a] [[data-theme=light]_&]:text-white hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition";
 
 export default function ContactForm({ email = "" }) {
   const [status, setStatus] = useState("idle");

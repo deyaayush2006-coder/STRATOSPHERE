@@ -650,31 +650,35 @@ export const SECTIONS = [
     icon: "🖼️",
     kind: "object",
     blurb:
-      "The hero slideshow on the front page, and the nav logo.",
+      "The photo behind the title at the top of the front page, and the nav logo.",
     fields: [
       {
-        name: "heroSlides",
-        label: "Hero slideshow",
-        type: "list",
-        itemName: "photo",
+        name: "heroPhoto",
+        label: "Hero photo",
+        type: "image",
         hint:
-          "The photos behind the title at the top of the front page, shown in this order — the first one is what the page opens on. " +
-          "Each is cropped to fill the band, losing more of its bottom than its top and, on narrow screens, its left side — keep the subject up and to the right. " +
-          "Leave the list empty and the band shows no photo at all.",
-        title: (s) => s.alt || s.src,
-        compact: true,
-        blank: () => ({ src: "", alt: "" }),
-        fields: [
-          { name: "src", label: "Image", type: "image", required: true },
-          {
-            name: "alt",
-            label: "Note",
-            type: "text",
-            hint: "What the photo shows, for your own reference. The page treats these as decoration and does not read it out.",
-          },
-        ],
+          "Cropped to fill the band, keeping its centre-right in view on narrow screens. " +
+          "Use a wide photo at least 1920px across. Leave it empty and the band shows no photo at all.",
       },
       { name: "logo", label: "Nav logo", type: "image" },
+    ],
+  },
+
+  {
+    key: "memories",
+    label: "Club memories",
+    icon: "📸",
+    kind: "list",
+    itemName: "photo",
+    blurb:
+      "The photo slideshow at the end of the front page, in this order, with a thumbnail strip underneath. Leave this empty and the section is hidden.",
+    title: (m) => m.caption || m.src,
+    subtitle: (m) => m.event,
+    blank: () => ({ src: "", event: "", caption: "" }),
+    fields: [
+      { name: "src", label: "Photo", type: "image", required: true },
+      { name: "event", label: "Event", type: "text", hint: "The small label above the caption, e.g. Srijan 2026" },
+      { name: "caption", label: "Caption", type: "text" },
     ],
   },
 

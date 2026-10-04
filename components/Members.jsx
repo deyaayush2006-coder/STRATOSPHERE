@@ -242,6 +242,7 @@ function CommitteeDialog({ cohort, onClose }) {
         aria-modal="true"
         aria-label={`Committee of ${cohort.year}`}
         className="animate-panel-in bg-panel border border-ink/15 shadow-[0_32px_80px_-32px_rgba(0,0,0,0.9)]
+          [[data-theme=light]_&]:shadow-[0_32px_80px_-32px_rgba(15,23,42,0.4)]
           w-full max-w-4xl max-h-[88svh] sm:max-h-[85svh] rounded-t-3xl sm:rounded-3xl flex flex-col overflow-hidden"
       >
         <div className="flex items-start justify-between gap-4 px-6 md:px-8 pt-6 pb-4 border-b border-ink/10">

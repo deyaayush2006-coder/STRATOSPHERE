@@ -1,75 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import Image from "next/image";
 import { mediaUrl } from "@/lib/media-url";
 import { afterIntro, gsap, SplitText, useGSAP } from "@/lib/gsap";
-
-const HOLD = 3500;
-const FADE = 1000;
-
-function useSlideshow(count, ref) {
-  const [index, setIndex] = useState(0);
-  const [prev, setPrev] = useState(-1);
-  const [reach, setReach] = useState(0);
-  const [ready, setReady] = useState([0]);
-  const [heldFor, setHeldFor] = useState(-1);
-  const [allowed, setAllowed] = useState(false);
-  const [paused, setPaused] = useState(false);
-
-  const live = allowed && !paused && count > 1;
-  const next = (index + 1) % count;
-  const nextReady = ready.includes(next);
-
-  useEffect(() => {
-    const node = ref.current;
-    if (!node || count < 2) return undefined;
-
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let onScreen = true;
-    const sync = () => setAllowed(!mq.matches && !document.hidden && onScreen);
-    const io = new IntersectionObserver(([entry]) => {
-      onScreen = entry.isIntersecting;
-      sync();
-    });
-
-    io.observe(node);
-    sync();
-    mq.addEventListener("change", sync);
-    document.addEventListener("visibilitychange", sync);
-    return () => {
-      io.disconnect();
-      mq.removeEventListener("change", sync);
-      document.removeEventListener("visibilitychange", sync);
-    };
-  }, [ref, count]);
-
-  useEffect(() => {
-    if (live) setReach((r) => Math.max(r, next));
-  }, [live, next]);
-
-  useEffect(() => {
-    if (!live) return undefined;
-    const timer = setTimeout(() => setHeldFor(index), HOLD);
-    return () => clearTimeout(timer);
-  }, [live, index]);
-
-  useEffect(() => {
-    if (!live || heldFor !== index || !nextReady) return;
-    setPrev(index);
-    setIndex(next);
-  }, [live, heldFor, index, next, nextReady]);
-
-  useEffect(() => {
-    if (prev < 0) return undefined;
-    const timer = setTimeout(() => setPrev(-1), FADE);
-    return () => clearTimeout(timer);
-  }, [prev]);
-
-  const markReady = (i) => setReady((r) => (r.includes(i) ? r : [...r, i]));
-
-  return { index, prev, reach, live, paused, setPaused, markReady };
-}
 
 // The title block is hidden on mount, then built in once the intro loader has
 // gone: the accent bar grows, the letters rise out of a mask, the ring around
@@ -119,19 +53,9 @@ function useHeroTitle(bandRef, titleRef) {
   );
 }
 
-export default function Hero({ slides = [] }) {
+export default function Hero({ photo }) {
   const bandRef = useRef(null);
-
-  const photos = slides
-    .map((slide) => slide?.src)
-    .filter((src, i, all) => src && all.indexOf(src) === i)
-    .map(mediaUrl);
-
-  const { index, prev, reach, live, paused, setPaused, markReady } = useSlideshow(
-    photos.length,
-    bandRef
-  );
-  const moving = photos.length > 1;
+  const src = mediaUrl(photo);
 
   const titleRef = useRef(null);
   useHeroTitle(bandRef, titleRef);
@@ -142,33 +66,25 @@ export default function Hero({ slides = [] }) {
       id="overview"
       className="relative isolate grid overflow-hidden scroll-mt-1 mt-[calc(1rem+2px)] min-h-[calc(100svh-7.25rem+8px)]"
     >
-      {photos.map((src, i) =>
-        i > reach ? null : (
-          <Image
-            key={src}
-            src={src}
-            alt=""
-            fill
-            priority={i === 0}
-            sizes="(orientation: portrait) 140vh, 100vw"
-            onLoad={() => markReady(i)}
-            onError={() => markReady(i)}
-            className={`object-cover object-[100%_25%] origin-top motion-reduce:animate-none ${
-              i === index
-                ? "-z-10 opacity-100 transition-opacity duration-[1000ms] ease-in-out"
-                : `-z-20 ${i === prev ? "opacity-100" : "opacity-0"}`
-            } ${moving && (i === index || i === prev) ? (i % 2 ? "animate-hero-pull" : "animate-hero-push") : ""} ${
-              live ? "" : "[animation-play-state:paused]"
-            }`}
-          />
-        )
+      {src && (
+        <Image
+          src={src}
+          alt=""
+          fill
+          priority
+          sizes="(orientation: portrait) 200vh, 100vw"
+          className="-z-10 object-cover object-[72%_45%]"
+        />
       )}
       <div
-        className="col-start-1 row-start-1 bg-gradient-to-t from-base via-base/55 to-transparent"
+        className="col-start-1 row-start-1 bg-gradient-to-t from-base via-base/55 to-transparent
+          [[data-theme=light]_&]:via-base/0 [[data-theme=light]_&]:via-[24%]"
         aria-hidden="true"
       />
       <div
-        className="col-start-1 row-start-1 bg-gradient-to-r from-base/85 via-base/25 to-transparent"
+        className="col-start-1 row-start-1 bg-gradient-to-r from-base/85 via-base/25 to-transparent
+          [[data-theme=light]_&]:from-base/85 [[data-theme=light]_&]:via-base/40 [[data-theme=light]_&]:via-[30%]
+          [[data-theme=light]_&]:to-[58%]"
         aria-hidden="true"
       />
       <div className="col-start-1 row-start-1 flex flex-col justify-end px-6 pb-14 md:px-10 md:pb-20">

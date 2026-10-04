@@ -1,4 +1,11 @@
+"use client";
+
+import dynamic from "next/dynamic";
 import Rocket from "./Rocket";
+
+// three.js comes in its own chunk so it never holds up the page behind the
+// loader; the stars fade in once it lands.
+const Starfield = dynamic(() => import("./Starfield"), { ssr: false });
 
 const TILT = "68deg";
 
@@ -33,18 +40,7 @@ export default function LoadingScreen({ served = false, leaving = false, fade = 
         />
         <div className="absolute inset-x-0 bottom-0 h-3/5 bg-[radial-gradient(120%_100%_at_50%_100%,var(--sky-horizon),transparent_70%)]" />
 
-        <div
-          className="absolute inset-0 animate-loader-twinkle motion-reduce:animate-none [[data-theme=light]_&]:hidden
-            [background-size:260px_260px]
-            [background-image:radial-gradient(1px_1px_at_24px_38px,#fff_100%,transparent),radial-gradient(1px_1px_at_142px_96px,#fff_100%,transparent),radial-gradient(1.5px_1.5px_at_208px_22px,#fff_100%,transparent),radial-gradient(1px_1px_at_74px_188px,#fff_100%,transparent),radial-gradient(1px_1px_at_230px_210px,#fff_100%,transparent)]
-            [mask-image:radial-gradient(ellipse_at_center,transparent_18%,#000_70%)]"
-        />
-        <div
-          className="absolute inset-0 animate-loader-twinkle [animation-delay:-1.8s] motion-reduce:animate-none
-            [[data-theme=light]_&]:hidden [background-size:410px_410px]
-            [background-image:radial-gradient(1px_1px_at_60px_300px,#fff_100%,transparent),radial-gradient(1.5px_1.5px_at_320px_140px,#9ad9ff_100%,transparent),radial-gradient(1px_1px_at_190px_40px,#fff_100%,transparent),radial-gradient(1px_1px_at_380px_380px,#fff_100%,transparent)]
-            [mask-image:radial-gradient(ellipse_at_center,transparent_18%,#000_70%)]"
-        />
+        <Starfield />
       </div>
 
       <>
