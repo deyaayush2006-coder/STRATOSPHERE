@@ -25,6 +25,7 @@ export default async function NotFound() {
               </p>
             </div>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- kept as a plain link when lint was added; <Link> would change navigation */}
               <a
                 href="/"
                 className="inline-flex items-center gap-2 rounded-full border border-ink/20 px-5 py-2.5 text-sm font-semibold text-ink/80 hover:text-aurora2 hover:border-aurora2/40 transition duration-150"

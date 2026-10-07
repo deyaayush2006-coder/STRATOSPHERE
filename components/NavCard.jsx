@@ -28,6 +28,7 @@ export default function NavCard({ navLinks = [], site = {} }) {
       <div
         className={`relative flex items-center gap-4 px-5 py-3.5 rounded-2xl glass-matte ${open ? "is-matte" : ""}`}
       >
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- kept as a plain link when lint was added; <Link> would change navigation */}
         <a href="/#overview" className="flex flex-1 items-center gap-2.5 min-w-0">
           <Image
             src={mediaUrl(site.logo) || "/1674144810258.jpg"}
