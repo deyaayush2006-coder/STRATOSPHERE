@@ -1,6 +1,8 @@
-# docker compose --env-file .env.local up --build
+# cp .env.example .env    # then fill in the values (see README → Docker)
+# docker compose up --build
 #
-# Values come from the env file passed with --env-file (or from your shell).
+# Compose reads .env from this folder automatically. To use another file:
+#   docker compose --env-file .env.local up --build
 # NEXT_PUBLIC_* are build args; SUPABASE_SERVICE_ROLE_KEY is runtime only.
 # The site is served on http://localhost:${APP_PORT:-3000}.
 
@@ -9,8 +11,8 @@ services:
     build:
       context: .
       args:
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?set NEXT_PUBLIC_SUPABASE_URL}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?set NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?missing - copy .env.example to .env and fill it in}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?missing - copy .env.example to .env and fill it in}
         NEXT_PUBLIC_ADMIN_PATH: ${NEXT_PUBLIC_ADMIN_PATH:-admin}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
     image: stratosphere:latest
