@@ -5,7 +5,7 @@ import ScrollReveal from "./ScrollReveal";
 const FACT_COLUMNS = { 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3" };
 
 export default function About({ about = {}, socials = [] }) {
-  const { body = [], activities = [], facts = [] } = about;
+  const { body = [], pillars = [], activities = [], facts = [] } = about;
 
   return (
     <section id="about" className="px-6 py-24 md:py-28 scroll-mt-28 max-w-6xl mx-auto">
@@ -25,6 +25,20 @@ export default function About({ about = {}, socials = [] }) {
 
         </div>
       </Reveal>
+      <Reveal className="mt-16 md:mt-20 grid md:grid-cols-2 gap-12 md:gap-0">
+        {pillars.map((pillar, i) => (
+          <div
+            key={pillar.title}
+            className={i === 0 ? "md:pr-12" : "md:border-l md:border-ink/40 md:pl-12"}
+          >
+            <h3 className="font-semibold text-2xl md:text-3xl text-ink tracking-[-0.01em]">
+              {pillar.title}
+            </h3>
+            <p className="text-ink/70 mt-4 leading-relaxed">{pillar.body}</p>
+          </div>
+        ))}
+      </Reveal>
+
       {activities.length > 0 && (
         <Reveal className="mt-16 md:mt-20">
           <h3 className="font-semibold text-2xl md:text-3xl text-ink tracking-[-0.01em]">

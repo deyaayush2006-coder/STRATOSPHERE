@@ -28,6 +28,16 @@ export const ABOUT = {
     "Stratosphere is the aerospace club of Jadavpur University, founded in the 2022–23 session by three students in the Mechanical Engineering department. We design and build RC planes, gliders and drones, run hands-on sessions on 3D printing and PCB design, and organise JalAstra and SkySprint at Srijan, the university's techno-management fest.",
     "Next on the list is a CanSat: a working satellite the size of a soft-drink can.",
   ],
+  pillars: [
+    {
+      title: "Our Mission",
+      body: "Give JU students a place to build things that fly, not just study them. Members learn design, fabrication, electronics and flight testing on the club's own aircraft, rockets and satellites, and take that work to competitions like NSSC at IIT Kharagpur.",
+    },
+    {
+      title: "Our Vision",
+      body: "A design–build–fly programme that carries over from one batch to the next, where each committee hands on its designs, tools and lessons so every year starts further along than the last.",
+    },
+  ],
   // Every line here is taken from the event, project and achievement
   // write-ups elsewhere on the site.
   activities: [

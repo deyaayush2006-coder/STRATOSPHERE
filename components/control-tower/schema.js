@@ -540,10 +540,23 @@ export const SECTIONS = [
     label: "About",
     icon: "📄",
     kind: "object",
-    blurb: "The About section: the opening lines, what members do in the club, and the numbers underneath.",
+    blurb: "The About section: the opening lines, the two pillars, what members do in the club, and the numbers underneath.",
     fields: [
       { name: "lead", label: "Lead paragraph", type: "textarea", rows: 3 },
       { name: "body", label: "Body paragraphs", type: "stringList", itemName: "paragraph", multiline: true },
+      {
+        name: "pillars",
+        label: "Pillars",
+        type: "list",
+        itemName: "pillar",
+        hint: "Laid out in two columns — a third entry would need a design change",
+        title: (p) => p.title,
+        blank: () => ({ title: "", body: "" }),
+        fields: [
+          { name: "title", label: "Heading", type: "text", required: true },
+          { name: "body", label: "Body", type: "textarea", rows: 5 },
+        ],
+      },
       {
         name: "activities",
         label: "What you'll do here",
