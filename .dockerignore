@@ -1,0 +1,33 @@
+# Secrets never go into the build context or an image layer.
+.env
+.env.*
+
+# Rebuilt inside the image.
+node_modules
+.next
+out
+build
+.dist
+
+# Not needed to build or run the site.
+.git
+.github
+.vercel
+.claude
+.playwright-mcp
+.mcp.json
+coverage
+test-results
+playwright-report
+e2e
+tests
+**/*.test.js
+vitest.config.mjs
+vitest.rls.config.mjs
+playwright.config.mjs
+supabase
+Dockerfile
+docker-compose.yml
+.dockerignore
+npm-debug.log*
+.DS_Store
