@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:rls": "vitest run --config vitest.rls.config.mjs",
     "seed": "node supabase/seed.mjs"
   },
   "dependencies": {
