@@ -33,7 +33,7 @@ export default async function AdminPage() {
   const staff = await getStaff();
   if (!staff) return <LoginScreen />;
 
-  const content = await readContent(await createClient());
+  const content = await readContent(await createClient(), { staff: true });
 
   return <Dashboard user={staff} initialContent={content} />;
 }

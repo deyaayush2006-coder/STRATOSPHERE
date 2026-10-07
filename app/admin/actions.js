@@ -206,7 +206,7 @@ export async function saveSection(key, value) {
 
   refreshSite();
 
-  const content = await readContent(supabase);
+  const content = await readContent(supabase, { staff: true });
   return content[key];
 }
 
@@ -224,7 +224,7 @@ export async function resetSection(key) {
 
   refreshSite();
 
-  const content = await readContent(supabase);
+  const content = await readContent(supabase, { staff: true });
   return content[key];
 }
 
