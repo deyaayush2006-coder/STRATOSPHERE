@@ -21,3 +21,7 @@ npm-debug.log*
 .mcp.json
 components.json
 .playwright-mcp
+
+coverage
+test-results
+playwright-report
