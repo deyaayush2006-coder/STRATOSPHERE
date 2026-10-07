@@ -257,15 +257,22 @@ export async function createUser({ name, email, password, role }) {
   }
 
   const admin = createAdminClient();
+  const grant = role === "admin" ? "admin" : "editor";
 
-  const { error } = await admin.auth.admin.createUser({
+  const { data, error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { name, role: role === "admin" ? "admin" : "editor" },
+    user_metadata: { name },
+    app_metadata: { role: grant },
   });
 
   fail(error, "Could not create the account");
+
+  fail(
+    (await admin.from("profiles").update({ role: grant, is_active: true }).eq("id", data.user.id)).error,
+    "Could not activate the account"
+  );
   return listUsers();
 }
 

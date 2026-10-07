@@ -139,22 +139,15 @@ async function seedAdmin() {
     email,
     password,
     email_confirm: true,
-    user_metadata: { name, role: "admin" },
+    user_metadata: { name },
+    app_metadata: { role: "admin" },
   });
   check(error, "Could not create the admin account");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", data.user.id)
-    .single();
-
-  if (profile?.role !== "admin") {
-    check(
-      (await supabase.from("profiles").update({ role: "admin" }).eq("id", data.user.id)).error,
-      "Could not promote the first account"
-    );
-  }
+  check(
+    (await supabase.from("profiles").update({ role: "admin", is_active: true }).eq("id", data.user.id)).error,
+    "Could not promote the first account"
+  );
 
   console.log(`  ${email} created as an admin`);
   console.log("  Change this password from the dashboard, then clear it out of .env.local.");
