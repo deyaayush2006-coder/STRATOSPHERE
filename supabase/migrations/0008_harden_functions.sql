@@ -19,3 +19,11 @@ begin
   return new;
 end;
 $fn$;
+
+-- 2 ------------------------------------------------------------------------
+-- Triggers fire whatever the EXECUTE grants say, so new sign-ups still get
+-- a profile. Everything inside is already schema-qualified.
+
+alter function public.handle_new_user() set search_path = '';
+
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
