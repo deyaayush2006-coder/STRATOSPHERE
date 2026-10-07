@@ -7,6 +7,8 @@ build
 .env
 .env.local
 .env*.local
+.env*
+!.env.example
 
 .vercel
 *.tsbuildinfo
@@ -16,9 +18,6 @@ next-env.d.ts
 npm-debug.log*
 .claude
 
-.vercel
-.env*
 .mcp.json
 components.json
 .playwright-mcp
-.claude
