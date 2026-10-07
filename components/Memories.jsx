@@ -69,12 +69,12 @@ export default function Memories({ memories = [] }) {
   return (
     <section id="memories" aria-labelledby="memories-heading" className="px-6 py-24 md:py-28 scroll-mt-28">
       <div className="relative mx-auto max-w-6xl">
-        <div class="px-6 max-w-6xl mx-auto">
-          <div class="transition-[opacity,transform] duration-700 ease-out opacity-100 translate-y-0 mb-14 text-center ">
-            <h2 class="uppercase font-bold text-3xl md:text-4xl lg:text-5xl text-ink tracking-[0.05em] leading-[1.05] w-fit max-w-full mx-auto">
-              <span class="">Club Memories</span>
+        <div className="px-6 max-w-6xl mx-auto">
+          <div className="transition-[opacity,transform] duration-700 ease-out opacity-100 translate-y-0 mb-14 text-center ">
+            <h2 className="uppercase font-bold text-3xl md:text-4xl lg:text-5xl text-ink tracking-[0.05em] leading-[1.05] w-fit max-w-full mx-auto">
+              <span className="">Club Memories</span>
             </h2>
-            <div class="rule-sweep mt-8" aria-hidden="true">
+            <div className="rule-sweep mt-8" aria-hidden="true">
             </div>
           </div>
         </div>
