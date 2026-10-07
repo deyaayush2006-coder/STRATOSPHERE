@@ -74,7 +74,17 @@ export default function Footer({ contact = {}, footerCols = [], compact = false 
         </div>
         
         <div className="flex flex-wrap gap-x-6 gap-y-2 justify-between pt-6 border-t border-ink/10 text-xs text-ink/40">
-          <span>Made By Aerospace Club</span>
+          <span>
+            Made by Aerospace Club · Website by{" "}
+            <a
+              href="https://github.com/deyaayush2006-coder"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:text-ink transition-colors"
+            >
+              Aayush Dey
+            </a>
+          </span>
           <span>© {new Date().getFullYear()} Stratosphere</span>
         </div>
       </div>
