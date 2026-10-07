@@ -123,6 +123,44 @@ only if the club ever gets a domain of its own.
 `NEXT_PUBLIC_ADMIN_PATH` is read at build time rather than per request, so
 **changing it needs a redeploy** before it takes effect.
 
+## Running it in Docker
+
+Vercel is still the main deploy. The image is for running the same site on
+any other machine or server.
+
+```bash
+docker compose --env-file .env.local up --build
+```
+
+The site is then at <http://localhost:3000> (set `APP_PORT` to use another
+port, for example while `npm run dev` holds 3000).
+
+Without Compose:
+
+```bash
+docker build   --build-arg NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co   --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>   --build-arg NEXT_PUBLIC_ADMIN_PATH=<dashboard path>   --build-arg NEXT_PUBLIC_SITE_URL=https://<public url>   -t stratosphere .
+
+docker run -p 3000:3000 -e SUPABASE_SERVICE_ROLE_KEY=<service role key> stratosphere
+```
+
+How the variables split:
+
+- **`NEXT_PUBLIC_*` are build args.** Next.js inlines them into the browser
+  bundle when it builds, so changing one means rebuilding the image. Set
+  `NEXT_PUBLIC_SITE_URL` to the address people will use, or share cards
+  point at `localhost`.
+- **`SUPABASE_SERVICE_ROLE_KEY` is a runtime env var only.** It never enters
+  an image layer. Without it the site still runs, but the contact form and
+  account management are switched off.
+- **No `.env` file goes into the image.** `.dockerignore` excludes all of
+  them from the build context.
+
+The image uses Next's standalone output on `node:22-alpine`, runs as a
+non-root user, and has a healthcheck on `/`. Standalone output is switched on
+only inside the image (`NEXT_OUTPUT=standalone`), so Vercel builds the same
+way as before. The `Docker` workflow builds the image and starts it on every
+PR and on any push that changes the image definition.
+
 ## How content reaches the page
 
 The site is static, rebuilt at most once a minute (`revalidate = 60` in
