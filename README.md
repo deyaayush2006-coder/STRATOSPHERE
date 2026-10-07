@@ -252,6 +252,7 @@ for them.
 npm run lint       # ESLint, next/core-web-vitals
 npm test           # Vitest unit tests: lib/**/*.test.js, no network
 npm run test:rls   # row level security, against a local Supabase only
+npm run test:e2e   # Playwright, against E2E_BASE_URL (default localhost:3000)
 ```
 
 `npm test` covers the row mappers (including a check that the public member
@@ -266,8 +267,51 @@ keys from `.env.local`, and it refuses to run against the production project:
 RLS_SUPABASE_URL=http://127.0.0.1:54321 RLS_SUPABASE_ANON_KEY=<local anon key> RLS_SUPABASE_SERVICE_ROLE_KEY=<local service_role key> npm run test:rls
 ```
 
-With the service-role key it creates its own fixture rows and removes them
-afterwards. Without the URL and anon key the suite is skipped.
+With the service-role key it creates its own fixture rows and test accounts
+and removes them afterwards. Without the URL and anon key the suite is skipped.
+In CI it runs against `supabase start`, which applies every file in
+`supabase/migrations/` to a throwaway database (`supabase/config.toml`).
+
+`npm run test:e2e` drives a deployed site in Chromium: every section renders,
+every event and project page linked from the homepage loads, no member email
+appears in the HTML or the RSC payload, no console errors, no horizontal
+scroll on an iPhone 12 viewport, the dashboard shows only a login screen when
+signed out, and the share card tags are present. The contact form is only ever
+submitted with the honeypot filled or an invalid email, so it never stores a
+message. Tests tagged `@smoke` also run against production.
+
+```bash
+npm run build && npx next start -p 3100
+E2E_BASE_URL=http://localhost:3100 npm run test:e2e
+```
+
+Set `E2E_ADMIN_PATH` to your `NEXT_PUBLIC_ADMIN_PATH` to also check that
+`/admin` is a 404.
+
+### Release gates
+
+Nothing reaches production without passing these:
+
+1. **Inside the Vercel build.** `vercel.json` sets the build command to
+   `npm run vercel-build`, which runs lint and the unit tests before
+   `next build`. If either fails, the deploy fails and production keeps
+   serving the last good one.
+2. **On every pull request** (`.github/workflows/ci.yml`):
+   - `check`: lint, unit tests with coverage, build with dummy Supabase values
+   - `rls`: the RLS suite on a local Supabase
+   - `security`: `npm audit` (warning only for now) and a gitleaks secret scan
+   - `migrations`: fails if an existing migration is edited instead of added
+3. **On every preview deploy** (`e2e.yml`): the Playwright suite against the
+   preview URL.
+4. **After every production deploy** (`prod-smoke.yml`), and **every 30
+   minutes** (`uptime.yml`): the smoke tests, plus `e2e/anon-probe.mjs`, which
+   proves with the anon key that member emails and contact messages are not
+   readable. A failure opens a `P0` issue (or comments on the open one), and
+   the issue closes itself when the check passes again.
+
+Rules for the suites: no test writes to production, no test needs the
+service-role key except the RLS suite on a local database, and a flaky test
+gets fixed or deleted, never retried.
 
 ## Contributing
 
