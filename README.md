@@ -35,11 +35,27 @@ this site needs. Then open **SQL Editor**, paste the whole of
 That creates every table, the row level security policies, and the `media`
 storage bucket. It is safe to run again if something goes wrong halfway.
 
-Then run the numbered files after it, in order, the same way — `0002`, `0003`,
-`0004`. Each one adds columns to what `0001` created and each is safe to re-run.
-**`0004` is not optional on an existing project**: it adds the columns behind
-the 3D models, the CAD galleries, the write-ups and the flight data, and until
-it has been run, saving a project in the dashboard fails on the missing columns.
+Then run the numbered files after it, in order, the same way — `0002` through
+the highest number in the folder. **`0004` is not optional on an existing
+project**: it adds the columns behind the 3D models, the CAD galleries, the
+write-ups and the flight data, and until it has been run, saving a project in
+the dashboard fails on the missing columns.
+
+On a fresh project, run everything in order before the first deploy. On the
+live project, some files have to wait until the code that expects them is
+deployed:
+
+| File | Apply when | What it does |
+| --- | --- | --- |
+| `0007_hide_member_emails.sql` | after the deploy that reads `cohort_members` by explicit columns | revokes `anon`'s access to `cohort_members.email` |
+| `0008_harden_functions.sql` | after its PR is merged and deployed | pins `search_path`, closes `/rest/v1/rpc` for `handle_new_user`, moves `is_staff()` / `is_admin()` to the unexposed `private` schema |
+| `0009_new_users_need_admin_grant.sql` | after the deploy where `createUser` sets `app_metadata` | stops sign-up metadata choosing the account role |
+
+Apply `0007` before `0008`. After `0008`, re-run **Advisors → Security**; only
+the dashboard-only items (leaked password protection) should be left. Keep
+`private` out of **Project Settings → API → Exposed schemas**.
+
+Never edit a migration that has been applied. A change is a new numbered file.
 
 ### 2. Fill in the environment
 
@@ -56,7 +72,9 @@ From **Supabase → Project Settings → API**, copy in:
 | `SUPABASE_SERVICE_ROLE_KEY` | `service_role` `secret` key |
 
 Then set `ADMIN_EMAIL` and `ADMIN_PASSWORD` to the first committee account you
-want. The contact form saves messages to the `contact_messages` table through
+want. `ADMIN_EMAIL`, `ADMIN_PASSWORD` and `ADMIN_NAME` are **only for local
+seeding** — `npm run seed` is the only thing that reads them. Never set them on
+Vercel. The contact form saves messages to the `contact_messages` table through
 the `service_role` key, so it needs no key of its own.
 
 The `anon` key is meant to be public — it ends up in the browser bundle, and row
@@ -85,8 +103,18 @@ password you just set, then change that password from **Your account** and clear
 Import the repository at [vercel.com/new](https://vercel.com/new). Vercel
 detects Next.js on its own — there is nothing to configure.
 
-Add all six environment variables from `.env.local` under **Settings →
-Environment Variables** before the first deploy, then deploy.
+Add these under **Settings → Environment Variables** before the first deploy,
+then deploy:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_ADMIN_PATH`
+- `NEXT_PUBLIC_SITE_URL`, only if the club has its own domain
+
+Leave out `ADMIN_EMAIL`, `ADMIN_PASSWORD` and `ADMIN_NAME`. They exist for
+`npm run seed` on your own machine, and a password sitting in the Vercel
+settings is one more place for it to leak from.
 
 You do not need a domain. Leave `NEXT_PUBLIC_SITE_URL` empty and the deploy
 picks up its own `*.vercel.app` address for the social card images; set it
@@ -150,7 +178,10 @@ anyone may read the published rows, an active staff account may do anything.
 
 - **No public sign-up.** An account exists only because an admin created one in
   the Accounts tab. Two levels: an editor changes content, an admin also manages
-  accounts.
+  accounts. Keep **Authentication → Sign In / Providers → Allow new users to
+  sign up** switched off in Supabase. Even if it is on, an account that signs
+  itself up starts inactive (migration `0009`) and has no staff access until an
+  admin activates it.
 - **Suspend rather than delete** when a committee hands over, so the trail on
   old content still resolves to a name.
 - **Server actions run as the signed-in member**, so a stolen anon key gets a
@@ -158,8 +189,11 @@ anyone may read the published rows, an active staff account may do anything.
   service role — creating and deleting accounts — checks the caller is an admin
   itself, because that key bypasses the policies.
 - **`NEXT_PUBLIC_ADMIN_PATH`** moves the dashboard to a URL only the committee
-  knows. It is not the security boundary — a wrong guess still meets a login
-  form — but it keeps the panel out of crawlers and scanner wordlists. Nothing
+  knows. It is a convenience, not a security control: like every
+  `NEXT_PUBLIC_` variable it is bundled into the client JavaScript, so anyone
+  reading the bundle can find it. What actually protects the dashboard is row
+  level security plus `requireStaff()` in every server action. The path keeps
+  the panel out of crawlers and scanner wordlists. Nothing
   links to it, the page serves `noindex`, and every unrecognised URL renders the
   ordinary home page. Change it whenever the committee hands over, alongside the
   passwords.
@@ -211,3 +245,42 @@ few hundred points and a set of finished numbers, not the raw log and a parser
 to run over it. `three` and `recharts` are loaded only by the pages that
 actually draw something, so a project with none of these extras pays nothing
 for them.
+
+## Testing
+
+```bash
+npm run lint       # ESLint, next/core-web-vitals
+npm test           # Vitest unit tests: lib/**/*.test.js, no network
+npm run test:rls   # row level security, against a local Supabase only
+```
+
+`npm test` covers the row mappers (including a check that the public member
+shape never carries `email`) and the contact form: honeypot, validation, field
+limits and the rate limit, with the Supabase client mocked.
+
+`npm run test:rls` signs in as `anon` and tries to read and write what it
+should not. It reads its own variables so it can never pick up the production
+keys from `.env.local`, and it refuses to run against the production project:
+
+```bash
+RLS_SUPABASE_URL=http://127.0.0.1:54321 RLS_SUPABASE_ANON_KEY=<local anon key> RLS_SUPABASE_SERVICE_ROLE_KEY=<local service_role key> npm run test:rls
+```
+
+With the service-role key it creates its own fixture rows and removes them
+afterwards. Without the URL and anon key the suite is skipped.
+
+## Contributing
+
+- **Branch** off `main` as `type/short-description`: `fix/hide-member-emails`,
+  `feat/event-gallery`, `chore/repo-hygiene`, `ci/release-gates`.
+- **Commit** with [Conventional Commits](https://www.conventionalcommits.org):
+  `fix(scope): …`, `feat(scope): …`, `chore: …`, `test: …`, `ci: …`, `docs: …`.
+  One change per commit, and a message that says what changed — not "final" or
+  "new version".
+- **Open a pull request into `main`.** Nothing is pushed to `main` directly, even
+  working alone: Vercel deploys every push to `main` straight to production.
+- **CI must pass** before merging: `npm run lint && npm test && npm run build`.
+- **Database changes** go in a new numbered file in `supabase/migrations/`.
+  Never edit one that has been applied, and say in the PR when it should be run.
+- Never commit `.env`, `.env.local` or any real key. `.env.example` holds names
+  only.
