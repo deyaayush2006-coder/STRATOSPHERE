@@ -23,8 +23,89 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm test
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: ignore
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
+
+  rls:
+    # Applies every migration to a throwaway local Supabase and runs
+    # tests/rls.test.js against it. Never touches the live project.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start local Supabase (applies supabase/migrations)
+        run: supabase start
+      - name: Export local keys
+        run: |
+          supabase status -o json > "$RUNNER_TEMP/supabase.json"
+          {
+            echo "RLS_SUPABASE_URL=$(jq -r .API_URL "$RUNNER_TEMP/supabase.json")"
+            echo "RLS_SUPABASE_ANON_KEY=$(jq -r .ANON_KEY "$RUNNER_TEMP/supabase.json")"
+            echo "RLS_SUPABASE_SERVICE_ROLE_KEY=$(jq -r .SERVICE_ROLE_KEY "$RUNNER_TEMP/supabase.json")"
+          } >> "$GITHUB_ENV"
+      - run: npm run test:rls
+      - if: always()
+        run: supabase stop --no-backup
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: npm audit (warn only for now)
+        run: npm audit --audit-level=high || echo "::warning::npm audit found high or critical advisories"
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  migrations:
+    # Applied migrations are history. A change is a new numbered file.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Only new files in supabase/migrations
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          changed=$(git diff --name-status --diff-filter=MDRT "$BASE"...HEAD -- supabase/migrations/)
+          if [ -n "$changed" ]; then
+            echo "::error::Existing migrations were edited, renamed or deleted. Add a new numbered file instead."
+            echo "$changed"
+            exit 1
+          fi
+
+          bad=0
+          for f in $(git diff --name-only --diff-filter=A "$BASE"...HEAD -- supabase/migrations/); do
+            if ! basename "$f" | grep -Eq '^[0-9]{4}_[a-z0-9_]+\.sql$'; then
+              echo "::error file=$f::Name it NNNN_snake_case.sql"
+              bad=1
+            fi
+          done
+
+          dupes=$(ls supabase/migrations/*.sql | xargs -n1 basename | cut -c1-4 | sort | uniq -d)
+          if [ -n "$dupes" ]; then
+            echo "::error::Two migrations share the number: $dupes"
+            bad=1
+          fi
+          exit $bad

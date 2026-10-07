@@ -8,5 +8,11 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["{app,components,lib}/**/*.test.{js,jsx}"],
+    coverage: {
+      provider: "v8",
+      include: ["lib/**/*.js"],
+      exclude: ["lib/**/*.test.js"],
+      reporter: ["text-summary", "lcov"],
+    },
   },
 });
