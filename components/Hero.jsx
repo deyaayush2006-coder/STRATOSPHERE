@@ -25,6 +25,7 @@ function useHeroTitle(bandRef, titleRef) {
           const split = SplitText.create(block.querySelector("[data-hero-title]"), {
             type: "chars",
             mask: "chars",
+            aria: "hidden",
           });
 
           gsap.set(block, { autoAlpha: 1 });
@@ -69,9 +70,10 @@ export default function Hero({ photo }) {
       {src && (
         <Image
           src={src}
-          alt=""
+          alt="Aerial view of the Jadavpur University campus"
           fill
           priority
+          fetchPriority="high"
           sizes="(orientation: portrait) 200vh, 100vw"
           className="-z-10 object-cover object-[72%_45%]"
         />
@@ -88,7 +90,7 @@ export default function Hero({ photo }) {
         aria-hidden="true"
       />
       <div className="col-start-1 row-start-1 flex flex-col justify-end px-6 pb-14 md:px-10 md:pb-20">
-        <div
+        <h1
           ref={titleRef}
           className="flex flex-col w-[330px] md:w-[500px] text-left pr-2 absolute top-[calc(40vh+3px)] left-[5%] font-semibold gap-y-4"
         >
@@ -98,8 +100,10 @@ export default function Hero({ photo }) {
             className="absolute inset-y-0 left-0 w-[4px] origin-top bg-[#309ece] [[data-theme=light]_&]:bg-[#0D4C72]"
           />
           <div className="pl-[19px] text-4xl md:text-5xl">
+            <span className="sr-only">Stratosphere</span>
             <span
               data-hero-title
+              aria-hidden="true"
               className="font-display text-[35px] sm:text-[47px] hover:text-aurora2 font-bold uppercase leading-none tracking-[0.01em] text-ink"
             >
               Strat
@@ -142,7 +146,7 @@ export default function Hero({ photo }) {
               </span>
             </span>
           </div>
-        </div>
+        </h1>
       </div>
 
     </header>
