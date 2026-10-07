@@ -3,7 +3,7 @@ import SocialIcon, { socialLabel } from "./SocialIcon";
 import Magnet from "./Magnet";
 
 export default function Footer({ contact = {}, footerCols = [], compact = false }) {
-  const { address = [], hours = [], email = "", socials = [] } = contact;
+  const { address = [], email = "", socials = [] } = contact;
 
   const accounts = socials.filter((s) => s?.url);
 
@@ -41,19 +41,6 @@ export default function Footer({ contact = {}, footerCols = [], compact = false 
 
           <FooterAddressColumn address={address} email={email} always={compact} />
 
-          <div>
-            <h4 className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/35 mb-4">
-              Office hours
-            </h4>
-            <dl className="flex flex-col gap-3 text-sm">
-              {hours.map(([day, time]) => (
-                <div key={day} className="flex items-baseline justify-between gap-4 max-w-64">
-                  <dt className="text-ink/60">{day}</dt>
-                  <dd className="text-aurora2 font-mono text-[12px] m-0">{time}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
           {accounts.length > 0 && (
             <div>
               <h4 className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/35 mb-4">

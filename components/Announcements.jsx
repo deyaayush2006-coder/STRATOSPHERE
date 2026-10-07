@@ -125,8 +125,6 @@ export default function Announcements({ announcements = [], announcementSettings
         id="announcement-archive"
         label={archiveLabel}
         items={archived}
-        noun="announcement"
-        nounPlural="announcements"
       >
         {(a) => <ArchiveRow key={a.id || a.title} announcement={a} />}
       </FeedArchive>

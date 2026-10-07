@@ -7,14 +7,10 @@ export default function FeedArchive({
   id,
   label,
   items = [],
-  noun = "entry",
-  nounPlural = "entries",
   children,
 }) {
   const [open, setOpen] = useState(false);
   if (items.length === 0) return null;
-
-  const count = items.length;
 
   return (
     <Reveal className="mt-5">
@@ -25,11 +21,8 @@ export default function FeedArchive({
         aria-controls={id}
         className="group w-full glass rounded-3xl px-6 md:px-10 py-5 flex items-center justify-between gap-4 text-left hover:border-aurora2/30 transition-colors duration-200"
       >
-        <span>
-          <span className="block text-ink text-base font-semibold tracking-[-0.01em]">{label}</span>
-          <span className="block text-sm text-ink/45 mt-1">
-            {count} {count === 1 ? noun : nounPlural} kept on record, oldest still readable.
-          </span>
+        <span className="text-ink text-base font-semibold tracking-[-0.01em]">
+          {label} <span className="text-ink/45 font-normal">({items.length})</span>
         </span>
 
         <span className="shrink-0 text-sm font-medium text-aurora2">

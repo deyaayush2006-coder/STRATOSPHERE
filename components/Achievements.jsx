@@ -235,8 +235,6 @@ export default function Achievements({ achievements = [], achievementSettings })
         id="achievement-archive"
         label={archiveLabel}
         items={archived}
-        noun="achievement"
-        nounPlural="achievements"
       >
         {(a, i) => <Row key={a.title || i} achievement={a} archived />}
       </FeedArchive>

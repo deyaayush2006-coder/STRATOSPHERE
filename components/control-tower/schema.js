@@ -576,7 +576,7 @@ export const SECTIONS = [
 
   {
     key: "contact",
-    label: "Contact & hours",
+    label: "Contact",
     icon: "✉️",
     kind: "object",
     blurb:
@@ -598,7 +598,6 @@ export const SECTIONS = [
         hint: "Shown in the footer and made dialable. Leave empty to hide the line.",
       },
       { name: "address", label: "Address", type: "stringList", itemName: "line", hint: "One line per row" },
-      { name: "hours", label: "Office hours", type: "pairList", keyLabel: "Day(s)", valueLabel: "Hours" },
       {
         name: "socials",
         label: "Follow us",
