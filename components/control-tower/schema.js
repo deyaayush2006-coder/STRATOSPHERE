@@ -540,7 +540,7 @@ export const SECTIONS = [
     label: "About",
     icon: "📄",
     kind: "object",
-    blurb: "The About section: the opening lines, the two pillars, what members do in the club, and the numbers underneath.",
+    blurb: "The About section: the opening lines, the two pillars, and the numbers underneath.",
     fields: [
       { name: "lead", label: "Lead paragraph", type: "textarea", rows: 3 },
       { name: "body", label: "Body paragraphs", type: "stringList", itemName: "paragraph", multiline: true },
@@ -555,19 +555,6 @@ export const SECTIONS = [
         fields: [
           { name: "title", label: "Heading", type: "text", required: true },
           { name: "body", label: "Body", type: "textarea", rows: 5 },
-        ],
-      },
-      {
-        name: "activities",
-        label: "What you'll do here",
-        type: "list",
-        itemName: "activity",
-        hint: "One thing members actually do, each with what they build or run there",
-        title: (a) => a.name,
-        blank: () => ({ name: "", body: "" }),
-        fields: [
-          { name: "name", label: "Activity", type: "text", required: true },
-          { name: "body", label: "What a member does", type: "textarea", rows: 3 },
         ],
       },
       {

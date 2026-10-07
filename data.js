@@ -38,30 +38,6 @@ export const ABOUT = {
       body: "A design–build–fly programme that carries over from one batch to the next, where each committee hands on its designs, tools and lessons so every year starts further along than the last.",
     },
   ],
-  // Every line here is taken from the event, project and achievement
-  // write-ups elsewhere on the site.
-  activities: [
-    {
-      name: "Build a glider at Windcraft",
-      body: "Cut depron, shape each part, solder the electronics and glue the airframe together, then take home a motorised glider you built yourself.",
-    },
-    {
-      name: "Learn the tools",
-      body: "Hands-on sessions on 3D printing and PCB design, the same tools the project teams use.",
-    },
-    {
-      name: "Join a project team",
-      body: "The CanSat, a 3D-printed scale model of JAXA's Epsilon rocket, or the F-22 RC model with its 3D-printed airframe and electric ducted fan.",
-    },
-    {
-      name: "Run SkySprint and JalAstra",
-      body: "The club organises both at Srijan: hand-launched gliders flown for distance, time aloft and landing, and water rockets launched for range on the CAB Ground.",
-    },
-    {
-      name: "Compete",
-      body: "Take the club's work to events like the National Students' Space Challenge at IIT Kharagpur, where the 2025 team won the Contingent Award.",
-    },
-  ],
   facts: [
     { label: "Active Members", value: "60+" },
     { label: "Awards Won", value: "3+" },
