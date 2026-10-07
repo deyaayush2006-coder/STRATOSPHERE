@@ -1,0 +1,40 @@
+name: Production smoke
+
+on: deployment_status
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  smoke:
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      contains(github.event.deployment_status.environment, 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.deployment.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - id: smoke
+        run: npx playwright test --grep @smoke
+        env:
+          E2E_BASE_URL: ${{ secrets.PROD_URL || github.event.deployment_status.environment_url }}
+      - uses: actions/github-script@v7
+        if: always() && steps.smoke.outcome != 'skipped'
+        with:
+          script: |
+            await require("./.github/scripts/p0-issue.cjs")({
+              github,
+              context,
+              title: "Production smoke test failing",
+              failed: "${{ steps.smoke.outcome }}" === "failure",
+              details: "The smoke tests failed right after a production deploy (${{ github.event.deployment.sha }}). Roll back from the Vercel dashboard (Deployments → previous → Promote) if the site is broken.",
+            });

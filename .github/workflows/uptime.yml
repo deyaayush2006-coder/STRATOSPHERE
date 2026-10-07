@@ -1,0 +1,72 @@
+name: Uptime
+
+# Every 30 minutes: the homepage loads, has no member emails in it, and the
+# public anon key still cannot read member emails or contact messages.
+# Read-only. Uses the anon key only, never the service role.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  uptime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PROD_URL: ${{ secrets.PROD_URL }}
+    steps:
+      - id: cfg
+        run: |
+          if [ -z "$PROD_URL" ]; then
+            echo "::notice::PROD_URL is not set yet; skipping the uptime check."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.cfg.outputs.ready == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.cfg.outputs.ready == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.cfg.outputs.ready == 'true'
+        run: npm ci
+      - if: steps.cfg.outputs.ready == 'true'
+        run: npx playwright install --with-deps chromium
+      - id: smoke
+        if: steps.cfg.outputs.ready == 'true'
+        continue-on-error: true
+        run: npx playwright test --grep @smoke
+        env:
+          E2E_BASE_URL: ${{ env.PROD_URL }}
+      - id: probe
+        if: steps.cfg.outputs.ready == 'true'
+        continue-on-error: true
+        run: node e2e/anon-probe.mjs
+        env:
+          PROBE_SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+          PROBE_SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
+      - uses: actions/github-script@v7
+        if: steps.cfg.outputs.ready == 'true'
+        with:
+          script: |
+            const smoke = "${{ steps.smoke.outcome }}";
+            const probe = "${{ steps.probe.outcome }}";
+            await require("./.github/scripts/p0-issue.cjs")({
+              github,
+              context,
+              title: "Production uptime check failing",
+              failed: smoke === "failure" || probe === "failure",
+              details: `Smoke tests: ${smoke}. Anon-key privacy probe: ${probe}.`,
+            });
+      - if: steps.smoke.outcome == 'failure' || steps.probe.outcome == 'failure'
+        run: exit 1
