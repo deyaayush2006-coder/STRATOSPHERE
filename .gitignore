@@ -5,6 +5,7 @@ build
 .dist
 
 .env
+!.env.example
 .env.local
 .env*.local
 
@@ -16,9 +17,7 @@ next-env.d.ts
 npm-debug.log*
 .claude
 
-.vercel
 .env*
 .mcp.json
 components.json
 .playwright-mcp
-.claude
