@@ -1,3 +1,5 @@
+import { securityHeaders } from "./lib/security-headers.mjs";
+
 function supabasePattern() {
   try {
     const { protocol, hostname } = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL);
@@ -17,7 +19,11 @@ const nextConfig = {
 
   transpilePackages: ["three"],
 
-  eslint: { ignoreDuringBuilds: true },
+  poweredByHeader: false,
+
+  async headers() {
+    return [{ source: "/(.*)", headers: securityHeaders() }];
+  },
 };
 
 export default nextConfig;
