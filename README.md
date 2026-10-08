@@ -252,6 +252,34 @@ One-time setup:
 - GitHub → Settings → Secrets and variables → Actions: secrets `VERCEL_AUTOMATION_BYPASS_SECRET` (if Deployment Protection is on), `ADMIN_PATH`, `PROD_SUPABASE_ANON_KEY`; variables `PROD_URL`, `PROD_SUPABASE_URL`.
 - Vercel: delete `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` (only `npm run seed` uses them, locally).
 
+## Handing the site over
+
+Every person gets their own account; nobody shares a password. Outgoing admins keep their accounts, so handing over never locks anyone out.
+
+**Admin portal access** (no code or dashboard access needed):
+1. An existing admin opens Control Tower → Users → **+ Add an account**, enters the successor's name and email, a starting password and Level **Admin**.
+2. The successor signs in and changes the password from their own account. From then on only they know it.
+3. Always keep **at least two active admins**. Control Tower stops an admin from suspending, demoting or deleting their own account, but if the only admin forgets their password, the portal can't fix it.
+
+**The services behind the site.** Admin access in the portal does not let anyone deploy, fix the database or renew anything. These are tied to whoever owns them, so give the successor access before you leave:
+
+| Service | What to do |
+| --- | --- |
+| GitHub | Move the repo to a club organization (Settings → Transfer), or add the successor as an admin collaborator. Branch protection, secrets and variables move with it. |
+| Vercel | Invite the successor to the team that owns the `stratosphere` project, or transfer the project (Settings → Transfer). Environment variables move with it. |
+| Supabase | Invite the successor to the organization that owns the project with the Owner role, or transfer the project to a club organization. |
+| Domain | If you add a custom domain, register it to a club account or email, not a personal one. |
+
+**Break-glass: nobody can sign in to Control Tower.** Anyone with access to the Supabase project can restore access without a password reset:
+1. Supabase → Authentication → Users → **Add user**, with their own email and password, and tick **Auto Confirm User**. (Skip this if they already have an account.)
+2. Supabase → SQL Editor:
+   ```sql
+   update public.profiles set role = 'admin', is_active = true where email = 'their@email';
+   ```
+3. They sign in at the admin path and take it from there.
+
+`npm run seed` with `ADMIN_EMAIL` / `ADMIN_PASSWORD` does the same for a brand-new project.
+
 ## Contributing
 
 Branch from `main` (`fix/…`, `feat/…`, `ci/…`), keep commits atomic with Conventional Commit messages, open a PR, merge when CI is green.
