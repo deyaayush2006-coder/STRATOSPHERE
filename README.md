@@ -211,3 +211,47 @@ few hundred points and a set of finished numbers, not the raw log and a parser
 to run over it. `three` and `recharts` are loaded only by the pages that
 actually draw something, so a project with none of these extras pays nothing
 for them.
+
+
+## Security model
+
+- **Public site** reads Supabase with the anon key. RLS lets `anon` read published content only. Member emails, contact messages, profiles, drafts and the media table are never readable by `anon`.
+- **Staff** are accounts whose `profiles.is_active` is true. Only the server (service role) can create staff: the admin panel sets `app_metadata.staff` / `app_metadata.role`, which users cannot edit. Public sign-ups get an inactive profile and see nothing.
+- **Keep public sign-ups off** in Supabase → Authentication → Sign In / Providers. Migration 0007 makes a sign-up harmless, but there is no reason to allow it.
+- Role checks (`private.is_staff()`, `private.is_admin()`) live in a schema the REST API does not expose.
+- Security headers come from `lib/security-headers.mjs`. The full CSP runs in Report-Only mode; move it to the enforced header once a preview deploy shows no violations in the browser console.
+
+## Migrations
+
+Migrations are append-only: never edit a file that has been applied; add a new numbered one. CI fails a PR that changes an existing migration.
+
+| File | When to apply |
+| --- | --- |
+| `0007_auth_and_rls_hardening.sql` | Any time (no app change needed). Until this app version is live, accounts created in Control Tower start suspended; activate them under Users. |
+| `0008_member_email_privacy.sql` | **Only after** this app version is deployed. The old code selects `cohort_members(*)`, which fails once anon loses the email column. |
+
+## Testing
+
+| Command | What it checks | Needs |
+| --- | --- | --- |
+| `npm run lint` | ESLint (Next.js rules) | — |
+| `npm run test:unit` | Content privacy, admin save rollback, contact form, security headers, event dates | — |
+| `npm run test:db` | Every RLS policy, as anon, outsider, suspended editor, editor and admin, on plain Postgres with all migrations | `TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres` |
+| `npm run test:smoke` | Black-box HTTP checks of a running site (status codes, headers, metadata, no leaked emails) | `SMOKE_URL=https://…` |
+
+## CI/CD
+
+1. **Pull request → GitHub Actions (`ci.yml`)**: lint, unit tests, build, RLS tests on Postgres 17, append-only migration check, gitleaks secret scan, `npm audit`. CodeQL runs separately.
+2. **Vercel build**: `vercel-build` runs lint and unit tests before `next build`, so a failing test fails the deploy and production keeps the last good version.
+3. **Every Vercel deployment → `deploy-smoke.yml`**: smoke tests against the preview or production URL. A failing production smoke test opens a `P0` issue.
+4. **Every 30 minutes → `uptime.yml`**: site up, and the anon key cannot read private data. Opens one `P0` issue on failure.
+5. **Dependabot** opens weekly update PRs, which go through the same checks.
+
+One-time setup:
+- GitHub → Settings → Branches: protect `main`; require a PR and the `Lint, unit tests, build`, `Database security (RLS)`, `Migrations are append-only` and `Secret scan` checks.
+- GitHub → Settings → Secrets and variables → Actions: secrets `VERCEL_AUTOMATION_BYPASS_SECRET` (if Deployment Protection is on), `ADMIN_PATH`, `PROD_SUPABASE_ANON_KEY`; variables `PROD_URL`, `PROD_SUPABASE_URL`.
+- Vercel: delete `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` (only `npm run seed` uses them, locally).
+
+## Contributing
+
+Branch from `main` (`fix/…`, `feat/…`, `ci/…`), keep commits atomic with Conventional Commit messages, open a PR, merge when CI is green.
