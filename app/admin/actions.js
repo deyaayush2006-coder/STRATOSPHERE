@@ -262,7 +262,10 @@ export async function createUser({ name, email, password, role }) {
     email,
     password,
     email_confirm: true,
-    user_metadata: { name, role: role === "admin" ? "admin" : "editor" },
+    user_metadata: { name },
+    // app_metadata can only be set with the service role, so the database
+    // trusts it (see migration 0007). user_metadata is user-editable.
+    app_metadata: { staff: true, role: role === "admin" ? "admin" : "editor" },
   });
 
   fail(error, "Could not create the account");
