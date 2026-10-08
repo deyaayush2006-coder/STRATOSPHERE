@@ -17,9 +17,17 @@ export async function middleware(request) {
       rewritten.pathname = pathname.replace(`/${ADMIN_PATH}`, `/${REAL}`);
       return withSession(request, NextResponse.rewrite(rewritten));
     }
+
+    return NextResponse.next();
   }
 
-  return withSession(request, NextResponse.next({ request }));
+  // Only the admin area needs a Supabase session. Public pages are cached and
+  // read as anon, so skip the auth round-trip on every visitor's request.
+  const isAdmin = pathname === `/${REAL}` || pathname.startsWith(`/${REAL}/`);
+  if (ADMIN_PATH === REAL && isAdmin) {
+    return withSession(request, NextResponse.next({ request }));
+  }
+  return NextResponse.next();
 }
 
 async function withSession(request, response) {
