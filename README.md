@@ -252,6 +252,67 @@ One-time setup:
 - GitHub → Settings → Secrets and variables → Actions: secrets `VERCEL_AUTOMATION_BYPASS_SECRET` (if Deployment Protection is on), `ADMIN_PATH`, `PROD_SUPABASE_ANON_KEY`; variables `PROD_URL`, `PROD_SUPABASE_URL`.
 - Vercel: delete `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` (only `npm run seed` uses them, locally).
 
+## Running it in Docker
+
+Vercel is still the main deploy. Docker runs the same site on any computer
+without installing Node or anything else, which is the easiest way for a new
+maintainer to get it running.
+
+**Before you start:** install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+(Windows, macOS or Linux) and open it once so it is running.
+
+1. **Get the code.**
+   ```bash
+   git clone https://github.com/deyaayush2006-coder/STRATOSPHERE.git
+   cd STRATOSPHERE
+   ```
+2. **Make your settings file.** Copy `.env.example` to `.env` (on Windows:
+   `copy .env.example .env`; elsewhere: `cp .env.example .env`) and fill in:
+
+   | Variable | Where to find it | Needed? |
+   | --- | --- | --- |
+   | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → Project URL | Yes |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Same page → `anon` `public` key | Yes |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Same page → `service_role` key. **Secret** | For the contact form and Control Tower → Users |
+   | `NEXT_PUBLIC_ADMIN_PATH` | Vercel → Settings → Environment Variables (same name) | Optional, defaults to `admin` |
+
+   If you have access to the Vercel project, `npx vercel link` and then
+   `npx vercel env pull .env --environment=production` fill them in one go.
+3. **Start it.**
+   ```bash
+   docker compose up --build
+   ```
+   The first build takes a few minutes. Then open <http://localhost:3000>, and
+   the admin panel at `http://localhost:3000/<NEXT_PUBLIC_ADMIN_PATH>`. Stop it
+   with `Ctrl+C`. After changing the code or `.env`, run the same command again.
+
+**Things to know:**
+- **It uses the live database.** With the production Supabase keys, anything
+  you change in Control Tower on your computer changes the real site too.
+- **Never commit `.env`** or send it in a chat. It is already in `.gitignore`
+  and `.dockerignore`, so it can't reach GitHub or the image by accident. The
+  service role key bypasses every database rule.
+- **"missing - copy .env.example to .env"** means `.env` is missing or a
+  required value in it is empty.
+- **"port is already allocated"** means something else is using 3000. Run
+  `APP_PORT=3001 docker compose up --build` (PowerShell:
+  `$env:APP_PORT=3001; docker compose up --build`) and open port 3001.
+- **The site shows sample content** when the Supabase values are wrong or the
+  project is paused. It falls back to the bundled defaults instead of
+  crashing. Check the values, and that the project is not paused in Supabase.
+
+How the variables split inside the image:
+- **`NEXT_PUBLIC_*` are build args.** Next.js inlines them into the browser
+  bundle when it builds, so changing one means rebuilding (`--build`).
+- **`SUPABASE_SERVICE_ROLE_KEY` is a runtime env var only.** It never enters
+  an image layer.
+
+The image uses Next's standalone output on `node:22-alpine`, runs as a
+non-root user and has a healthcheck on `/`. Standalone output is switched on
+only inside the image (`NEXT_OUTPUT=standalone`), so Vercel builds the same
+way as before. The `Docker` workflow builds the image and starts it on every
+PR.
+
 ## Handing the site over
 
 Every person gets their own account; nobody shares a password. Outgoing admins keep their accounts, so handing over never locks anyone out.
@@ -269,6 +330,8 @@ Every person gets their own account; nobody shares a password. Outgoing admins k
 | Vercel | Invite the successor to the team that owns the `stratosphere` project, or transfer the project (Settings → Transfer). Environment variables move with it. |
 | Supabase | Invite the successor to the organization that owns the project with the Owner role, or transfer the project to a club organization. |
 | Domain | If you add a custom domain, register it to a club account or email, not a personal one. |
+
+**Running it on the successor's computer:** once they have Supabase (or Vercel) access, they follow [Running it in Docker](#running-it-in-docker). Give them access to the services, not a copy of your `.env` file.
 
 **Break-glass: nobody can sign in to Control Tower.** Anyone with access to the Supabase project can restore access without a password reset:
 1. Supabase → Authentication → Users → **Add user**, with their own email and password, and tick **Auto Confirm User**. (Skip this if they already have an account.)
