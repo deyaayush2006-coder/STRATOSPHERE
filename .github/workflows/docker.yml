@@ -1,10 +1,11 @@
 name: Docker
 
 # Builds the production image and checks the container serves the site.
-# Runs on every PR, and on any push that touches the image definition.
+# Runs on every PR, and on pushes to main that touch the image definition.
 on:
   pull_request:
   push:
+    branches: [main]
     paths:
       - Dockerfile
       - .dockerignore
