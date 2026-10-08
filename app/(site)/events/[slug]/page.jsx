@@ -8,6 +8,8 @@ import Cover from "@/components/Cover";
 import SplitHeading from "@/components/SplitHeading";
 import Thesis from "@/components/Thesis";
 import Label from "@/components/Label";
+import { eventSchedule } from "@/lib/event-dates";
+import { SITE_URL } from "@/lib/site-url";
 
 async function findEvent(slug) {
   const { events } = await getContent();
@@ -79,6 +81,18 @@ export default async function EventDetail({ params }) {
         {event.location && (
           <p className="font-sans text-sm text-ink/45 mt-3">{event.location}</p>
         )}
+        {upcoming && eventSchedule(event) && (
+          <a
+            href={`/events/${event.slug}/ics`}
+            className="inline-block font-sans text-sm text-aurora2 underline-offset-4 hover:underline mt-3"
+          >
+            Add to calendar
+          </a>
+        )}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: eventJsonLd(event) }}
+        />
 
         {event.body && (
           <p className="text-ink/65 mt-5 max-w-2xl leading-relaxed">{event.body}</p>
@@ -145,4 +159,22 @@ export default async function EventDetail({ params }) {
       <CadGallery shots={event.gallery ?? []} title="Photos" />
     </main>
   );
+}
+
+function eventJsonLd(event) {
+  const schedule = eventSchedule(event);
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: event.title,
+    description: event.body,
+    url: `${SITE_URL}/events/${event.slug}`,
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    organizer: { "@type": "Organization", name: "Stratosphere — Aerospace Club, Jadavpur University", url: SITE_URL },
+    ...(schedule && { startDate: schedule.start.toISOString(), endDate: schedule.end.toISOString() }),
+    ...(event.location && { location: { "@type": "Place", name: event.location } }),
+    ...(event.image && { image: [event.image.startsWith("http") ? event.image : `${SITE_URL}${event.image}`] }),
+  };
+  return JSON.stringify(data).replace(/</g, "\\u003c");
 }
