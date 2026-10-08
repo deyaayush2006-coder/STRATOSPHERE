@@ -28,7 +28,7 @@ export default function FeedArchive({
         <span>
           <span className="block text-ink text-base font-semibold tracking-[-0.01em]">{label}</span>
           <span className="block text-sm text-ink/45 mt-1">
-            {count} {count === 1 ? noun : nounPlural} kept on record, oldest still readable.
+            {count} earlier {count === 1 ? noun : nounPlural}
           </span>
         </span>
 
