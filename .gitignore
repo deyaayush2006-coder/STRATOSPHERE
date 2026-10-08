@@ -16,9 +16,8 @@ next-env.d.ts
 npm-debug.log*
 .claude
 
-.vercel
 .env*
+!.env.example
 .mcp.json
 components.json
 .playwright-mcp
-.claude
