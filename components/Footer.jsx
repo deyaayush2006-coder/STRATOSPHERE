@@ -10,7 +10,12 @@ export default function Footer({ contact = {}, footerCols = [], compact = false 
 
   const accounts = socials.filter((s) => s?.url);
 
-  const columns = footerCols.length ? footerCols : [{ title: "Useful Links", links: [] }];
+  const base = footerCols.length ? footerCols : [{ title: "Useful Links", links: [] }];
+  // Club members reach the dashboard from the first links column; the
+  // dashboard itself sends noindex.
+  const columns = base.map((c, i) =>
+    i === 0 ? { ...c, links: [...(c.links ?? []), { label: "Admin", href: ADMIN_HREF, rel: "nofollow" }] } : c
+  );
 
   return (
     <footer
@@ -32,6 +37,7 @@ export default function Footer({ contact = {}, footerCols = [], compact = false 
                   <a
                     key={l.label}
                     href={l.href}
+                    rel={l.rel}
                     className="text-sm text-ink/60 hover:text-ink transition-colors w-fit"
                   >
                     {l.label}
@@ -92,19 +98,8 @@ export default function Footer({ contact = {}, footerCols = [], compact = false 
         </div>
         
         <div className="flex flex-wrap gap-x-6 gap-y-2 justify-between pt-6 border-t border-ink/10 text-xs text-ink/40">
-          <span>
-            Website by{" "}
-            <a href="https://github.com/deyaayush2006-coder" className="underline-offset-4 hover:underline hover:text-ink/70">
-              Aayush Dey
-            </a>
-          </span>
-          <span className="flex gap-x-6">
-            {/* For club members; the dashboard itself sends noindex. */}
-            <a href={ADMIN_HREF} rel="nofollow" className="underline-offset-4 hover:underline hover:text-ink/70">
-              Admin
-            </a>
-            <span>© {new Date().getFullYear()} Stratosphere</span>
-          </span>
+          <span>Made By Aerospace Club</span>
+          <span>© {new Date().getFullYear()} Stratosphere</span>
         </div>
       </div>
     </footer>
