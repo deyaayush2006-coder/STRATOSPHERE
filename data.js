@@ -58,11 +58,7 @@ export const CONTACT = {
     "Jadavpur University",
     "Kolkata - 700032",
   ],
-  hours: [
-    ["Monday - Friday", "9:00 AM - 6:00 PM"],
-    ["Saturday", "10:00 AM - 2:00 PM"],
-    ["Sunday", "Closed"],
-  ],
+  hours: [],
   socials: [
     { platform: "instagram", url: "https://www.instagram.com/aerospace_club_ju", label: "" },
     { platform: "linkedin", url: "https://www.linkedin.com/company/aerospace-club-ju/", label: "" },

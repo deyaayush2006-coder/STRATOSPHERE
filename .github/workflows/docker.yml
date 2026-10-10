@@ -1,0 +1,56 @@
+name: Docker
+
+# Builds the production image and checks the container serves the site.
+# Runs on every PR, and on pushes to main that touch the image definition.
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - docker-compose.yml
+      - next.config.mjs
+      - package.json
+      - package-lock.json
+      - .github/workflows/docker.yml
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  docker:
+    # Builds the production image and checks the container serves the site.
+    # Dummy Supabase values: the build falls back to the bundled content.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: stratosphere:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy
+      - name: Run the container and request the homepage
+        run: |
+          docker run -d --name web -p 3000:3000 stratosphere:ci
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://localhost:3000/; then
+              echo "homepage served"
+              docker exec web sh -c 'id -u' | grep -qx 1001 || { echo "::error::container is not running as the nextjs user"; exit 1; }
+              docker exec web sh -c 'ls -a /app' | grep -q '^\.env' && { echo "::error::an .env file reached the image"; exit 1; }
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs web
+          exit 1

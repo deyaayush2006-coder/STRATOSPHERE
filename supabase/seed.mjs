@@ -139,19 +139,22 @@ async function seedAdmin() {
     email,
     password,
     email_confirm: true,
-    user_metadata: { name, role: "admin" },
+    user_metadata: { name },
+    // The profile trigger only trusts app_metadata (migration 0007).
+    app_metadata: { staff: true, role: "admin" },
   });
   check(error, "Could not create the admin account");
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, is_active")
     .eq("id", data.user.id)
     .single();
 
-  if (profile?.role !== "admin") {
+  if (profile?.role !== "admin" || !profile?.is_active) {
     check(
-      (await supabase.from("profiles").update({ role: "admin" }).eq("id", data.user.id)).error,
+      (await supabase.from("profiles").update({ role: "admin", is_active: true }).eq("id", data.user.id))
+        .error,
       "Could not promote the first account"
     );
   }

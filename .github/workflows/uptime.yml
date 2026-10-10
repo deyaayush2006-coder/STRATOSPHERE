@@ -1,0 +1,61 @@
+name: Uptime and data-exposure check
+
+# Every 30 minutes: is the site up, and can the public anon key read anything
+# private? Opens one P0 issue on failure (and keeps the free Supabase project
+# from pausing for inactivity).
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Site is up
+        env:
+          SITE: ${{ vars.PROD_URL }}
+        run: |
+          for path in / /sitemap.xml; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$SITE$path")
+            echo "$path -> $code"
+            [ "$code" = 200 ] || { echo "::error::$path returned $code"; exit 1; }
+          done
+      - name: Anon key cannot read private data
+        env:
+          SUPABASE_URL: ${{ vars.PROD_SUPABASE_URL }}
+          ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
+        run: |
+          read_as_anon() {
+            curl -s --max-time 20 -o /tmp/body -w '%{http_code}' "$SUPABASE_URL/rest/v1/$1" \
+              -H "apikey: $ANON_KEY" -H "Authorization: Bearer $ANON_KEY"
+          }
+          for path in "contact_messages?select=id&limit=1" "profiles?select=id&limit=1" "media?select=id&limit=1"; do
+            code=$(read_as_anon "$path")
+            if [ "$code" = 200 ] && [ "$(cat /tmp/body)" != "[]" ]; then
+              echo "::error::Anon can read $path"; exit 1
+            fi
+          done
+          code=$(read_as_anon "cohort_members?select=email&limit=1")
+          if [ "$code" = 200 ]; then echo "::error::Anon can read member emails (apply migration 0008)"; exit 1; fi
+      - name: Open a P0 issue (once)
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const open = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo, state: "open", labels: "uptime",
+            });
+            if (open.data.length) return;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "P0: uptime / data-exposure check failing",
+              body: `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              labels: ["P0", "uptime", "incident"],
+            });

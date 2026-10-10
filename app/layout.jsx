@@ -63,6 +63,20 @@ const THEME_SCRIPT = `(function () {
   document.documentElement.dataset.theme = theme;
 })();`;
 
+const ORGANIZATION_JSON_LD = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Stratosphere — Aerospace Club, Jadavpur University",
+  alternateName: "Stratosphere",
+  url: SITE_URL,
+  logo: `${SITE_URL}/icon.png`,
+  parentOrganization: { "@type": "CollegeOrUniversity", name: "Jadavpur University" },
+  sameAs: [
+    "https://www.instagram.com/aerospace_club_ju",
+    "https://www.linkedin.com/company/aerospace-club-ju/",
+  ],
+}).replace(/</g, "\\u003c");
+
 export default function RootLayout({ children }) {
   return (
     <html
@@ -73,7 +87,8 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      <body>{children}</body>
+      <body>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ORGANIZATION_JSON_LD }} />{children}</body>
     </html>
   );
 }

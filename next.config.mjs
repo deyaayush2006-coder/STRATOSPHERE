@@ -1,3 +1,5 @@
+import { securityHeaders } from "./lib/security-headers.mjs";
+
 function supabasePattern() {
   try {
     const { protocol, hostname } = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL);
@@ -17,7 +19,15 @@ const nextConfig = {
 
   transpilePackages: ["three"],
 
-  eslint: { ignoreDuringBuilds: true },
+  poweredByHeader: false,
+
+  async headers() {
+    return [{ source: "/(.*)", headers: securityHeaders() }];
+  },
+
+  // The Dockerfile sets NEXT_OUTPUT=standalone to get a self-contained
+  // server in .next/standalone. Vercel builds are left as they were.
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
 };
 
 export default nextConfig;

@@ -57,6 +57,22 @@ const firstRepeat = (values) => {
 
 const withoutId = ({ id, ...rest }) => rest;
 
+// Saving a collection is several requests (delete, update, insert). There is no
+// transaction across them, so take a copy of every row we are about to delete
+// and put it back if a later step fails. A failed save then leaves the old
+// content in place instead of silently losing rows.
+async function snapshot(query, what) {
+  const { data, error } = await query;
+  fail(error, `Could not read ${what} before saving`);
+  return data ?? [];
+}
+
+async function restore(supabase, table, rows) {
+  if (!rows.length) return;
+  const { error } = await supabase.from(table).upsert(rows);
+  if (error) console.error(`[content] could not restore ${table} after a failed save:`, error.message);
+}
+
 const MISSING_COLUMN = /Could not find the '([^']+)' column/i;
 
 async function writeRows(run, rows, table) {
@@ -104,12 +120,30 @@ async function replaceCollection(supabase, key, items) {
     }
   }
 
-  let del = supabase.from(cfg.table).delete();
-  del = keptIds.length
-    ? del.not("id", "in", `(${keptIds.join(",")})`)
-    : del.neq("id", EVERY_ROW);
-  fail((await del).error, `Could not remove deleted ${key}`);
+  const removedScope = (query) =>
+    keptIds.length ? query.not("id", "in", `(${keptIds.join(",")})`) : query.neq("id", EVERY_ROW);
 
+  const removed = await snapshot(removedScope(supabase.from(cfg.table).select("*")), key);
+  const removedChildren =
+    cfg.child && removed.length
+      ? await snapshot(
+          supabase.from(cfg.child.table).select("*").in(cfg.child.fk, removed.map((r) => r.id)),
+          cfg.child.key
+        )
+      : [];
+
+  fail((await removedScope(supabase.from(cfg.table).delete())).error, `Could not remove deleted ${key}`);
+
+  try {
+    await writeCollection(supabase, cfg, key, list, rows, existing, fresh);
+  } catch (error) {
+    await restore(supabase, cfg.table, removed);
+    if (cfg.child) await restore(supabase, cfg.child.table, removedChildren);
+    throw error;
+  }
+}
+
+async function writeCollection(supabase, cfg, key, list, rows, existing, fresh) {
   if (existing.length) {
     const { error } = await writeRows(
       (batch) => supabase.from(cfg.table).upsert(batch),
@@ -160,10 +194,23 @@ async function replaceChildren(supabase, cfg, list, rows, inserted) {
     );
   }
 
-  let del = supabase.from(child.table).delete().in(child.fk, parentIds);
-  if (keptIds.length) del = del.not("id", "in", `(${keptIds.join(",")})`);
-  fail((await del).error, `Could not remove deleted ${child.key}`);
+  const childScope = (query) => {
+    const scoped = query.in(child.fk, parentIds);
+    return keptIds.length ? scoped.not("id", "in", `(${keptIds.join(",")})`) : scoped;
+  };
 
+  const removed = await snapshot(childScope(supabase.from(child.table).select("*")), child.key);
+  fail((await childScope(supabase.from(child.table).delete())).error, `Could not remove deleted ${child.key}`);
+
+  try {
+    await writeChildren(supabase, child, childRows);
+  } catch (error) {
+    await restore(supabase, child.table, removed);
+    throw error;
+  }
+}
+
+async function writeChildren(supabase, child, childRows) {
   const update = childRows.filter((r) => r.id);
   const create = childRows.filter((r) => !r.id).map(withoutId);
 
@@ -206,7 +253,7 @@ export async function saveSection(key, value) {
 
   refreshSite();
 
-  const content = await readContent(supabase);
+  const content = await readContent(supabase, { includePrivate: true });
   return content[key];
 }
 
@@ -224,7 +271,7 @@ export async function resetSection(key) {
 
   refreshSite();
 
-  const content = await readContent(supabase);
+  const content = await readContent(supabase, { includePrivate: true });
   return content[key];
 }
 
@@ -262,7 +309,10 @@ export async function createUser({ name, email, password, role }) {
     email,
     password,
     email_confirm: true,
-    user_metadata: { name, role: role === "admin" ? "admin" : "editor" },
+    user_metadata: { name },
+    // app_metadata can only be set with the service role, so the database
+    // trusts it (see migration 0007). user_metadata is user-editable.
+    app_metadata: { staff: true, role: role === "admin" ? "admin" : "editor" },
   });
 
   fail(error, "Could not create the account");

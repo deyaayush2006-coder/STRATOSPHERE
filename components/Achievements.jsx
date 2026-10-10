@@ -127,11 +127,16 @@ export default function Achievements({ achievements = [], achievementSettings })
 
       const content = (row) => row.querySelectorAll(":scope > div");
       const state = rows.map(() => false);
+      // A refresh (e.g. an archive opening below) rewinds the scrub to 0 to
+      // re-measure, then restores it without firing onUpdate. Ignore the
+      // rewind and re-apply once it is restored, or every row stays hidden.
+      let refreshing = false;
 
       // Per row, in order: dot lights (0ms, CSS 200ms), connector draws
       // (120ms, CSS 300ms), text slides in (200ms, 500ms). Scrolling back
       // above a dot reverses it, so text is visible only while its dot is lit.
       const apply = (progress, animate = true) => {
+        if (refreshing) return;
         const at = progress * span;
         gsap.set(fill, { scaleY: progress });
         gsap.set(tip, { y: at, autoAlpha: progress > 0 && progress < 1 ? 1 : 0 });
@@ -171,12 +176,20 @@ export default function Achievements({ achievements = [], achievementSettings })
             end: () => `top+=${first + span} ${FOCUS}`,
             scrub: 0.25,
             invalidateOnRefresh: true,
-            onRefreshInit: measure,
+            onRefreshInit: () => {
+              refreshing = true;
+              measure();
+            },
+            onRefresh: () => {
+              refreshing = false;
+              apply(rail.progress);
+            },
           },
         });
         apply(0);
 
         return () => {
+          refreshing = false;
           state.fill(false);
           rows.forEach((row) => row.classList.remove("is-reached"));
         };

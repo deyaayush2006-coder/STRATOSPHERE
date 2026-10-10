@@ -2,6 +2,9 @@ import FooterContact, { FooterAddressColumn } from "./FooterContact";
 import SocialIcon, { socialLabel } from "./SocialIcon";
 import Magnet from "./Magnet";
 
+// Same normalisation as middleware.js, so the link follows NEXT_PUBLIC_ADMIN_PATH.
+const ADMIN_HREF = `/${(process.env.NEXT_PUBLIC_ADMIN_PATH || "admin").replace(/^\/+|\/+$/g, "")}`;
+
 export default function Footer({ contact = {}, footerCols = [], compact = false }) {
   const { address = [], hours = [], email = "", socials = [] } = contact;
 
@@ -41,6 +44,7 @@ export default function Footer({ contact = {}, footerCols = [], compact = false 
 
           <FooterAddressColumn address={address} email={email} always={compact} />
 
+          {hours.length > 0 && (
           <div>
             <h4 className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/35 mb-4">
               Office hours
@@ -54,6 +58,7 @@ export default function Footer({ contact = {}, footerCols = [], compact = false 
               ))}
             </dl>
           </div>
+          )}
           {accounts.length > 0 && (
             <div>
               <h4 className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/35 mb-4">
@@ -87,8 +92,19 @@ export default function Footer({ contact = {}, footerCols = [], compact = false 
         </div>
         
         <div className="flex flex-wrap gap-x-6 gap-y-2 justify-between pt-6 border-t border-ink/10 text-xs text-ink/40">
-          <span>Made By Aerospace Club</span>
-          <span>© {new Date().getFullYear()} Stratosphere</span>
+          <span>
+            Website by{" "}
+            <a href="https://github.com/deyaayush2006-coder" className="underline-offset-4 hover:underline hover:text-ink/70">
+              Aayush Dey
+            </a>
+          </span>
+          <span className="flex gap-x-6">
+            {/* For club members; the dashboard itself sends noindex. */}
+            <a href={ADMIN_HREF} rel="nofollow" className="underline-offset-4 hover:underline hover:text-ink/70">
+              Admin
+            </a>
+            <span>© {new Date().getFullYear()} Stratosphere</span>
+          </span>
         </div>
       </div>
     </footer>

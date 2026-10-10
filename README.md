@@ -157,12 +157,12 @@ anyone may read the published rows, an active staff account may do anything.
   visitor's view of the database and nothing more. The one place that uses the
   service role — creating and deleting accounts — checks the caller is an admin
   itself, because that key bypasses the policies.
-- **`NEXT_PUBLIC_ADMIN_PATH`** moves the dashboard to a URL only the committee
-  knows. It is not the security boundary — a wrong guess still meets a login
-  form — but it keeps the panel out of crawlers and scanner wordlists. Nothing
-  links to it, the page serves `noindex`, and every unrecognised URL renders the
-  ordinary home page. Change it whenever the committee hands over, alongside the
-  passwords.
+- **`NEXT_PUBLIC_ADMIN_PATH`** sets the dashboard's URL. The footer's "Admin"
+  link points at it, so members never have to type it, which also means
+  it is public. It was never the security boundary: every visitor meets a login
+  form, and only active staff accounts get past it. The link is `nofollow`, the
+  page serves `noindex`, and `/admin` itself returns 404 when a custom path is
+  set.
 
 ## Images
 
@@ -211,3 +211,138 @@ few hundred points and a set of finished numbers, not the raw log and a parser
 to run over it. `three` and `recharts` are loaded only by the pages that
 actually draw something, so a project with none of these extras pays nothing
 for them.
+
+
+## Security model
+
+- **Public site** reads Supabase with the anon key. RLS lets `anon` read published content only. Member emails, contact messages, profiles, drafts and the media table are never readable by `anon`.
+- **Staff** are accounts whose `profiles.is_active` is true. Only the server (service role) can create staff: the admin panel sets `app_metadata.staff` / `app_metadata.role`, which users cannot edit. Public sign-ups get an inactive profile and see nothing.
+- **Keep public sign-ups off** in Supabase → Authentication → Sign In / Providers. Migration 0007 makes a sign-up harmless, but there is no reason to allow it.
+- Role checks (`private.is_staff()`, `private.is_admin()`) live in a schema the REST API does not expose.
+- Security headers come from `lib/security-headers.mjs`. The full CSP runs in Report-Only mode; move it to the enforced header once a preview deploy shows no violations in the browser console.
+
+## Migrations
+
+Migrations are append-only: never edit a file that has been applied; add a new numbered one. CI fails a PR that changes an existing migration.
+
+| File | When to apply |
+| --- | --- |
+| `0007_auth_and_rls_hardening.sql` | Any time (no app change needed). Until this app version is live, accounts created in Control Tower start suspended; activate them under Users. |
+| `0008_member_email_privacy.sql` | **Only after** this app version is deployed. The old code selects `cohort_members(*)`, which fails once anon loses the email column. |
+
+## Testing
+
+| Command | What it checks | Needs |
+| --- | --- | --- |
+| `npm run lint` | ESLint (Next.js rules) | — |
+| `npm run test:unit` | Content privacy, admin save rollback, contact form, security headers, event dates | — |
+| `npm run test:db` | Every RLS policy, as anon, outsider, suspended editor, editor and admin, on plain Postgres with all migrations | `TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres` |
+| `npm run test:smoke` | Black-box HTTP checks of a running site (status codes, headers, metadata, no leaked emails) | `SMOKE_URL=https://…` |
+
+## CI/CD
+
+1. **Pull request → GitHub Actions (`ci.yml`)**: lint, unit tests, build, RLS tests on Postgres 17, append-only migration check, gitleaks secret scan, `npm audit`. CodeQL runs separately.
+2. **Vercel build**: `vercel-build` runs lint and unit tests before `next build`, so a failing test fails the deploy and production keeps the last good version.
+3. **Every Vercel deployment → `deploy-smoke.yml`**: smoke tests against the preview or production URL. A failing production smoke test opens a `P0` issue.
+4. **Every 30 minutes → `uptime.yml`**: site up, and the anon key cannot read private data. Opens one `P0` issue on failure.
+5. **Dependabot** opens weekly update PRs, which go through the same checks.
+
+One-time setup:
+- GitHub → Settings → Branches: protect `main`; require a PR and the `Lint, unit tests, build`, `Database security (RLS)`, `Migrations are append-only` and `Secret scan` checks.
+- GitHub → Settings → Secrets and variables → Actions: secrets `VERCEL_AUTOMATION_BYPASS_SECRET` (if Deployment Protection is on), `ADMIN_PATH`, `PROD_SUPABASE_ANON_KEY`; variables `PROD_URL`, `PROD_SUPABASE_URL`.
+- Vercel: delete `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` (only `npm run seed` uses them, locally).
+
+## Running it in Docker
+
+Vercel is still the main deploy. Docker runs the same site on any computer
+without installing Node or anything else, which is the easiest way for a new
+maintainer to get it running.
+
+**Before you start:** install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+(Windows, macOS or Linux) and open it once so it is running.
+
+1. **Get the code.**
+   ```bash
+   git clone https://github.com/deyaayush2006-coder/STRATOSPHERE.git
+   cd STRATOSPHERE
+   ```
+2. **Make your settings file.** Copy `.env.example` to `.env` (on Windows:
+   `copy .env.example .env`; elsewhere: `cp .env.example .env`) and fill in:
+
+   | Variable | Where to find it | Needed? |
+   | --- | --- | --- |
+   | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → Project URL | Yes |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Same page → `anon` `public` key | Yes |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Same page → `service_role` key. **Secret** | For the contact form and Control Tower → Users |
+   | `NEXT_PUBLIC_ADMIN_PATH` | Vercel → Settings → Environment Variables (same name) | Optional, defaults to `admin` |
+
+   If you have access to the Vercel project, `npx vercel link` and then
+   `npx vercel env pull .env --environment=production` fill them in one go.
+3. **Start it.**
+   ```bash
+   docker compose up --build
+   ```
+   The first build takes a few minutes. Then open <http://localhost:3000>, and
+   the admin panel at `http://localhost:3000/<NEXT_PUBLIC_ADMIN_PATH>`. Stop it
+   with `Ctrl+C`. After changing the code or `.env`, run the same command again.
+
+**Things to know:**
+- **It uses the live database.** With the production Supabase keys, anything
+  you change in Control Tower on your computer changes the real site too.
+- **Never commit `.env`** or send it in a chat. It is already in `.gitignore`
+  and `.dockerignore`, so it can't reach GitHub or the image by accident. The
+  service role key bypasses every database rule.
+- **"missing - copy .env.example to .env"** means `.env` is missing or a
+  required value in it is empty.
+- **"port is already allocated"** means something else is using 3000. Run
+  `APP_PORT=3001 docker compose up --build` (PowerShell:
+  `$env:APP_PORT=3001; docker compose up --build`) and open port 3001.
+- **The site shows sample content** when the Supabase values are wrong or the
+  project is paused. It falls back to the bundled defaults instead of
+  crashing. Check the values, and that the project is not paused in Supabase.
+
+How the variables split inside the image:
+- **`NEXT_PUBLIC_*` are build args.** Next.js inlines them into the browser
+  bundle when it builds, so changing one means rebuilding (`--build`).
+- **`SUPABASE_SERVICE_ROLE_KEY` is a runtime env var only.** It never enters
+  an image layer.
+
+The image uses Next's standalone output on `node:22-alpine`, runs as a
+non-root user and has a healthcheck on `/`. Standalone output is switched on
+only inside the image (`NEXT_OUTPUT=standalone`), so Vercel builds the same
+way as before. The `Docker` workflow builds the image and starts it on every
+PR.
+
+## Handing the site over
+
+Every person gets their own account; nobody shares a password. Outgoing admins keep their accounts, so handing over never locks anyone out.
+
+**Admin portal access** (no code or dashboard access needed):
+1. An existing admin opens Control Tower → Users → **+ Add an account**, enters the successor's name and email, a starting password and Level **Admin**.
+2. The successor signs in and changes the password from their own account. From then on only they know it.
+3. Always keep **at least two active admins**. Control Tower stops an admin from suspending, demoting or deleting their own account, but if the only admin forgets their password, the portal can't fix it.
+
+**The services behind the site.** Admin access in the portal does not let anyone deploy, fix the database or renew anything. These are tied to whoever owns them, so give the successor access before you leave:
+
+| Service | What to do |
+| --- | --- |
+| GitHub | Move the repo to a club organization (Settings → Transfer), or add the successor as an admin collaborator. Branch protection, secrets and variables move with it. |
+| Vercel | Invite the successor to the team that owns the `stratosphere` project, or transfer the project (Settings → Transfer). Environment variables move with it. |
+| Supabase | Invite the successor to the organization that owns the project with the Owner role, or transfer the project to a club organization. |
+| Domain | If you add a custom domain, register it to a club account or email, not a personal one. |
+
+**Running it on the successor's computer:** once they have Supabase (or Vercel) access, they follow [Running it in Docker](#running-it-in-docker). Give them access to the services, not a copy of your `.env` file.
+
+**Break-glass: nobody can sign in to Control Tower.** Anyone with access to the Supabase project can restore access without a password reset:
+1. Supabase → Authentication → Users → **Add user**, with their own email and password, and tick **Auto Confirm User**. (Skip this if they already have an account.)
+2. Supabase → SQL Editor:
+   ```sql
+   update public.profiles set role = 'admin', is_active = true where email = 'their@email';
+   ```
+3. They sign in at the admin path and take it from there.
+
+`npm run seed` with `ADMIN_EMAIL` / `ADMIN_PASSWORD` does the same for a brand-new project.
+
+## Contributing
+
+Branch from `main` (`fix/…`, `feat/…`, `ci/…`), keep commits atomic with Conventional Commit messages, open a PR, merge when CI is green.
