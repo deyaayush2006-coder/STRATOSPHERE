@@ -101,7 +101,7 @@ export default function Footer({ contact = {}, footerCols = [], compact = false 
           <span className="flex gap-x-6">
             {/* For club members; the dashboard itself sends noindex. */}
             <a href={ADMIN_HREF} rel="nofollow" className="underline-offset-4 hover:underline hover:text-ink/70">
-              Club login
+              Admin
             </a>
             <span>© {new Date().getFullYear()} Stratosphere</span>
           </span>
