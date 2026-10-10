@@ -2,6 +2,9 @@ import FooterContact, { FooterAddressColumn } from "./FooterContact";
 import SocialIcon, { socialLabel } from "./SocialIcon";
 import Magnet from "./Magnet";
 
+// Same normalisation as middleware.js, so the link follows NEXT_PUBLIC_ADMIN_PATH.
+const ADMIN_HREF = `/${(process.env.NEXT_PUBLIC_ADMIN_PATH || "admin").replace(/^\/+|\/+$/g, "")}`;
+
 export default function Footer({ contact = {}, footerCols = [], compact = false }) {
   const { address = [], hours = [], email = "", socials = [] } = contact;
 
@@ -95,7 +98,13 @@ export default function Footer({ contact = {}, footerCols = [], compact = false 
               Aayush Dey
             </a>
           </span>
-          <span>© {new Date().getFullYear()} Stratosphere</span>
+          <span className="flex gap-x-6">
+            {/* For club members; the dashboard itself sends noindex. */}
+            <a href={ADMIN_HREF} rel="nofollow" className="underline-offset-4 hover:underline hover:text-ink/70">
+              Club login
+            </a>
+            <span>© {new Date().getFullYear()} Stratosphere</span>
+          </span>
         </div>
       </div>
     </footer>

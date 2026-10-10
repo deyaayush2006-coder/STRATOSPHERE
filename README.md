@@ -157,12 +157,12 @@ anyone may read the published rows, an active staff account may do anything.
   visitor's view of the database and nothing more. The one place that uses the
   service role — creating and deleting accounts — checks the caller is an admin
   itself, because that key bypasses the policies.
-- **`NEXT_PUBLIC_ADMIN_PATH`** moves the dashboard to a URL only the committee
-  knows. It is not the security boundary — a wrong guess still meets a login
-  form — but it keeps the panel out of crawlers and scanner wordlists. Nothing
-  links to it, the page serves `noindex`, and every unrecognised URL renders the
-  ordinary home page. Change it whenever the committee hands over, alongside the
-  passwords.
+- **`NEXT_PUBLIC_ADMIN_PATH`** sets the dashboard's URL. The footer's "Club
+  login" link points at it, so members never have to type it, which also means
+  it is public. It was never the security boundary: every visitor meets a login
+  form, and only active staff accounts get past it. The link is `nofollow`, the
+  page serves `noindex`, and `/admin` itself returns 404 when a custom path is
+  set.
 
 ## Images
 
