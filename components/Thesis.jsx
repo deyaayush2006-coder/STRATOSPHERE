@@ -1,8 +1,4 @@
-const paragraphs = (body) =>
-  String(body ?? "")
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+import RichText from "./RichText";
 
 export default function Thesis({ sections = [], title = "Technical write-up" }) {
   const usable = sections.filter((s) => s?.heading || s?.body);
@@ -21,11 +17,11 @@ export default function Thesis({ sections = [], title = "Technical write-up" }) 
               </h3>
             )}
 
-            {paragraphs(section.body).map((para, p) => (
-              <p key={p} className="text-ink/65 mt-4 leading-relaxed max-w-2xl">
-                {para}
-              </p>
-            ))}
+            <RichText
+              text={section.body}
+              paragraphClassName="text-ink/65 mt-4 leading-relaxed max-w-2xl"
+              displayClassName="mt-4 max-w-2xl text-ink/85"
+            />
 
             {(section.figures ?? []).length > 0 && (
               <dl className="grid sm:grid-cols-3 gap-6 mt-7 pt-6 border-t border-ink/10">

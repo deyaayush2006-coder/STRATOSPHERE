@@ -331,3 +331,20 @@
     background: linear-gradient(90deg, transparent, var(--rule-ink) 45%, transparent);
   }
 }
+
+/* LaTeX (components/RichText.jsx). Display equations scroll sideways on narrow
+   screens instead of overflowing the card; inline math sits a touch larger
+   than the body text, as it does in a paper. */
+.math-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.math-display .katex-display {
+  margin: 0.25em 0;
+  padding: 0.25em 0.125em;
+}
+.katex {
+  font-size: 1.08em;
+}
