@@ -200,7 +200,7 @@ project that uses none of them renders exactly as it did before they existed.
   opens full size.
 - **A technical write-up** — headed sections of prose, with an optional row of
   key figures under each. A blank line in the body starts a new paragraph, and
-  that is the only formatting there is.
+  equations are written in LaTeX (see [Writing equations](#writing-equations)).
 - **Flight data** — a pasted CSV with a header row. The page works out the
   charts, the peak/min/final figures and a data table from it. Long logs are
   thinned for drawing, but the quoted figures are always taken from every row,
@@ -212,6 +212,57 @@ to run over it. `three` and `recharts` are loaded only by the pages that
 actually draw something, so a project with none of these extras pays nothing
 for them.
 
+
+## Writing equations
+
+Write-ups take LaTeX math the way it is written in Overleaf. It works in the
+project **Technical write-up** and **Overview**, in project **part paragraphs**
+and in the event **Write-up**. In Control Tower a preview appears under the box
+as soon as it contains an equation, so a typo shows up before you save.
+
+| You write | You get |
+| --- | --- |
+| `$E = mc^2$` or `\(E = mc^2\)` | inline math, inside the sentence |
+| `$$ ... $$` or `\[ ... \]` | a centred equation on its own line |
+| `\begin{equation} ... \end{equation}` | a numbered equation |
+| `equation*`, `align`, `align*`, `alignat`, `gather` (and starred forms) | the same environments as in a paper |
+| `\$` | a literal dollar sign |
+
+A section body, as typed into the box:
+
+```latex
+The ideal velocity change follows from the Tsiolkovsky equation,
+$\Delta v = v_e \ln\frac{m_0}{m_f}$, where $v_e$ is the exhaust velocity.
+
+\begin{equation}
+\Delta v = I_{sp}\, g_0 \ln\left(\frac{m_0}{m_f}\right)
+\end{equation}
+
+During the coast phase
+\begin{align*}
+m\frac{dv}{dt} &= -mg - \tfrac{1}{2}\rho v^2 C_D A \\
+\frac{dh}{dt}  &= v
+\end{align*}
+
+Each motor cost \$45.
+```
+
+Things to know:
+- **Only the math is LaTeX.** The text around it is plain: `\section`,
+  `\textbf`, `\cite`, `\ref`, `\label` and `\usepackage` do nothing outside an
+  equation. Use the section heading field for headings, and a blank line for a
+  new paragraph.
+- **Prices are safe.** A `$` followed by a space or a number, as in "costs
+  $45", stays a dollar sign. Use `\$` whenever one sits next to an equation.
+- **Supported commands** are KaTeX's: <https://katex.org/docs/supported>.
+  Anything else, or a typo, shows as red source text instead of breaking the
+  page. `\href`, `\url`, `\includegraphics` and raw HTML are switched off.
+- **Equations are drawn on the server.** Visitors get finished HTML, MathML
+  for screen readers and the KaTeX fonts, with no math JavaScript. A display
+  equation wider than a phone scrolls sideways inside its own box.
+
+The parser is `lib/latex.js`; `components/RichText.jsx` renders it and is the
+one place to add another field that should accept math.
 
 ## Security model
 

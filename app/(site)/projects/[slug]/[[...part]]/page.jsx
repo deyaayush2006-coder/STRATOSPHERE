@@ -7,6 +7,7 @@ import CadGallery from "@/components/CadGallery";
 import ModelViewer from "@/components/ModelViewer";
 import Telemetry from "@/components/Telemetry";
 import Thesis from "@/components/Thesis";
+import RichText from "@/components/RichText";
 import Cover from "@/components/Cover";
 import SplitHeading from "@/components/SplitHeading";
 
@@ -84,7 +85,11 @@ export default async function ProjectDetail({ params }) {
           )}
           <div className="p-8 md:p-10">
             <span className="font-sans text-xs font-medium tracking-wide text-aurora2">Overview</span>
-            <p className="text-ink/65 mt-4 leading-relaxed max-w-2xl">{project.body}</p>
+            <RichText
+              text={project.body}
+              paragraphClassName="text-ink/65 mt-4 leading-relaxed max-w-2xl"
+              displayClassName="mt-4 max-w-2xl text-ink/85"
+            />
           </div>
         </article>
       ) : (
@@ -134,9 +139,12 @@ export default async function ProjectDetail({ params }) {
                 </h2>
 
                 {(active.detail ?? []).map((para, i) => (
-                  <p key={i} className="text-ink/65 mt-4 leading-relaxed max-w-2xl">
-                    {para}
-                  </p>
+                  <RichText
+                    key={i}
+                    text={para}
+                    paragraphClassName="text-ink/65 mt-4 leading-relaxed max-w-2xl"
+                    displayClassName="mt-4 max-w-2xl text-ink/85"
+                  />
                 ))}
 
                 <dl className="grid sm:grid-cols-3 gap-6 mt-9 pt-8 border-t border-ink/10">

@@ -4,6 +4,26 @@ import { useEffect, useRef, useState } from "react";
 import { Badge, Button, FIELD, IconButton, Label, Notice, Spinner } from "./ui";
 import { slugify } from "./schema";
 import { formatBytes, getCached, loadMedia, mediaUrl, subscribe, uploadMedia } from "./media";
+import RichText from "@/components/RichText";
+import { hasMath } from "@/lib/latex";
+
+// Under a field marked `math: true`: how the text will look on the site, shown
+// as soon as it contains LaTeX, so a typo shows up before saving.
+function MathPreview({ text }) {
+  if (!hasMath(text)) return null;
+  return (
+    <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Preview</p>
+      <div className="text-sm text-slate-300">
+        <RichText
+          text={text}
+          paragraphClassName="mt-2 leading-relaxed"
+          displayClassName="mt-2 text-slate-100"
+        />
+      </div>
+    </div>
+  );
+}
 
 function TextInput({ field, value, onChange }) {
   return (
@@ -73,13 +93,16 @@ function DateTimeInput({ field, value, onChange }) {
 
 function TextArea({ field, value, onChange }) {
   return (
-    <textarea
-      rows={field.rows || 4}
-      className={`${FIELD} resize-y leading-relaxed`}
-      value={value ?? ""}
-      placeholder={field.placeholder || ""}
-      onChange={(e) => onChange(e.target.value)}
-    />
+    <>
+      <textarea
+        rows={field.rows || 4}
+        className={`${FIELD} resize-y leading-relaxed`}
+        value={value ?? ""}
+        placeholder={field.placeholder || ""}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {field.math && <MathPreview text={value} />}
+    </>
   );
 }
 
@@ -293,12 +316,15 @@ function StringList({ field, value, onChange }) {
       {rows.map((row, i) => (
         <div key={i} className="flex items-start gap-2">
           {field.multiline ? (
-            <textarea
-              rows={3}
-              className={`${FIELD} resize-y leading-relaxed`}
-              value={row}
-              onChange={(e) => set(i, e.target.value)}
-            />
+            <div className="min-w-0 flex-1">
+              <textarea
+                rows={3}
+                className={`${FIELD} resize-y leading-relaxed`}
+                value={row}
+                onChange={(e) => set(i, e.target.value)}
+              />
+              {field.math && <MathPreview text={row} />}
+            </div>
           ) : (
             <input type="text" className={FIELD} value={row} onChange={(e) => set(i, e.target.value)} />
           )}

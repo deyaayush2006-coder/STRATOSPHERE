@@ -1,4 +1,7 @@
 const SLUG_HINT = "Used in the page URL. Lowercase, dashes, no spaces.";
+const MATH_HINT =
+  "Equations use LaTeX, as in Overleaf: $E = mc^2$ inline, $$...$$ or \\[...\\] or " +
+  "\\begin{equation}...\\end{equation} on their own line. Write \\$ for a dollar sign.";
 
 const POSTED = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Kolkata",
@@ -163,7 +166,8 @@ export const SECTIONS = [
             label: "Body",
             type: "textarea",
             rows: 10,
-            hint: "Leave a blank line between paragraphs and they come out as paragraphs.",
+            math: true,
+            hint: "Leave a blank line between paragraphs and they come out as paragraphs. " + MATH_HINT,
           },
           {
             name: "figures",
@@ -249,7 +253,8 @@ export const SECTIONS = [
         label: "Overview",
         type: "textarea",
         rows: 6,
-        hint: "Shown on the project page when there are no parts",
+        math: true,
+        hint: "Shown on the project page when there are no parts. " + MATH_HINT,
       },
       { name: "image", label: "Cover image", type: "image" },
       { name: "published", label: "Show this on the site", type: "checkbox" },
@@ -309,7 +314,8 @@ export const SECTIONS = [
             label: "Body",
             type: "textarea",
             rows: 10,
-            hint: "Leave a blank line between paragraphs and they come out as paragraphs.",
+            math: true,
+            hint: "Leave a blank line between paragraphs and they come out as paragraphs. " + MATH_HINT,
           },
           {
             name: "figures",
@@ -403,7 +409,15 @@ export const SECTIONS = [
           { name: "slug", label: "URL slug", type: "text", hint: SLUG_HINT, slugFrom: "name", unique: true },
           { name: "blurb", label: "Short blurb", type: "text", hint: "Shown under the name in the side index" },
           { name: "image", label: "Image", type: "image" },
-          { name: "detail", label: "Paragraphs", type: "stringList", itemName: "paragraph", multiline: true },
+          {
+            name: "detail",
+            label: "Paragraphs",
+            type: "stringList",
+            itemName: "paragraph",
+            multiline: true,
+            math: true,
+            hint: MATH_HINT,
+          },
           { name: "specs", label: "Specs", type: "pairList", keyLabel: "Label", valueLabel: "Value" },
           {
             name: "model",
