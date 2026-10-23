@@ -45,7 +45,7 @@ jobs:
           if [ "$code" = 200 ]; then echo "::error::Anon can read member emails (apply migration 0008)"; exit 1; fi
       - name: Open a P0 issue (once)
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const open = await github.rest.issues.listForRepo({
