@@ -222,11 +222,51 @@ actually draw something, so a project with none of these extras pays nothing
 for them.
 
 
+## Learn: the long versions of Instagram posts
+
+`/learn` holds the club's knowledge articles — the detailed write-up behind an
+Instagram infographic: RC circuitry and design specs, aerodynamics, fluid
+dynamics and so on. Articles are edited in Control Tower → **Learn**.
+
+**Publishing one alongside an Instagram post**
+
+1. Control Tower → Learn → **+ Add article**. It starts as a draft, so nothing
+   is public while you write.
+2. Fill in the title, a one-line **Summary** (it becomes the link preview on
+   WhatsApp and Instagram) and, if it belongs to one, a **Series** name.
+3. **Infographic slides:** add the post's images in order. They show whole, in
+   the 4:5 Instagram shape, under *From the post*.
+4. **Write-up:** one entry per section — text with LaTeX, an optional diagram
+   with caption, optional key figures. Three or more headed sections get a
+   contents list.
+5. Paste the post's address into **Instagram post** once it is live, add any
+   **Further reading**, tick **Show this on the site** and save.
+
+**Series.** Articles with the same Series name are grouped on `/learn` and
+numbered *Part 1 of N* in the order they sit in the Control Tower list; each
+article links to the rest of its series. Drafts never count towards the
+numbering.
+
+**Linking from Instagram.** Captions aren't clickable, so put
+`https://stratosphere-zeta.vercel.app/learn` in the profile bio once and end
+each caption with *"Full write-up: link in bio → Learn"*. For stories, use the
+article's own address (`/learn/<slug>`; the Share button on the page copies it), which is
+why the slug field asks for something short.
+
+**Where it shows up.** Learn joins the menu (before Contact) and the footer, and
+the three newest articles appear on the home page, as soon as the first one is
+published — no Navigation edit needed. Every article page has share previews,
+a canonical URL and `Article` structured data for search engines, and is
+listed in the sitemap.
+
+The table is `articles` (migration 0009); the page code is
+`app/(site)/learn/`, the helpers `lib/articles.js`.
+
 ## Writing equations
 
-Write-ups take LaTeX math the way it is written in Overleaf. It works in the
-project **Technical write-up** and **Overview**, in project **part paragraphs**
-and in the event **Write-up**. In Control Tower a preview appears under the box
+Write-ups take LaTeX math the way it is written in Overleaf. It works in Learn
+**articles**, the project **Technical write-up** and **Overview**, in project
+**part paragraphs** and in the event **Write-up**. In Control Tower a preview appears under the box
 as soon as it contains an equation, so a typo shows up before you save.
 
 | You write | You get |
@@ -310,13 +350,14 @@ Migrations are append-only: never edit a file that has been applied; add a new n
 | --- | --- |
 | `0007_auth_and_rls_hardening.sql` | Any time (no app change needed). Until this app version is live, accounts created in Control Tower start suspended; activate them under Users. |
 | `0008_member_email_privacy.sql` | **Only after** this app version is deployed. The old code selects `cohort_members(*)`, which fails once anon loses the email column. |
+| `0009_articles.sql` | Any time; best **before** the deploy that adds Learn. It only adds a table. If the app runs without it, Learn is empty and the rest of the site is unaffected. |
 
 ## Testing
 
 | Command | What it checks | Needs |
 | --- | --- | --- |
 | `npm run lint` | ESLint (Next.js rules) | — |
-| `npm run test:unit` | Content privacy, admin save rollback, dashboard link checks, contact form, security headers, event dates, screen-reader markup | — |
+| `npm run test:unit` | Content privacy, admin save rollback, dashboard link checks, Learn articles (rows, series, links), LaTeX, health check, contact form, security headers, event dates, screen-reader markup | — |
 | `npm run test:db` | Every RLS policy, as anon, outsider, suspended editor, editor and admin, on plain Postgres with all migrations | `TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres` |
 | `npm run test:smoke` | Black-box HTTP checks of a running site (status codes, headers, metadata, no leaked emails) | `SMOKE_URL=https://…` |
 
