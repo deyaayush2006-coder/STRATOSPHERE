@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { mediaUrl } from "@/lib/media-url";
 
-function Tile({ shot, onOpen, index }) {
+function Tile({ shot, onOpen, index, itemName, portrait }) {
   const [failed, setFailed] = useState(false);
   const src = mediaUrl(shot.src);
 
@@ -19,12 +19,14 @@ function Tile({ shot, onOpen, index }) {
       >
         <Image
           src={src}
-          alt={shot.caption || "CAD drawing"}
+          alt={shot.caption || `${itemName} ${index + 1}`}
           width={800}
-          height={600}
+          height={portrait ? 1000 : 600}
           onError={() => setFailed(true)}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 380px"
-          className="h-full w-full aspect-[4/3] object-cover transition duration-300 group-hover:scale-[1.03]"
+          className={`h-full w-full transition duration-300 group-hover:scale-[1.03] ${
+            portrait ? "aspect-[4/5] object-contain" : "aspect-[4/3] object-cover"
+          }`}
         />
         <span className="absolute inset-0 bg-base/0 group-hover:bg-base/10 transition-colors" />
       </button>
@@ -36,7 +38,7 @@ function Tile({ shot, onOpen, index }) {
   );
 }
 
-function Lightbox({ shots, index, onClose, onStep }) {
+function Lightbox({ shots, index, onClose, onStep, itemName }) {
   const closeRef = useRef(null);
   const shot = shots[index];
 
@@ -70,7 +72,7 @@ function Lightbox({ shots, index, onClose, onStep }) {
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
       role="dialog"
       aria-modal="true"
-      aria-label={shot.caption || "CAD drawing"}
+      aria-label={shot.caption || `${itemName} ${index + 1}`}
     >
       <button
         ref={closeRef}
@@ -88,7 +90,7 @@ function Lightbox({ shots, index, onClose, onStep }) {
         <Image
           key={shot.src}
           src={mediaUrl(shot.src)}
-          alt={shot.caption || "CAD drawing"}
+          alt={shot.caption || `${itemName} ${index + 1}`}
           width={1800}
           height={1350}
           sizes="(max-width: 1024px) 100vw, 1024px"
@@ -126,7 +128,14 @@ function Lightbox({ shots, index, onClose, onStep }) {
   );
 }
 
-export default function CadGallery({ shots = [], title = "CAD & drawings" }) {
+// `itemName` names untitled images for screen readers ("Slide 3"); `portrait`
+// shows each tile whole in a 4:5 frame, the shape of an Instagram post.
+export default function CadGallery({
+  shots = [],
+  title = "CAD & drawings",
+  itemName = "CAD drawing",
+  portrait = false,
+}) {
   const [open, setOpen] = useState(null);
 
   const usable = shots.filter((s) => s?.src);
@@ -144,12 +153,25 @@ export default function CadGallery({ shots = [], title = "CAD & drawings" }) {
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
         {usable.map((shot, i) => (
-          <Tile key={`${shot.src}-${i}`} shot={shot} index={i} onOpen={setOpen} />
+          <Tile
+            key={`${shot.src}-${i}`}
+            shot={shot}
+            index={i}
+            onOpen={setOpen}
+            itemName={itemName}
+            portrait={portrait}
+          />
         ))}
       </div>
 
       {open != null && (
-        <Lightbox shots={usable} index={open} onClose={() => setOpen(null)} onStep={step} />
+        <Lightbox
+          shots={usable}
+          index={open}
+          onClose={() => setOpen(null)}
+          onStep={step}
+          itemName={itemName}
+        />
       )}
     </section>
   );
