@@ -7,6 +7,8 @@ import { gsap, useGSAP } from "@/lib/gsap";
 // scrolls through the viewport. Adapted to clean up only its own triggers
 // (the original kills every ScrollTrigger on the page), to keep the caller's
 // element and classes, and to fade opacity only — per-word blur is costly.
+// Screen readers get the sentence whole from a visually hidden copy: a span per
+// word makes VoiceOver and TalkBack stop after every word.
 export default function ScrollReveal({
   as: Tag = "p",
   children,
@@ -56,7 +58,8 @@ export default function ScrollReveal({
 
   return (
     <Tag ref={ref} className={className}>
-      {words}
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true">{words}</span>
     </Tag>
   );
 }
