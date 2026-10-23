@@ -2,9 +2,11 @@ import NavCard from "@/components/NavCard";
 import Footer from "@/components/Footer";
 import SiteBackground from "@/components/SiteBackground";
 import { getContent } from "@/lib/content";
+import { siteLinks } from "@/lib/articles";
 
 export default async function NotFound() {
   const content = await getContent();
+  const { navLinks, footerCols } = siteLinks(content);
 
   return (
     <div className="relative w-full min-h-screen bg-base overflow-x-clip">
@@ -12,7 +14,7 @@ export default async function NotFound() {
       <SiteBackground plain />
 
       <div className="relative z-10 flex min-h-[100svh] flex-col">
-        <NavCard navLinks={content.navLinks} site={content.site} />
+        <NavCard navLinks={navLinks} site={content.site} />
 
         <main className="flex flex-1 items-center px-6 py-20 md:px-10 md:py-28">
           <div className="mx-auto w-full max-w-3xl">
@@ -35,7 +37,7 @@ export default async function NotFound() {
           </div>
         </main>
 
-        <Footer contact={content.contact} footerCols={content.footerCols} compact />
+        <Footer contact={content.contact} footerCols={footerCols} compact />
       </div>
     </div>
   );

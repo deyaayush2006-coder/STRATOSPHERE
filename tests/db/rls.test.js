@@ -39,9 +39,9 @@ suite("database security (RLS)", () => {
 
   describe("anonymous visitors", () => {
     it("see only published rows", async () => {
-      for (const table of ["announcements", "projects"]) {
+      for (const table of ["announcements", "projects", "articles"]) {
         const { rows } = await anon(`select slug from public.${table}`);
-        expect(rows.every((r) => !["draft", "hidden"].includes(r.slug))).toBe(true);
+        expect(rows.every((r) => !["draft", "hidden", "draft-article"].includes(r.slug))).toBe(true);
         expect(rows.length).toBe(1);
       }
       const parts = await anon("select slug from public.project_parts");
@@ -67,6 +67,11 @@ suite("database security (RLS)", () => {
       expect((await anon("update public.announcements set title = 'pwned'")).count).toBe(0);
       expect((await anon("delete from public.announcements")).count).toBe(0);
       expect((await anon("update public.sections set value = '{}'")).count).toBe(0);
+      expect((await anon("insert into public.articles (slug, title) values ('x', 'x')")).error).toBeTruthy();
+      // articles has no UPDATE/DELETE grant for anon at all: refused outright.
+      expect((await anon("update public.articles set title = 'pwned'")).error).toMatch(/permission denied/);
+      expect((await anon("delete from public.articles")).error).toMatch(/permission denied/);
+      expect((await anon("truncate public.articles")).error).toBeTruthy();
     });
 
     it("cannot list storage objects (public URLs do not need this)", async () => {
@@ -102,6 +107,8 @@ suite("database security (RLS)", () => {
         expect((await who("select * from public.contact_messages")).rows).toEqual([]);
         expect((await who("select * from public.cohort_members")).rows).toEqual([]);
         expect((await who("select * from public.announcements where not published")).rows).toEqual([]);
+        expect((await who("select * from public.articles")).rows).toEqual([]);
+        expect((await who("insert into public.articles (slug, title) values ('x', 'x')")).error).toBeTruthy();
         expect((await who("insert into public.announcements (slug, title) values ('x', 'x')")).error).toBeTruthy();
         expect((await who("select name from storage.objects")).rows).toEqual([]);
       }
@@ -117,6 +124,8 @@ suite("database security (RLS)", () => {
       expect((await editor("select * from public.announcements")).rows.length).toBe(2);
       expect((await editor("select email from public.cohort_members")).rows[0].email).toBe("member@example.com");
       expect((await editor("insert into public.announcements (slug, title) values ('new', 'New')")).count).toBe(1);
+      expect((await editor("select slug from public.articles")).rows.length).toBe(2);
+      expect((await editor("insert into public.articles (slug, title) values ('new-article', 'New')")).count).toBe(1);
       expect((await editor("select name from storage.objects")).rows.length).toBe(1);
     });
 
@@ -128,6 +137,19 @@ suite("database security (RLS)", () => {
     it("admins can activate and change accounts", async () => {
       expect((await admin("update public.profiles set is_active = true where id = $1", [IDS.outsider])).count).toBe(1);
     });
+  });
+
+  it("articles reject malformed slugs, empty titles, non-array JSON and non-https Instagram links", async () => {
+    const bad = [
+      "insert into public.articles (slug, title) values ('Bad Slug', 'x')",
+      "insert into public.articles (slug, title) values ('ok-slug', '   ')",
+      "insert into public.articles (slug, title, sections) values ('ok-slug', 'x', '{}')",
+      "insert into public.articles (slug, title, instagram_url) values ('ok-slug', 'x', 'javascript:alert(1)')",
+      "insert into public.articles (slug, title) values ('lift-basics', 'Duplicate slug')",
+    ];
+    for (const sql of bad) {
+      await expect(db.query(sql)).rejects.toThrow();
+    }
   });
 
   it("media bucket does not accept SVG", async () => {

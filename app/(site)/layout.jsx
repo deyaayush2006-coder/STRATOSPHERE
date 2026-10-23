@@ -6,6 +6,7 @@ import ClickSpark from "@/components/ClickSpark";
 import { getContent } from "@/lib/content";
 import { INTRO_SEEN_SCRIPT } from "@/lib/intro";
 import { typeWhenSeen } from "@/lib/typing-clock";
+import { publishedArticles, siteLinks } from "@/lib/articles";
 
 export const revalidate = 60;
 
@@ -16,8 +17,11 @@ export default async function SiteLayout({ children }) {
     "/",
     ...(content.projects ?? []).map((p) => `/projects/${p.slug}`),
     ...(content.events ?? []).map((e) => `/events/${e.slug}`),
+    "/learn",
+    ...publishedArticles(content.articles).map((a) => `/learn/${a.slug}`),
   ];
   const trees = (content.projects ?? []).map((p) => `/projects/${p.slug}`);
+  const { navLinks, footerCols } = siteLinks(content);
 
   return (
     <div className="relative w-full min-h-screen bg-base overflow-x-clip">
@@ -32,9 +36,9 @@ export default async function SiteLayout({ children }) {
       <SiteBackground />
       <ClickSpark />
       <div className="relative z-10">
-        <NavCard navLinks={content.navLinks} site={content.site} />
+        <NavCard navLinks={navLinks} site={content.site} />
         {children}
-        <Footer contact={content.contact} footerCols={content.footerCols} />
+        <Footer contact={content.contact} footerCols={footerCols} />
       </div>
     </div>
   );

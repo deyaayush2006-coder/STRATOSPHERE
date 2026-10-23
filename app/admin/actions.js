@@ -9,6 +9,7 @@ import { findProblem, SECTIONS } from "@/components/control-tower/schema";
 import {
   achievementsToRows,
   announcementsToRows,
+  articlesToRows,
   cohortMembersToRows,
   cohortsToRows,
   eventsToRows,
@@ -28,6 +29,7 @@ const COLLECTIONS = {
     naturalKey: "slug",
     child: { table: "project_parts", fk: "project_id", key: "parts", toRows: projectPartsToRows },
   },
+  articles: { table: "articles", toRows: articlesToRows, naturalKey: "slug" },
   memberCohorts: {
     table: "cohorts",
     toRows: cohortsToRows,
@@ -265,6 +267,9 @@ export async function saveSection(key, value) {
 
 export async function resetSection(key) {
   await requireStaff();
+  if (SECTIONS.find((s) => s.key === key)?.resettable === false) {
+    throw new Error("This section has no built-in content to go back to, so it can't be reset.");
+  }
   const supabase = await createClient();
 
   if (JSON_SECTIONS.includes(key)) {

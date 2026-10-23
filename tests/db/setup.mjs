@@ -48,6 +48,8 @@ export async function buildDatabase(adminUrl, dbName = "strat_rls") {
   await db.query(`
     insert into public.announcements (slug, title, published) values ('live', 'Live', true), ('draft', 'Draft', false);
     insert into public.projects (slug, title, published) values ('pub', 'Pub', true), ('hidden', 'Hidden', false);
+    insert into public.articles (slug, title, series, published) values
+      ('lift-basics', 'Lift basics', 'Aerodynamics', true), ('draft-article', 'Draft', 'Aerodynamics', false);
     insert into public.project_parts (project_id, slug, name)
       select id, 'part-' || slug, 'Part' from public.projects;
     insert into public.cohorts (year) values ('2026');
