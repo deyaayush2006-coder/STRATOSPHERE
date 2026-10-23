@@ -66,6 +66,9 @@ stray import into a client component fails the build instead of leaking it.
 
 ### 3. Seed and run
 
+Use Node 22 — the version CI, Docker and Vercel build with (`engines` in
+`package.json`).
+
 ```bash
 npm install
 npm run seed     # fills the tables and creates the first admin
@@ -141,6 +144,12 @@ Types are `text`, `textarea`, `select`, `checkbox`, `image`, `stringList`,
 `pairList` and `list` (which nests). For a **page copy** section that is the
 whole job. For a **record** section, add the column to a migration and the two
 lines that map it in `lib/mappers.js`.
+
+A field can also take `validate: (value) => message`, returning `""` when the
+value is fine. The editor refuses to save while any field in the section
+returns a message, and says which one; the server action runs the same check.
+The link fields use this so a link pasted without its `https://` never reaches
+the site.
 
 ## Security
 
@@ -286,7 +295,7 @@ Migrations are append-only: never edit a file that has been applied; add a new n
 | Command | What it checks | Needs |
 | --- | --- | --- |
 | `npm run lint` | ESLint (Next.js rules) | — |
-| `npm run test:unit` | Content privacy, admin save rollback, contact form, security headers, event dates | — |
+| `npm run test:unit` | Content privacy, admin save rollback, dashboard link checks, contact form, security headers, event dates, screen-reader markup | — |
 | `npm run test:db` | Every RLS policy, as anon, outsider, suspended editor, editor and admin, on plain Postgres with all migrations | `TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres` |
 | `npm run test:smoke` | Black-box HTTP checks of a running site (status codes, headers, metadata, no leaked emails) | `SMOKE_URL=https://…` |
 
@@ -296,7 +305,7 @@ Migrations are append-only: never edit a file that has been applied; add a new n
 2. **Vercel build**: `vercel-build` runs lint and unit tests before `next build`, so a failing test fails the deploy and production keeps the last good version.
 3. **Every Vercel deployment → `deploy-smoke.yml`**: smoke tests against the preview or production URL. A failing production smoke test opens a `P0` issue.
 4. **Every 30 minutes → `uptime.yml`**: site up, and the anon key cannot read private data. Opens one `P0` issue on failure.
-5. **Dependabot** opens weekly update PRs, which go through the same checks.
+5. **Dependabot** opens weekly update PRs, which go through the same checks. `next` and `eslint-config-next` arrive in one PR so they stay on the same version; ESLint majors are held back until `eslint-config-next` accepts them (see `.github/dependabot.yml`).
 
 One-time setup:
 - GitHub → Settings → Branches: protect `main`; require a PR and the `Lint, unit tests, build`, `Database security (RLS)`, `Migrations are append-only` and `Secret scan` checks.

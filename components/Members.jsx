@@ -130,7 +130,8 @@ function MemberCard({ member }) {
 
       <Avatar member={member} />
 
-      <div className="min-w-0">
+      {/* Top-aligned, so names in a row line up whether or not a card has a LinkedIn link. */}
+      <div className="min-w-0 self-start">
         <h3 className="text-ink text-[14px] font-semibold tracking-[-0.01em] truncate">
           {member.name}
         </h3>

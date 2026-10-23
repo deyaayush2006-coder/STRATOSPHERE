@@ -1,17 +1,32 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, ConfirmButton, Notice, Spinner } from "./ui";
 import { ListInput, ObjectFields } from "./fields";
+import { findProblem } from "./schema";
 
 export default function SectionEditor({ section, value, onSave, onReset }) {
   const [draft, setDraft] = useState(value);
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
+  // Counts every message shown, so the same one twice still scrolls to it.
+  const [shown, setShown] = useState(0);
+  const noticeRef = useRef(null);
 
   useEffect(() => {
     setDraft(value);
   }, [value]);
+
+  // Save sits in the bar at the bottom of the screen; once the message at the
+  // top has rendered, bring it into view.
+  useEffect(() => {
+    if (shown) noticeRef.current?.scrollIntoView({ block: "center" });
+  }, [shown]);
+
+  const showError = (message) => {
+    setError(message);
+    setShown((n) => n + 1);
+  };
 
   useEffect(() => {
     setStatus("idle");
@@ -31,6 +46,14 @@ export default function SectionEditor({ section, value, onSave, onReset }) {
   }, [dirty]);
 
   async function save() {
+    // Checked here as well as on the server: in production the server's message
+    // reaches the browser only as a generic error.
+    const problem = findProblem(section, draft);
+    if (problem) {
+      showError(problem);
+      return;
+    }
+
     setStatus("saving");
     setError("");
     try {
@@ -38,7 +61,7 @@ export default function SectionEditor({ section, value, onSave, onReset }) {
       setStatus("saved");
       setTimeout(() => setStatus((s) => (s === "saved" ? "idle" : s)), 2500);
     } catch (err) {
-      setError(err.message);
+      showError(err.message);
       setStatus("idle");
     }
   }
@@ -50,7 +73,7 @@ export default function SectionEditor({ section, value, onSave, onReset }) {
       await onReset(section.key);
       setStatus("idle");
     } catch (err) {
-      setError(err.message);
+      showError(err.message);
       setStatus("idle");
     }
   }
@@ -77,7 +100,7 @@ export default function SectionEditor({ section, value, onSave, onReset }) {
       </header>
 
       {error && (
-        <div className="mb-5">
+        <div ref={noticeRef} className="mb-5">
           <Notice onDismiss={() => setError("")}>{error}</Notice>
         </div>
       )}

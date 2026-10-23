@@ -1,7 +1,15 @@
+import { isLinkedInAddress, isWebAddress } from "@/lib/links";
+
 const SLUG_HINT = "Used in the page URL. Lowercase, dashes, no spaces.";
 const MATH_HINT =
   "Equations use LaTeX, as in Overleaf: $E = mc^2$ inline, $$...$$ or \\[...\\] or " +
   "\\begin{equation}...\\end{equation} on their own line. Write \\$ for a dollar sign.";
+
+// A field's `validate` returns what is wrong with its value, or "". Saving is
+// refused until findProblem() below comes back empty.
+const webAddress = (v) => (!v || isWebAddress(v) ? "" : "Use the full address, starting https://");
+const linkedIn = (v) =>
+  !v || isLinkedInAddress(v) ? "" : "Use the full profile address, starting https://www.linkedin.com/in/";
 
 const POSTED = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Kolkata",
@@ -147,6 +155,7 @@ export const SECTIONS = [
           "A form or ticket page. Shown as a Register button on the event page while the " +
           "status above is Upcoming, and dropped once it is Past — so a closed form stops " +
           "being offered on its own.",
+        validate: webAddress,
       },
       {
         name: "detail",
@@ -478,7 +487,13 @@ export const SECTIONS = [
           { name: "role", label: "Role", type: "text" },
           { name: "dept", label: "Department", type: "text" },
           { name: "image", label: "Photo", type: "image", hint: "Left empty, the card shows their initials" },
-          { name: "linkedin", label: "LinkedIn URL", type: "text" },
+          {
+            name: "linkedin",
+            label: "LinkedIn URL",
+            type: "text",
+            hint: "The full address, starting https://www.linkedin.com/in/",
+            validate: linkedIn,
+          },
           { name: "email", label: "Email", type: "text", hint: "For the committee only. It is not shown on the site." },
         ],
       },
@@ -646,6 +661,7 @@ export const SECTIONS = [
             type: "text",
             required: true,
             hint: "The full address, https:// and all. A row with no URL is skipped.",
+            validate: webAddress,
           },
           {
             name: "label",
@@ -729,7 +745,13 @@ export const SECTIONS = [
     fields: [
       { name: "name", label: "Sponsor name", type: "text", required: true },
       { name: "logo", label: "Logo", type: "image", hint: "A PNG or SVG with a transparent background works best." },
-      { name: "url", label: "Link", type: "text", hint: "Their website or Instagram page. Optional." },
+      {
+        name: "url",
+        label: "Link",
+        type: "text",
+        hint: "Their website or Instagram page. Optional.",
+        validate: webAddress,
+      },
       {
         name: "plate",
         label: "Put the logo on a white background",
@@ -785,5 +807,36 @@ export const SECTIONS = [
     ],
   },
 ];
+
+// The first value in a section that a field's `validate` rejects, as a message
+// that says where it is — or "" when the section can be saved.
+export function findProblem(section, value) {
+  const inList = (spec, items, trail) => {
+    for (const [i, item] of (Array.isArray(items) ? items : []).entries()) {
+      const name = String(spec.title?.(item) ?? "").trim() || `${spec.itemName || "item"} ${i + 1}`;
+      const found = inFields(spec.fields, item, [...trail, name]);
+      if (found) return found;
+    }
+    return "";
+  };
+
+  const inFields = (fields = [], item, trail) => {
+    for (const field of fields) {
+      const v = item?.[field.name];
+      if (field.type === "list") {
+        const found = inList(field, v, [...trail, field.label]);
+        if (found) return found;
+        continue;
+      }
+      const problem = field.validate?.(v);
+      if (problem) return `${[...trail, field.label].join(" → ")}: ${problem}`;
+    }
+    return "";
+  };
+
+  return section.kind === "list"
+    ? inList(section, value, [section.label])
+    : inFields(section.fields, value, [section.label]);
+}
 
 export { slugify } from "@/lib/slug";

@@ -22,9 +22,12 @@ function useHeroTitle(bandRef, titleRef) {
         gsap.set(block, { autoAlpha: 0 });
 
         const build = contextSafe(() => {
+          // The title is aria-hidden behind a visually hidden copy. SplitText's
+          // default would put aria-label on the span, which a span may not carry.
           const split = SplitText.create(block.querySelector("[data-hero-title]"), {
             type: "chars",
             mask: "chars",
+            aria: "none",
           });
 
           gsap.set(block, { autoAlpha: 1 });
@@ -67,6 +70,9 @@ export default function Hero({ photo }) {
       className="relative isolate grid overflow-hidden scroll-mt-1 mt-[calc(1rem+2px)] min-h-[calc(100svh-7.25rem+8px)]"
     >
       {src && (
+        // In portrait the photo is scaled to the band's height and cropped, so it
+        // is drawn far wider than the screen (~1400px on a 390px phone). 200vh
+        // tells the browser that; 100vw would fetch a source too small to be sharp.
         <Image
           src={src}
           alt=""
@@ -98,8 +104,10 @@ export default function Hero({ photo }) {
             className="absolute inset-y-0 left-0 w-[4px] origin-top bg-[#309ece] [[data-theme=light]_&]:bg-[#0D4C72]"
           />
           <div className="pl-[19px] text-4xl md:text-5xl">
+            <span className="sr-only">Stratosphere</span>
             <span
               data-hero-title
+              aria-hidden="true"
               className="font-display text-[35px] sm:text-[47px] hover:text-aurora2 font-bold uppercase leading-none tracking-[0.01em] text-ink"
             >
               Strat
