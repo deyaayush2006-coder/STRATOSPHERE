@@ -12,17 +12,22 @@ import { formatPosted, machineDate, splitFeed } from "@/lib/feed";
 
 function When({ achievement, archived = false }) {
   const exact = formatPosted(achievement.postedAt);
-  const machine = machineDate(achievement.postedAt);
   const tone = archived ? "text-ink/45" : "text-aurora2";
 
   const shown = archived ? exact || achievement.year : achievement.year || exact;
 
-  if (!machine) {
-    return <span className={`font-mono text-sm ${tone}`}>{shown}</span>;
+  // Only the formatted date is machine-readable. The free-text label
+  // ("January 2025", "2025") goes in a span, with the full date on hover.
+  if (!exact || shown !== exact) {
+    return (
+      <span title={exact || undefined} className={`font-mono text-sm ${tone}`}>
+        {shown}
+      </span>
+    );
   }
 
   return (
-    <time dateTime={machine} title={exact} className={`font-mono text-sm ${tone}`}>
+    <time dateTime={machineDate(achievement.postedAt)} title={exact} className={`font-mono text-sm ${tone}`}>
       {shown}
     </time>
   );

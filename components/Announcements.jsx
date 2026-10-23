@@ -7,23 +7,23 @@ import FeedArchive from "./FeedArchive";
 import { formatPosted, machineDate, splitFeed } from "@/lib/feed";
 import Label from "./Label";
 
+// The free-text date ("April 2026", "Dates TBD") is about the event, not when
+// it was posted, so only the posted time itself goes in a <time>.
 function Stamp({ announcement, className = "" }) {
   const exact = formatPosted(announcement.postedAt);
-  const machine = machineDate(announcement.postedAt);
+  const classes = `font-mono text-[11px] text-ink/40 ${className}`;
 
-  if (!exact) {
+  if (announcement.date || !exact) {
     return (
-      <span className={`font-mono text-[11px] text-ink/40 ${className}`}>{announcement.date}</span>
+      <span title={exact ? `Posted ${exact}` : undefined} className={classes}>
+        {announcement.date}
+      </span>
     );
   }
 
   return (
-    <time
-      {...(machine ? { dateTime: machine } : {})}
-      title={`Posted ${exact}`}
-      className={`font-mono text-[11px] text-ink/40 ${className}`}
-    >
-      {announcement.date || exact}
+    <time dateTime={machineDate(announcement.postedAt)} title={`Posted ${exact}`} className={classes}>
+      {exact}
     </time>
   );
 }
