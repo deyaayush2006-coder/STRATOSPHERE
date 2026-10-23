@@ -23,6 +23,13 @@ describe("security headers", () => {
     expect(contentSecurityPolicy({ dev: false })).not.toContain("unsafe-eval");
   });
 
+  it("report-only policy has no directive browsers ignore there", () => {
+    // Chrome logs a console error on every page load for each of these.
+    expect(contentSecurityPolicy({ dev: false })).not.toMatch(
+      /upgrade-insecure-requests|block-all-mixed-content|sandbox/
+    );
+  });
+
   it("lint runs during builds", () => {
     expect(nextConfig.eslint?.ignoreDuringBuilds).not.toBe(true);
   });
