@@ -3,6 +3,9 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -38,7 +41,7 @@
     "@tailwindcss/postcss": "^4.3.3",
     "dotenv": "^17.2.2",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^15.1.6",
+    "eslint-config-next": "^15.5.27",
     "pg": "^8.23.1",
     "shadcn": "^4.21.1",
     "tailwindcss": "^4.3.3",
