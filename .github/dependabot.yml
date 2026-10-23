@@ -6,8 +6,18 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     groups:
+      # next and its lint config are released together; bumped apart, they
+      # drift (eslint-config-next sat on 15.1.6 under next 15.5).
+      next:
+        patterns: ["next", "eslint-config-next"]
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # eslint-config-next 15 accepts ESLint 9 at most, so an ESLint major on
+      # its own fails `npm ci` with ERESOLVE. Drop this once the next group has
+      # brought eslint-config-next 16 (which accepts ESLint >= 9).
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
