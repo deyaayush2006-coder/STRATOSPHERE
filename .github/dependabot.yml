@@ -4,6 +4,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Only propose releases that have been out for two weeks: a compromised
+    # or broken publish is usually caught and pulled well within that.
+    cooldown:
+      default-days: 14
     open-pull-requests-limit: 5
     groups:
       # next and its lint config are released together; bumped apart, they
@@ -22,3 +26,5 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 14

@@ -305,7 +305,7 @@ Migrations are append-only: never edit a file that has been applied; add a new n
 2. **Vercel build**: `vercel-build` runs lint and unit tests before `next build`, so a failing test fails the deploy and production keeps the last good version.
 3. **Every Vercel deployment → `deploy-smoke.yml`**: smoke tests against the preview or production URL. A failing production smoke test opens a `P0` issue.
 4. **Every 30 minutes → `uptime.yml`**: site up, and the anon key cannot read private data. Opens one `P0` issue on failure.
-5. **Dependabot** opens weekly update PRs, which go through the same checks. `next` and `eslint-config-next` arrive in one PR so they stay on the same version; ESLint majors are held back until `eslint-config-next` accepts them (see `.github/dependabot.yml`).
+5. **Dependabot** opens weekly update PRs, which go through the same checks. `next` and `eslint-config-next` arrive in one PR so they stay on the same version; ESLint majors are held back until `eslint-config-next` accepts them, and nothing is proposed until it has been published for 14 days (see `.github/dependabot.yml`).
 
 One-time setup:
 - GitHub → Settings → Branches: protect `main`; require a PR and the `Lint, unit tests, build`, `Database security (RLS)`, `Migrations are append-only` and `Secret scan` checks.
