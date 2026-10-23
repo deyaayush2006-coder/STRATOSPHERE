@@ -5,6 +5,7 @@ import { createClient, getStaff } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { readContent } from "@/lib/content";
 import { DEFAULT_CONTENT, JSON_SECTIONS } from "@/lib/defaults";
+import { findProblem, SECTIONS } from "@/components/control-tower/schema";
 import {
   achievementsToRows,
   announcementsToRows,
@@ -238,6 +239,11 @@ function refreshSite() {
 
 export async function saveSection(key, value) {
   const staff = await requireStaff();
+
+  const section = SECTIONS.find((s) => s.key === key);
+  const problem = section ? findProblem(section, value) : "";
+  if (problem) throw new Error(problem);
+
   const supabase = await createClient();
 
   if (JSON_SECTIONS.includes(key)) {

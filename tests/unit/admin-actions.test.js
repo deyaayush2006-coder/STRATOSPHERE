@@ -72,6 +72,13 @@ describe("saving a collection never silently loses rows", () => {
     await expect(saveSection("announcements", [])).rejects.toThrow(/session/);
     expect(client.tables().announcements).toHaveLength(1);
   });
+
+  it("refuses a malformed link before touching the database", async () => {
+    client = fakeSupabase({ cohorts: [], cohort_members: [] });
+    const cohorts = [{ year: "2026–27", members: [{ name: "Naman Ray", linkedin: "linkedin.com/in/namanray" }] }];
+    await expect(saveSection("memberCohorts", cohorts)).rejects.toThrow(/Naman Ray → LinkedIn URL/);
+    expect(client.calls).toHaveLength(0);
+  });
 });
 
 describe("account creation", () => {
