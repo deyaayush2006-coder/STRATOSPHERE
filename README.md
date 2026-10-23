@@ -280,6 +280,27 @@ one place to add another field that should accept math.
 - **Keep public sign-ups off** in Supabase → Authentication → Sign In / Providers. Migration 0007 makes a sign-up harmless, but there is no reason to allow it.
 - Role checks (`private.is_staff()`, `private.is_admin()`) live in a schema the REST API does not expose.
 - Security headers come from `lib/security-headers.mjs`. The full CSP runs in Report-Only mode; move it to the enforced header once a preview deploy shows no violations in the browser console.
+- **Passwords** never reach this code: Control Tower signs in through Supabase Auth, which stores them hashed (bcrypt) and rate-limits sign-in attempts per IP. Tune those limits in Supabase → Authentication → Rate Limits rather than adding a hashing or rate-limiting library here.
+- **Rate limits** on the contact form are counted in the database (3 messages per sender and 50 site-wide per 10 minutes, `lib/send-message.js`), so they hold across every Vercel instance. An in-memory limiter would not: each request can land on a different instance.
+
+## Health check
+
+`GET /api/health` answers `200` with `"status": "ok"` when the app is up and the
+database answered a read within 3 seconds, and `503` otherwise:
+
+```json
+{ "status": "ok",
+  "checks": { "app": { "status": "ok" }, "database": { "status": "ok", "latencyMs": 19 } },
+  "version": "a1b2c3d", "checkedAt": "2026-10-23T16:04:50.635Z" }
+```
+
+`degraded` means no database is configured, so the site is serving its bundled
+defaults; `down` means the database failed or timed out. The reason goes to the
+server log (Vercel → Logs, search `[health]`), never into the response. Each
+instance reuses one result for 10 seconds, so polling it can't load the
+database. The uptime workflow checks it every 30 minutes, the deploy smoke test
+on every deployment, and it is the URL to give any external monitor
+(UptimeRobot, Better Stack) that should page someone.
 
 ## Migrations
 
@@ -304,7 +325,7 @@ Migrations are append-only: never edit a file that has been applied; add a new n
 1. **Pull request → GitHub Actions (`ci.yml`)**: lint, unit tests, build, RLS tests on Postgres 17, append-only migration check, gitleaks secret scan, `npm audit`. CodeQL runs separately.
 2. **Vercel build**: `vercel-build` runs lint and unit tests before `next build`, so a failing test fails the deploy and production keeps the last good version.
 3. **Every Vercel deployment → `deploy-smoke.yml`**: smoke tests against the preview or production URL. A failing production smoke test opens a `P0` issue.
-4. **Every 30 minutes → `uptime.yml`**: site up, and the anon key cannot read private data. Opens one `P0` issue on failure.
+4. **Every 30 minutes → `uptime.yml`**: site up, `/api/health` reports the database as ok, and the anon key cannot read private data. Opens one `P0` issue on failure.
 5. **Dependabot** opens weekly update PRs, which go through the same checks. `next` and `eslint-config-next` arrive in one PR so they stay on the same version; ESLint majors are held back until `eslint-config-next` accepts them, and nothing is proposed until it has been published for 14 days (see `.github/dependabot.yml`).
 
 One-time setup:

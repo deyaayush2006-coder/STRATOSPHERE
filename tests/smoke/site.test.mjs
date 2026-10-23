@@ -56,6 +56,17 @@ suite(`smoke: ${BASE}`, () => {
     expect(res.status).toBe(200);
   });
 
+  it("health check answers with fresh JSON", async () => {
+    const res = await get("/api/health");
+    // 503 is a valid answer (no database configured, or it is down); the
+    // uptime workflow is what insists on 200 in production.
+    expect([200, 503]).toContain(res.status);
+    expect(res.headers.get("cache-control")).toContain("no-store");
+    const body = await res.json();
+    expect(body.checks.app.status).toBe("ok");
+    expect(["ok", "degraded", "down"]).toContain(body.status);
+  });
+
   it("unknown pages return 404", async () => {
     expect((await get("/this-page-does-not-exist-404")).status).toBe(404);
   });

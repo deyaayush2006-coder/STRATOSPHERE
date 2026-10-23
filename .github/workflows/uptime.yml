@@ -1,8 +1,8 @@
 name: Uptime and data-exposure check
 
-# Every 30 minutes: is the site up, and can the public anon key read anything
-# private? Opens one P0 issue on failure (and keeps the free Supabase project
-# from pausing for inactivity).
+# Every 30 minutes: is the site up, does /api/health see a working database,
+# and can the public anon key read anything private? Opens one P0 issue on
+# failure (and keeps the free Supabase project from pausing for inactivity).
 on:
   schedule:
     - cron: "*/30 * * * *"
@@ -26,6 +26,13 @@ jobs:
             echo "$path -> $code"
             [ "$code" = 200 ] || { echo "::error::$path returned $code"; exit 1; }
           done
+      - name: Health check reports the app and database as ok
+        env:
+          SITE: ${{ vars.PROD_URL }}
+        run: |
+          code=$(curl -s -o /tmp/health --max-time 20 -w '%{http_code}' "$SITE/api/health")
+          echo "/api/health -> $code: $(cat /tmp/health)"
+          [ "$code" = 200 ] && grep -q '"status":"ok"' /tmp/health || { echo "::error::/api/health is not ok"; exit 1; }
       - name: Anon key cannot read private data
         env:
           SUPABASE_URL: ${{ vars.PROD_SUPABASE_URL }}
