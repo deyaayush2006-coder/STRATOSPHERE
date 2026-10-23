@@ -67,6 +67,12 @@ suite(`smoke: ${BASE}`, () => {
     expect(["ok", "degraded", "down"]).toContain(body.status);
   });
 
+  it("the Learn section is served", async () => {
+    const res = await get("/learn");
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain("Learn");
+  });
+
   it("unknown pages return 404", async () => {
     expect((await get("/this-page-does-not-exist-404")).status).toBe(404);
   });

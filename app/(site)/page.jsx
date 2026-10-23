@@ -6,6 +6,7 @@ import Members from "@/components/Members";
 import Achievements from "@/components/Achievements";
 import Events from "@/components/Events";
 import Projects from "@/components/Projects";
+import LearnTeaser from "@/components/LearnTeaser";
 import Sponsors from "@/components/Sponsors";
 import Memories from "@/components/Memories";
 import { getContent } from "@/lib/content";
@@ -63,6 +64,7 @@ export default async function Home() {
       />
       <Events events={content.events} />
       <Projects projects={content.projects} />
+      <LearnTeaser articles={content.articles} />
       <Sponsors sponsors={content.sponsors} email={content.contact?.email} />
       <Memories memories={content.memories} />
     </main>
