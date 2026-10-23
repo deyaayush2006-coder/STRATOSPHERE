@@ -117,15 +117,17 @@ export default function SectionEditor({ section, value, onSave, onReset }) {
         </div>
       )}
 
-      <div className="mt-8 border-t border-white/[0.07] pt-5">
-        <ConfirmButton onConfirm={reset} confirmLabel="Yes — discard saved changes">
-          Reset this section to the built-in content
-        </ConfirmButton>
-        <p className="mt-2 max-w-xl text-xs leading-relaxed text-slate-500">
-          Removes everything saved here and puts the section back to the version that ships with the
-          site. Use it if an edit goes wrong.
-        </p>
-      </div>
+      {section.resettable !== false && (
+        <div className="mt-8 border-t border-white/[0.07] pt-5">
+          <ConfirmButton onConfirm={reset} confirmLabel="Yes — discard saved changes">
+            Reset this section to the built-in content
+          </ConfirmButton>
+          <p className="mt-2 max-w-xl text-xs leading-relaxed text-slate-500">
+            Removes everything saved here and puts the section back to the version that ships with the
+            site. Use it if an edit goes wrong.
+          </p>
+        </div>
+      )}
 
       {(dirty || status !== "idle") && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0b0f16]/95 backdrop-blur md:left-64">

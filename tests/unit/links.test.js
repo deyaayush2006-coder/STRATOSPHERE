@@ -69,3 +69,30 @@ describe("saving a section checks its links", () => {
     }
   });
 });
+
+describe("Learn articles in the dashboard", () => {
+  const section = SECTIONS.find((s) => s.key === "articles");
+  const ok = { title: "Lift", slug: "lift", instagramUrl: "", furtherReading: [], sections: [], slides: [] };
+
+  it("accept Instagram posts and reels only", async () => {
+    const { isInstagramAddress } = await import("@/lib/links");
+    for (const url of ["https://www.instagram.com/p/C9xYz/", "https://instagram.com/reel/abc"]) {
+      expect(isInstagramAddress(url), url).toBe(true);
+    }
+    for (const url of ["http://www.instagram.com/p/x", "https://www.instagram.com/", "https://evil.com/instagram.com/p/x", "instagram.com/p/x"]) {
+      expect(isInstagramAddress(url), url).toBe(false);
+    }
+  });
+
+  it("refuse to save without a title, with a bad Instagram link or a link without an address", () => {
+    expect(findProblem(section, [ok])).toBe("");
+    expect(findProblem(section, [{ ...ok, title: "  " }])).toMatch(/title/i);
+    expect(findProblem(section, [{ ...ok, instagramUrl: "instagram.com/p/x" }])).toMatch(/Instagram post: .*https:\/\/www\.instagram\.com/);
+    expect(findProblem(section, [{ ...ok, furtherReading: [{ label: "NASA", url: "" }] }])).toMatch(/address/i);
+    expect(findProblem(section, [{ ...ok, furtherReading: [{ label: "NASA", url: "nasa.gov" }] }])).toMatch(/https:\/\//);
+  });
+
+  it("start new articles as drafts", () => {
+    expect(section.blank().published).toBe(false);
+  });
+});

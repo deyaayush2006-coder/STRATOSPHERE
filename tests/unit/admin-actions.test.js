@@ -17,7 +17,7 @@ vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({ auth: { admin: { createUser: createUserSpy } } }),
 }));
 
-const { createUser, saveSection } = await import("@/app/admin/actions");
+const { createUser, resetSection, saveSection } = await import("@/app/admin/actions");
 
 const announcement = (id, slug) => ({ id, slug, title: slug, body: "", tag: "Update", date_label: "", pinned: false, published: true, sort_order: 0 });
 
@@ -94,5 +94,43 @@ describe("account creation", () => {
   it("only admins can create accounts", async () => {
     staff = { id: "s2", role: "editor", is_active: true };
     await expect(createUser({ name: "x", email: "x@example.com", password: "long-enough-1", role: "admin" })).rejects.toThrow(/admin/);
+  });
+});
+
+describe("saving Learn articles", () => {
+  beforeEach(() => {
+    staff = { id: "s1", role: "editor", is_active: true };
+  });
+
+  it("writes articles with database-safe slugs and keeps their order", async () => {
+    client = fakeSupabase({ articles: [] });
+    await saveSection("articles", [
+      { title: "Lift & drag", slug: "", series: "Aerodynamics", sections: [{ heading: "Lift", body: "$L$" }], published: true },
+      { title: "Servos 101", slug: "Servos 101", series: "RC basics", published: false },
+    ]);
+    const rows = client.tables().articles;
+    expect(rows.map((r) => [r.slug, r.sort_order, r.published])).toEqual([
+      ["lift-drag", 0, true],
+      ["servos-101", 1, false],
+    ]);
+  });
+
+  it("refuses two articles with the same slug before touching the database", async () => {
+    client = fakeSupabase({ articles: [] });
+    await expect(
+      saveSection("articles", [{ title: "A", slug: "same" }, { title: "B", slug: "same" }])
+    ).rejects.toThrow(/slug "same"/);
+    expect(client.calls.filter((c) => c.table === "articles")).toEqual([]);
+  });
+
+  it("can't be reset, which would delete every article", async () => {
+    client = fakeSupabase({ articles: [{ id: "a1", slug: "keep", title: "Keep", sort_order: 0 }] });
+    await expect(resetSection("articles")).rejects.toThrow(/can't be reset/);
+    expect(client.tables().articles).toHaveLength(1);
+  });
+
+  it("refuses an article without a title", async () => {
+    client = fakeSupabase({ articles: [] });
+    await expect(saveSection("articles", [{ title: " ", slug: "x" }])).rejects.toThrow(/title/i);
   });
 });

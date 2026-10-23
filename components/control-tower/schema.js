@@ -1,4 +1,5 @@
-import { isLinkedInAddress, isWebAddress } from "@/lib/links";
+import { isInstagramAddress, isLinkedInAddress, isWebAddress } from "@/lib/links";
+import { LEVELS } from "@/lib/articles";
 
 const SLUG_HINT = "Used in the page URL. Lowercase, dashes, no spaces.";
 const MATH_HINT =
@@ -8,6 +9,9 @@ const MATH_HINT =
 // A field's `validate` returns what is wrong with its value, or "". Saving is
 // refused until findProblem() below comes back empty.
 const webAddress = (v) => (!v || isWebAddress(v) ? "" : "Use the full address, starting https://");
+const instagram = (v) =>
+  !v || isInstagramAddress(v) ? "" : "Use the post's full address, starting https://www.instagram.com/p/";
+const titled = (v) => (String(v ?? "").trim() ? "" : "Give the article a title");
 const linkedIn = (v) =>
   !v || isLinkedInAddress(v) ? "" : "Use the full profile address, starting https://www.linkedin.com/in/";
 
@@ -453,6 +457,145 @@ export const SECTIONS = [
           },
         ],
       },
+    ],
+  },
+
+  {
+    key: "articles",
+    label: "Learn",
+    icon: "📚",
+    kind: "list",
+    // Articles ship with no built-in content, so a reset would delete them all.
+    resettable: false,
+    itemName: "article",
+    blurb:
+      "The long versions of Instagram posts, at /learn. Give articles the same Series name and they are " +
+      "grouped and numbered Part 1, 2, 3… in the order they appear in this list. Learn appears in the menu " +
+      "and on the home page as soon as the first article is published. New articles start as drafts: " +
+      "tick Show this on the site when one is ready.",
+    title: (a) => a.title,
+    subtitle: (a) => [a.series, a.level, postedLabel(a)].filter(Boolean).join(" · "),
+    flag: (a) => (a.published === false ? "Draft" : null),
+    blank: () => ({
+      slug: "",
+      title: "",
+      series: "",
+      level: "",
+      summary: "",
+      cover: "",
+      author: "",
+      instagramUrl: "",
+      postedAt: new Date().toISOString(),
+      slides: [],
+      sections: [],
+      furtherReading: [],
+      published: false,
+    }),
+    fields: [
+      { name: "title", label: "Title", type: "text", required: true, validate: titled },
+      {
+        name: "slug",
+        label: "URL slug",
+        type: "text",
+        hint: SLUG_HINT + " The page is /learn/your-slug — short slugs are easier to type from an Instagram caption.",
+        slugFrom: "title",
+        required: true,
+        unique: true,
+      },
+      {
+        name: "series",
+        label: "Series",
+        type: "text",
+        hint: "e.g. RC plane basics or Fluid dynamics. Leave empty for a one-off article.",
+      },
+      {
+        name: "level",
+        label: "Level",
+        type: "select",
+        options: [{ value: "", label: "Not set" }, ...LEVELS.map((l) => ({ value: l, label: l }))],
+      },
+      {
+        name: "summary",
+        label: "Summary",
+        type: "textarea",
+        rows: 3,
+        hint: "One or two lines. Shown on the card, in search results and in the link preview on WhatsApp and Instagram.",
+      },
+      { name: "cover", label: "Cover image", type: "image", hint: "Wide (16:9) works best. Optional." },
+      { name: "author", label: "Written by", type: "text", hint: "Shown as By … Leave empty to credit the club." },
+      {
+        name: "instagramUrl",
+        label: "Instagram post",
+        type: "text",
+        hint: "The post this article expands on. Shown as a See the Instagram post button.",
+        validate: instagram,
+      },
+      {
+        name: "postedAt",
+        label: "Published on",
+        type: "datetime",
+        hint: "Decides which articles the home page shows as the latest. Left empty, it is stamped when you save.",
+      },
+      {
+        name: "slides",
+        label: "Infographic slides",
+        type: "list",
+        itemName: "slide",
+        hint: "The images from the Instagram post, in order. Shown whole, in a 4:5 frame, under From the post.",
+        title: (s) => s.caption || s.src,
+        compact: true,
+        blank: () => ({ src: "", caption: "" }),
+        fields: [
+          { name: "src", label: "Image", type: "image", required: true },
+          { name: "caption", label: "Caption", type: "text", hint: "What the slide shows. Also what a screen reader reads out." },
+        ],
+      },
+      {
+        name: "sections",
+        label: "Write-up",
+        type: "list",
+        itemName: "section",
+        hint: "The article itself, one entry per section. With three or more headed sections the page adds a contents list.",
+        title: (s) => s.heading,
+        subtitle: (s) => (s.body || "").slice(0, 80),
+        blank: () => ({ heading: "", body: "", image: "", caption: "", figures: [] }),
+        fields: [
+          { name: "heading", label: "Section heading", type: "text" },
+          {
+            name: "body",
+            label: "Body",
+            type: "textarea",
+            rows: 12,
+            math: true,
+            hint: "Leave a blank line between paragraphs and they come out as paragraphs. " + MATH_HINT,
+          },
+          { name: "image", label: "Diagram or photo", type: "image", hint: "Optional. Shown under the text; clicking it opens it full size." },
+          { name: "caption", label: "Diagram caption", type: "text" },
+          {
+            name: "figures",
+            label: "Key figures",
+            type: "pairList",
+            keyLabel: "Label",
+            valueLabel: "Value",
+            hint: "Optional — shown as a row under the section, e.g. Wing loading / 32 g/dm²",
+          },
+        ],
+      },
+      {
+        name: "furtherReading",
+        label: "Further reading",
+        type: "list",
+        itemName: "link",
+        hint: "Sources and good next reads: papers, NASA pages, datasheets.",
+        title: (l) => l.label || l.url,
+        compact: true,
+        blank: () => ({ label: "", url: "" }),
+        fields: [
+          { name: "label", label: "Title", type: "text", hint: "Left empty, the address is shown instead." },
+          { name: "url", label: "Address", type: "text", required: true, validate: (v) => (v ? webAddress(v) : "Add the link's address") },
+        ],
+      },
+      { name: "published", label: "Show this on the site", type: "checkbox" },
     ],
   },
 
