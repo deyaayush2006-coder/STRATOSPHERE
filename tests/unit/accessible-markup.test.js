@@ -19,8 +19,8 @@ describe("text split up for animation still reads as one sentence", () => {
     expect(out).toContain(`<span class="sr-only">${sentence}</span>`);
 
     const animated = out.match(/<span aria-hidden="true">(.*)<\/span><\/p>$/)?.[1] ?? "";
-    expect(animated.match(/data-word/g)).toHaveLength(7);
-    expect(animated.replace(/<[^>]+>/g, "")).toBe(sentence);
+    const words = [...animated.matchAll(/<span data-word="true"[^>]*>([^<]*)<\/span>/g)].map((m) => m[1]);
+    expect(words).toEqual(sentence.split(" "));
   });
 
   it("the hero title is read once, with no aria-label on a span", () => {
